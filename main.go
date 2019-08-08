@@ -2,10 +2,10 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/ujent/go-git-app/config"
 	"github.com/ujent/go-git-mysql/mysqlfs"
-	"gopkg.in/natefinch/lumberjack.v2"
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing/cache"
 	"gopkg.in/src-d/go-git.v4/storage/filesystem"
@@ -13,21 +13,16 @@ import (
 
 func main() {
 
+	logger := log.New(os.Stdout, "go-git-app:", log.LstdFlags)
+
 	settings, err := config.ParseTest()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	logger := lumberjack.Logger{
-		Filename: settings.LogConfig.FileName,
-		MaxSize:  settings.LogConfig.SizeMb,
-		Compress: true,
-	}
-	log.SetOutput(&logger)
-
 	log.Println("Config was successfully parsed")
 
-	server := newServer(settings, &logger)
+	server := newServer(settings, logger)
 
 	err = server.Start()
 	if err != nil {
