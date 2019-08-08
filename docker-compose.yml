@@ -10,7 +10,7 @@ services:
       - MYSQL_PASSWORD=gitea
       - MYSQL_DATABASE=gitea
     ports:
-      - 3306:3306
+      - "3306:3306"
     volumes:
       - mysqldata:/var/lib/mysql
 
@@ -18,7 +18,7 @@ services:
     image: adminer
     restart: always
     ports:
-      - 8080:8080
+      - "8080:8080"
 
   gitea:
     image: gitea/gitea
@@ -34,8 +34,8 @@ services:
     volumes:
       - giteadata:/data
     ports:
-      - 3000:3000
-      - 222:22
+      - "9000:3000"
+      - "222:22"
     depends_on:
       - db
 volumes:
