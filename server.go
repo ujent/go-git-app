@@ -7,17 +7,24 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/ujent/go-git-app/contract"
+	gitsvc "github.com/ujent/go-git-app/gitSvc"
 )
 
 type server struct {
 	settings *contract.ServerSettings
 	logger   *log.Logger
+	gitSvc   gitsvc.Service
 }
 
-func newServer(settings *contract.ServerSettings, logger *log.Logger) *server {
-	s := server{logger: logger, settings: settings}
+func newServer(settings *contract.ServerSettings, user *contract.Credentials, logger *log.Logger) (*server, error) {
+	gitSvc, err := gitsvc.New(user, settings)
+	if err != nil {
+		return nil, err
+	}
 
-	return &s
+	s := server{logger: logger, settings: settings, gitSvc: gitSvc}
+
+	return &s, nil
 }
 
 func (s *server) Start() error {

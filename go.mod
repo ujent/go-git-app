@@ -5,7 +5,9 @@ go 1.12
 require (
 	github.com/gliderlabs/ssh v0.2.2 // indirect
 	github.com/go-chi/chi v4.0.2+incompatible
+	github.com/go-sql-driver/mysql v1.4.1
 	github.com/google/go-cmp v0.3.0 // indirect
+	github.com/jmoiron/sqlx v1.2.0
 	github.com/kevinburke/ssh_config v0.0.0-20190725054713-01f96b0aa0cd // indirect
 	github.com/lib/pq v1.2.0 // indirect
 	github.com/mattn/go-sqlite3 v1.11.0 // indirect
@@ -15,7 +17,7 @@ require (
 	golang.org/x/net v0.0.0-20190724013045-ca1201d0de80 // indirect
 	golang.org/x/sys v0.0.0-20190804053845-51ab0e2deafa // indirect
 	google.golang.org/appengine v1.6.1 // indirect
-	gopkg.in/src-d/go-billy.v4 v4.3.2 // indirect
+	gopkg.in/src-d/go-billy.v4 v4.3.2
 	gopkg.in/src-d/go-git.v4 v4.13.1
 )
 
