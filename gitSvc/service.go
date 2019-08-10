@@ -27,16 +27,17 @@ type Service interface {
 	CreateRepository(name string) error
 	OpenRepository(name string) error
 	Repositories() ([]string, error)
-	Clone(url, repoName string, c *contract.Credentials) error
+	Clone(url, repoName string, auth *contract.Credentials) error
 	Fetch() error
 	Pull() error
-	Push() error
+	Push(remote string, auth *contract.Credentials) error
 	Commit(msg string) error
 	Merge(branch string) error
 	Branches() ([]string, error)
 	Checkout(commit string) error
 	CheckoutBranch(branch string) error
 	CreateBranch(branch, commit string) error
+	//CreateRemoteBranch(branch string) error
 	DeleteBranch(branch string) error
 	Add(path string) error
 	Log() ([]contract.Commit, error)
@@ -217,8 +218,18 @@ func (svc *service) Pull() error {
 	return nil
 }
 
-func (svc *service) Push() error {
-	return nil
+//Push performs a push to the remote. Returns NoErrAlreadyUpToDate if
+// the remote was already up-to-date, from the remote named as
+// FetchOptions.RemoteName.
+//Use credentials if needed. Remote also can be empty
+func (svc *service) Push(remote string, auth *contract.Credentials) error {
+	opts := &git.PushOptions{RemoteName: remote}
+
+	if auth != nil {
+		opts.Auth = &http.BasicAuth{Username: auth.Name, Password: auth.Password}
+	}
+
+	return svc.gitRepo.Push(opts)
 }
 
 func (svc *service) Commit(msg string) error {
