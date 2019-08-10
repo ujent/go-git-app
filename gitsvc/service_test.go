@@ -6,7 +6,7 @@ import (
 
 	"github.com/ujent/go-git-app/config"
 	"github.com/ujent/go-git-app/contract"
-	gitsvc "github.com/ujent/go-git-app/gitSvc"
+	"github.com/ujent/go-git-app/gitsvc"
 )
 
 const userName = "test_user"

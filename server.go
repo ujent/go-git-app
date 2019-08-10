@@ -9,7 +9,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"github.com/ujent/go-git-app/contract"
-	gitsvc "github.com/ujent/go-git-app/gitSvc"
+	"github.com/ujent/go-git-app/gitsvc"
 )
 
 type server struct {

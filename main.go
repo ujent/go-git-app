@@ -22,7 +22,7 @@ func main() {
 
 	log.Println("Config was successfully parsed")
 
-	server, err := newServer(settings, &contract.Credentials{Name: userName, Email: userEmail}, logger)
+	server, err := newServer(settings, &contract.User{Name: userName, Email: userEmail}, logger)
 	if err != nil {
 		log.Fatal(err)
 	}
