@@ -28,7 +28,7 @@ type Service interface {
 	OpenRepository(name string) error
 	Repositories() ([]string, error)
 	Clone(url, repoName string, auth *contract.Credentials) error
-	Fetch() error
+	Fetch(remote string) error
 	Pull() error
 	Push(remote string, auth *contract.Credentials) error
 	Commit(msg string) error
@@ -194,17 +194,16 @@ func (svc *service) Branches() ([]string, error) {
 	return branches, nil
 }
 
-func (svc *service) Fetch() error {
+// Fetch fetches references along with the objects necessary to complete
+// their histories, from the remote named as FetchOptions.RemoteName.
+// Remote can be empty (use "origin" by default)
+//
+// Returns nil if the operation is successful, NoErrAlreadyUpToDate if there are
+// no changes to be fetched, or an error.
+func (svc *service) Fetch(remote string) error {
 
-	headRef, err := svc.gitRepo.Head()
-	if err != nil {
-		return err
-	}
-
-	current := headRef.Name()
-
-	err = svc.gitRepo.Fetch(&git.FetchOptions{
-		RemoteName: current.Short(),
+	err := svc.gitRepo.Fetch(&git.FetchOptions{
+		RemoteName: remote,
 	})
 
 	if err != nil {
