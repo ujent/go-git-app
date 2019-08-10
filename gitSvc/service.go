@@ -11,6 +11,7 @@ import (
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/src-d/go-git.v4/plumbing/cache"
+	"gopkg.in/src-d/go-git.v4/plumbing/object"
 	"gopkg.in/src-d/go-git.v4/storage/filesystem"
 )
 
@@ -36,7 +37,7 @@ type Service interface {
 	CreateBranch(branch, commit string) error
 	DeleteBranch(branch string) error
 	Add() error
-	Log() error
+	Log() ([]contract.Commit, error)
 }
 
 type service struct {
@@ -149,12 +150,16 @@ func (svc *service) Branches() ([]string, error) {
 
 	branches := []string{}
 
-	iter.ForEach(func(br *plumbing.Reference) error {
+	err = iter.ForEach(func(br *plumbing.Reference) error {
 		if !br.Name().IsRemote() {
 			branches = append(branches, br.Name().Short())
 		}
 		return nil
 	})
+
+	if err != nil {
+		return nil, err
+	}
 
 	return branches, nil
 }
@@ -274,6 +279,26 @@ func (svc *service) Add() error {
 	return nil
 }
 
-func (svc *service) Log() error {
-	return nil
+//Log - Gets the HEAD history from HEAD, just like command "git log"
+func (svc *service) Log() ([]contract.Commit, error) {
+
+	ref, err := svc.gitRepo.Head()
+	if err != nil {
+		return nil, err
+	}
+
+	cIter, err := svc.gitRepo.Log(&git.LogOptions{From: ref.Hash()})
+	res := []contract.Commit{}
+
+	err = cIter.ForEach(func(c *object.Commit) error {
+
+		res = append(res, contract.Commit{Author: &contract.Credentials{Name: c.Author.Name, Email: c.Author.Email}, Date: c.Author.When, Message: c.Message, Hash: c.Hash.String()})
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }

@@ -1,5 +1,7 @@
 package contract
 
+import "time"
+
 //ServerSettings - common server settings
 type ServerSettings struct {
 	Port       string
@@ -11,4 +13,12 @@ type ServerSettings struct {
 type Credentials struct {
 	Name  string
 	Email string
+}
+
+//Commit - base commit information
+type Commit struct {
+	Author  *Credentials
+	Hash    string
+	Message string
+	Date    time.Time
 }
