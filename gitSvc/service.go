@@ -31,7 +31,9 @@ type Service interface {
 	Commit() error
 	Merge(branch string) error
 	Branches() ([]string, error)
-	Checkout(branch string) error
+	Checkout(commit string) error
+	CheckoutBranch(branch string) error
+	CreateBranch(branch, commit string) error
 	DeleteBranch(branch string) error
 	Add() error
 	Log() error
@@ -41,10 +43,11 @@ type service struct {
 	user     *contract.Credentials
 	settings *contract.ServerSettings
 	gitRepo  *git.Repository
+	db       *sqlx.DB
 }
 
 //New - create an instance of gitSvc
-func New(user *contract.Credentials, s *contract.ServerSettings) (Service, error) {
+func New(user *contract.Credentials, s *contract.ServerSettings, db *sqlx.DB) (Service, error) {
 
 	if user.Name == "" {
 		return nil, errors.New("userName cannot be empty")
@@ -54,7 +57,7 @@ func New(user *contract.Credentials, s *contract.ServerSettings) (Service, error
 		return nil, errors.New("userEmail cannot be empty")
 	}
 
-	return &service{user: user, settings: s}, nil
+	return &service{user: user, settings: s, db: db}, nil
 }
 
 func (svc *service) CreateRepository(name string) error {
@@ -89,18 +92,10 @@ func (svc *service) OpenRepository(name string) error {
 		return errors.New("Repository name cannot be empty")
 	}
 
-	db, err := sqlx.Connect("mysql", svc.settings.GitConnStr)
-
-	if err != nil {
-		return err
-	}
-
-	defer db.Close()
-
 	tables := []string{}
 	table := gitPrefix + name
 
-	err = db.Get(&tables, "SELECT table_name FROM information_schema.tables WHERE table_type = 'base table' AND table_name = ?", table)
+	err := svc.db.Get(&tables, "SELECT table_name FROM information_schema.tables WHERE table_type = 'base table' AND table_name = ?", table)
 	if err != nil {
 		return err
 	}
@@ -131,21 +126,10 @@ func (svc *service) OpenRepository(name string) error {
 	return nil
 }
 
-// func (svc *service) Clone() error {
-// 	return nil
-// }
-
 func (svc *service) Repositories() ([]string, error) {
-	db, err := sqlx.Connect("mysql", svc.settings.GitConnStr)
-
-	if err != nil {
-		return nil, err
-	}
 
 	tables := []string{}
-	db.Select(&tables, "SELECT table_name FROM information_schema.tables WHERE table_type = 'base table' ORDER BY table_name ASC")
-
-	db.Close()
+	svc.db.Select(&tables, "SELECT table_name FROM information_schema.tables WHERE table_type = 'base table' ORDER BY table_name ASC")
 
 	repos := []string{}
 	for _, t := range tables {
@@ -211,12 +195,79 @@ func (svc *service) Merge(branch string) error {
 	return nil
 }
 
-func (svc *service) Checkout(branch string) error {
+func (svc *service) Checkout(commit string) error {
+	wt, err := svc.gitRepo.Worktree()
+	if err != nil {
+		return err
+	}
+
+	err = wt.Checkout(&git.CheckoutOptions{
+		Hash: plumbing.NewHash(commit),
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+//CheckoutBranch - switch to existing branch
+func (svc *service) CheckoutBranch(branch string) error {
+	wt, err := svc.gitRepo.Worktree()
+	if err != nil {
+		return err
+	}
+
+	err = wt.Checkout(&git.CheckoutOptions{
+		Branch: plumbing.NewBranchReferenceName(branch),
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+//CreateBranch - creates a new branch from specified commit, if commit is empty new branch will be created from current commit
+func (svc *service) CreateBranch(branch, commit string) error {
+	wt, err := svc.gitRepo.Worktree()
+	if err != nil {
+		return err
+	}
+
+	var hash plumbing.Hash
+
+	if commit == "" {
+
+		headRef, err := svc.gitRepo.Head()
+		if err != nil {
+			return err
+		}
+
+		hash = headRef.Hash()
+	} else {
+		hash = plumbing.NewHash(commit)
+	}
+
+	err = wt.Checkout(&git.CheckoutOptions{
+		Hash:   hash,
+		Branch: plumbing.NewBranchReferenceName(branch),
+		Create: true,
+	})
+
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func (svc *service) DeleteBranch(branch string) error {
-	return nil
+	ref := plumbing.NewBranchReferenceName(branch)
+
+	return svc.gitRepo.Storer.RemoveReference(ref)
 }
 
 func (svc *service) Add() error {

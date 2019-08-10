@@ -6,6 +6,8 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/jmoiron/sqlx"
 	"github.com/ujent/go-git-app/contract"
 	gitsvc "github.com/ujent/go-git-app/gitSvc"
 )
@@ -17,7 +19,15 @@ type server struct {
 }
 
 func newServer(settings *contract.ServerSettings, user *contract.Credentials, logger *log.Logger) (*server, error) {
-	gitSvc, err := gitsvc.New(user, settings)
+	db, err := sqlx.Connect("mysql", settings.GitConnStr)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer db.Close()
+
+	gitSvc, err := gitsvc.New(user, settings, db)
 	if err != nil {
 		return nil, err
 	}
