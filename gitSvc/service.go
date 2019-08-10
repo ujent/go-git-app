@@ -157,6 +157,7 @@ func (svc *service) Clone(url, repoName string, c *contract.Credentials) error {
 	return nil
 }
 
+// Repositories - returns all locally existing repositories
 func (svc *service) Repositories() ([]string, error) {
 
 	tables := []string{}
@@ -172,6 +173,7 @@ func (svc *service) Repositories() ([]string, error) {
 	return repos, nil
 }
 
+//Branches - returns a list of local branches names
 func (svc *service) Branches() ([]string, error) {
 	iter, err := svc.gitRepo.Branches()
 	if err != nil {
@@ -231,6 +233,7 @@ func (svc *service) Push(remote string, auth *contract.Credentials) error {
 	return svc.gitRepo.Push(opts)
 }
 
+//Commit - commits changes and log history
 func (svc *service) Commit(msg string) error {
 	wt, err := svc.gitRepo.Worktree()
 	if err != nil {
@@ -256,6 +259,7 @@ func (svc *service) Merge(branch string) error {
 	return nil
 }
 
+//Checkout - switches branch to specified commit
 func (svc *service) Checkout(commit string) error {
 	wt, err := svc.gitRepo.Worktree()
 	if err != nil {
@@ -273,7 +277,7 @@ func (svc *service) Checkout(commit string) error {
 	return nil
 }
 
-//CheckoutBranch - switch to existing branch
+//CheckoutBranch - switch to specified existing branch
 func (svc *service) CheckoutBranch(branch string) error {
 	wt, err := svc.gitRepo.Worktree()
 	if err != nil {
@@ -325,6 +329,7 @@ func (svc *service) CreateBranch(branch, commit string) error {
 	return nil
 }
 
+//DeleteBranch - removes specified branch
 func (svc *service) DeleteBranch(branch string) error {
 	ref := plumbing.NewBranchReferenceName(branch)
 
