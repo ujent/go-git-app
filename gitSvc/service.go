@@ -3,6 +3,7 @@ package gitsvc
 import (
 	"errors"
 	"strings"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
@@ -29,7 +30,7 @@ type Service interface {
 	Fetch() error
 	Pull() error
 	Push() error
-	Commit() error
+	Commit(msg string) error
 	Merge(branch string) error
 	Branches() ([]string, error)
 	Checkout(commit string) error
@@ -61,6 +62,7 @@ func New(user *contract.Credentials, s *contract.ServerSettings, db *sqlx.DB) (S
 	return &service{user: user, settings: s, db: db}, nil
 }
 
+//CreateRepository - creates a new repository
 func (svc *service) CreateRepository(name string) error {
 
 	if name == "" {
@@ -88,21 +90,10 @@ func (svc *service) CreateRepository(name string) error {
 	return nil
 }
 
+//OpenRepository - opens an existing repository
 func (svc *service) OpenRepository(name string) error {
 	if name == "" {
 		return errors.New("Repository name cannot be empty")
-	}
-
-	tables := []string{}
-	table := gitPrefix + name
-
-	err := svc.db.Get(&tables, "SELECT table_name FROM information_schema.tables WHERE table_type = 'base table' AND table_name = ?", table)
-	if err != nil {
-		return err
-	}
-
-	if len(tables) == 0 {
-		return svc.CreateRepository(name)
 	}
 
 	fs, err := mysqlfs.New(svc.settings.GitConnStr, filesPrefix+name)
@@ -192,7 +183,24 @@ func (svc *service) Push() error {
 	return nil
 }
 
-func (svc *service) Commit() error {
+func (svc *service) Commit(msg string) error {
+	wt, err := svc.gitRepo.Worktree()
+	if err != nil {
+		return err
+	}
+
+	_, err = wt.Commit(msg, &git.CommitOptions{
+		Author: &object.Signature{
+			Name:  svc.user.Email,
+			Email: svc.user.Email,
+			When:  time.Now(),
+		},
+	})
+
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
