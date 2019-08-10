@@ -2,6 +2,7 @@ package gitsvc
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -27,6 +28,7 @@ type Service interface {
 	CreateRepository(name string) error
 	OpenRepository(name string) error
 	Repositories() ([]string, error)
+	RemoveRepository(name string) error
 	Clone(url, repoName string, auth *contract.Credentials) error
 	Fetch(remote string) error
 	Pull() error
@@ -161,7 +163,7 @@ func (svc *service) Clone(url, repoName string, c *contract.Credentials) error {
 func (svc *service) Repositories() ([]string, error) {
 
 	tables := []string{}
-	svc.db.Select(&tables, "SELECT table_name FROM information_schema.tables WHERE table_type = 'base table' ORDER BY table_name ASC")
+	svc.db.Select(&tables, "SELECT table_name FROM information_schema.tables ORDER BY table_name ASC")
 
 	repos := []string{}
 	for _, t := range tables {
@@ -171,6 +173,22 @@ func (svc *service) Repositories() ([]string, error) {
 	}
 
 	return repos, nil
+}
+
+//RemoveRepository - removes specified repository permanently
+func (svc *service) RemoveRepository(name string) error {
+
+	filesTable := filesPrefix + name
+	gitTable := gitPrefix + name
+
+	tx, err := svc.db.Begin()
+	if err != nil {
+		return err
+	}
+	tx.Exec(fmt.Sprintf("DROP TABLE %s", filesTable))
+	tx.Exec(fmt.Sprintf("DROP TABLE %s", gitTable))
+
+	return tx.Commit()
 }
 
 //Branches - returns a list of local branches names

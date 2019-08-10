@@ -1,12 +1,13 @@
-package gitSvc
+package gitsvc
 
 import (
 	"fmt"
 	"testing"
 
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/jmoiron/sqlx"
 	"github.com/ujent/go-git-app/config"
 	"github.com/ujent/go-git-app/contract"
-	"github.com/ujent/go-git-app/gitsvc"
 )
 
 const userName = "test_user"
@@ -18,17 +19,28 @@ func TestRepositories(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	svc, err := gitsvc.New(&contract.Credentials{Name: userName, Email: userEmail}, s)
+	db, err := sqlx.Connect("mysql", s.GitConnStr)
+
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = svc.CreateRepository("repo_1")
+	defer db.Close()
+
+	svc, err := New(&contract.User{Name: userName, Email: userEmail}, s, db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	r1 := "repo_1"
+	r2 := "repo_2"
+
+	err = svc.CreateRepository(r1)
 	if err != nil {
 		t.Error(err)
 	}
 
-	err = svc.CreateRepository("repo_2")
+	err = svc.CreateRepository(r2)
 	if err != nil {
 		t.Error(err)
 	}
@@ -44,4 +56,14 @@ func TestRepositories(t *testing.T) {
 	}
 
 	fmt.Println(repos)
+
+	err = svc.RemoveRepository(r1)
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = svc.RemoveRepository(r2)
+	if err != nil {
+		t.Error(err)
+	}
 }
