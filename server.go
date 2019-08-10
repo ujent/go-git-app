@@ -18,7 +18,7 @@ type server struct {
 	gitSvc   gitsvc.Service
 }
 
-func newServer(settings *contract.ServerSettings, user *contract.Credentials, logger *log.Logger) (*server, error) {
+func newServer(settings *contract.ServerSettings, user *contract.User, logger *log.Logger) (*server, error) {
 	db, err := sqlx.Connect("mysql", settings.GitConnStr)
 
 	if err != nil {

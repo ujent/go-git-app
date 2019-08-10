@@ -13,6 +13,7 @@ import (
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/src-d/go-git.v4/plumbing/cache"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
+	"gopkg.in/src-d/go-git.v4/plumbing/transport/http"
 	"gopkg.in/src-d/go-git.v4/storage/filesystem"
 )
 
@@ -26,7 +27,7 @@ type Service interface {
 	CreateRepository(name string) error
 	OpenRepository(name string) error
 	Repositories() ([]string, error)
-	//Clone() error
+	Clone(url, repoName string, c *contract.Credentials) error
 	Fetch() error
 	Pull() error
 	Push() error
@@ -37,19 +38,19 @@ type Service interface {
 	CheckoutBranch(branch string) error
 	CreateBranch(branch, commit string) error
 	DeleteBranch(branch string) error
-	Add() error
+	Add(path string) error
 	Log() ([]contract.Commit, error)
 }
 
 type service struct {
-	user     *contract.Credentials
+	user     *contract.User
 	settings *contract.ServerSettings
 	gitRepo  *git.Repository
 	db       *sqlx.DB
 }
 
 //New - create an instance of gitSvc
-func New(user *contract.Credentials, s *contract.ServerSettings, db *sqlx.DB) (Service, error) {
+func New(user *contract.User, s *contract.ServerSettings, db *sqlx.DB) (Service, error) {
 
 	if user.Name == "" {
 		return nil, errors.New("userName cannot be empty")
@@ -109,6 +110,43 @@ func (svc *service) OpenRepository(name string) error {
 	st := filesystem.NewStorage(fs, cache.NewObjectLRUDefault())
 
 	r, err := git.Open(st, gitFs)
+	if err != nil {
+		return err
+	}
+
+	svc.gitRepo = r
+
+	return nil
+}
+
+// Clone the given repository to the given directory
+func (svc *service) Clone(url, repoName string, c *contract.Credentials) error {
+
+	fs, err := mysqlfs.New(svc.settings.GitConnStr, filesPrefix+repoName)
+	if err != nil {
+		return err
+	}
+
+	gitFs, err := mysqlfs.New(svc.settings.GitConnStr, gitPrefix+repoName)
+	if err != nil {
+		return err
+	}
+
+	st := filesystem.NewStorage(fs, cache.NewObjectLRUDefault())
+
+	opts := &git.CloneOptions{
+		URL:               url,
+		RecurseSubmodules: git.DefaultSubmoduleRecursionDepth,
+	}
+
+	if c != nil {
+		opts.Auth = &http.BasicAuth{
+			Username: c.Name,
+			Password: c.Password,
+		}
+	}
+
+	r, err := git.Clone(st, gitFs, opts)
 	if err != nil {
 		return err
 	}
@@ -283,8 +321,15 @@ func (svc *service) DeleteBranch(branch string) error {
 	return svc.gitRepo.Storer.RemoveReference(ref)
 }
 
-func (svc *service) Add() error {
-	return nil
+//Add - adds the file content to the staging area
+func (svc *service) Add(path string) error {
+
+	wt, err := svc.gitRepo.Worktree()
+	if err != nil {
+		return nil
+	}
+
+	return wt.Add(path)
 }
 
 //Log - Gets the HEAD history from HEAD, just like command "git log"
@@ -300,7 +345,7 @@ func (svc *service) Log() ([]contract.Commit, error) {
 
 	err = cIter.ForEach(func(c *object.Commit) error {
 
-		res = append(res, contract.Commit{Author: &contract.Credentials{Name: c.Author.Name, Email: c.Author.Email}, Date: c.Author.When, Message: c.Message, Hash: c.Hash.String()})
+		res = append(res, contract.Commit{Author: &contract.User{Name: c.Author.Name, Email: c.Author.Email}, Date: c.Author.When, Message: c.Message, Hash: c.Hash.String()})
 		return nil
 	})
 

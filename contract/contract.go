@@ -9,15 +9,21 @@ type ServerSettings struct {
 	GitRemote  string
 }
 
-//Credentials -  current user information
-type Credentials struct {
+//User -  current user information
+type User struct {
 	Name  string
 	Email string
 }
 
+//Credentials - user credentials
+type Credentials struct {
+	Name     string
+	Password string
+}
+
 //Commit - base commit information
 type Commit struct {
-	Author  *Credentials
+	Author  *User
 	Hash    string
 	Message string
 	Date    time.Time
