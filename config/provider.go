@@ -10,6 +10,7 @@ import (
 const appServerHostEnv = "APP_SERVER_PORT"
 const gitConnStrEnv = "GIT_CONN_STRING"
 const gitConnStr = "root:secret@/gogit"
+const gitConnStrTest = "root:secret@/gogittest"
 const remoteGitEnv = "REMOTE_GIT_URL"
 
 //Parse - get settings from the env and parse them
@@ -35,5 +36,5 @@ func Parse() (*contract.ServerSettings, error) {
 
 //ParseTest - returns default values for testing usage
 func ParseTest() (*contract.ServerSettings, error) {
-	return &contract.ServerSettings{Port: "4000", GitConnStr: gitConnStr, GitRemote: "http://35.239.165.218:9000"}, nil
+	return &contract.ServerSettings{Port: "4000", GitConnStr: gitConnStrTest, GitRemote: "http://35.239.165.218:9000"}, nil
 }
