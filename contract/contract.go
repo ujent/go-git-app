@@ -1,6 +1,12 @@
 package contract
 
-import "time"
+import (
+	"errors"
+	"time"
+)
+
+//ErrGitRepositoryNotSet - occurs when repository wasn't chosen
+var ErrGitRepositoryNotSet = errors.New("Git repository isn't set")
 
 //ServerSettings - common server settings
 type ServerSettings struct {
@@ -27,4 +33,10 @@ type Commit struct {
 	Hash    string
 	Message string
 	Date    time.Time
+}
+
+//Branch - base information about branch
+type Branch struct {
+	Name string
+	Hash string
 }

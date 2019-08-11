@@ -10,6 +10,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/ujent/go-git-app/contract"
 	"github.com/ujent/go-git-mysql/mysqlfs"
+	"gopkg.in/src-d/go-billy.v4"
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/src-d/go-git.v4/plumbing/cache"
@@ -33,23 +34,31 @@ type Service interface {
 	Fetch(remote string) error
 	Pull() error
 	Push(remote string, auth *contract.Credentials) error
-	Commit(msg string) error
+	Commit(msg string) (string, error)
 	Merge(branch string) error
-	Branches() ([]string, error)
 	Checkout(commit string) error
 	CheckoutBranch(branch string) error
 	CreateBranch(branch, commit string) error
 	//CreateRemoteBranch(branch string) error
-	DeleteBranch(branch string) error
+	RemoveBranch(branch string) error
+	CurrentBranch() (*contract.Branch, error)
+	Branches() ([]string, error)
 	Add(path string) error
 	Log() ([]contract.Commit, error)
+	Filesystem() billy.Filesystem
 }
 
 type service struct {
 	user     *contract.User
 	settings *contract.ServerSettings
-	gitRepo  *git.Repository
+	git      *repository
 	db       *sqlx.DB
+}
+
+type repository struct {
+	name string
+	repo *git.Repository
+	fs   billy.Filesystem
 }
 
 //New - create an instance of gitSvc
@@ -64,6 +73,14 @@ func New(user *contract.User, s *contract.ServerSettings, db *sqlx.DB) (Service,
 	}
 
 	return &service{user: user, settings: s, db: db}, nil
+}
+
+func (svc *service) Filesystem() billy.Filesystem {
+	if svc.git != nil {
+		return svc.git.fs
+	}
+
+	return nil
 }
 
 //CreateRepository - creates a new repository
@@ -85,7 +102,8 @@ func (svc *service) CreateRepository(name string) error {
 
 	st := filesystem.NewStorage(fs, cache.NewObjectLRUDefault())
 	r, err := git.Init(st, gitFs)
-	svc.gitRepo = r
+
+	svc.git = &repository{name: name, fs: gitFs, repo: r}
 
 	if err != nil {
 		return err
@@ -117,7 +135,7 @@ func (svc *service) OpenRepository(name string) error {
 		return err
 	}
 
-	svc.gitRepo = r
+	svc.git = &repository{name: name, fs: gitFs, repo: r}
 
 	return nil
 }
@@ -154,7 +172,7 @@ func (svc *service) Clone(url, repoName string, c *contract.Credentials) error {
 		return err
 	}
 
-	svc.gitRepo = r
+	svc.git = &repository{name: repoName, fs: gitFs, repo: r}
 
 	return nil
 }
@@ -188,30 +206,16 @@ func (svc *service) RemoveRepository(name string) error {
 	tx.Exec(fmt.Sprintf("DROP TABLE %s", filesTable))
 	tx.Exec(fmt.Sprintf("DROP TABLE %s", gitTable))
 
-	return tx.Commit()
-}
-
-//Branches - returns a list of local branches names
-func (svc *service) Branches() ([]string, error) {
-	iter, err := svc.gitRepo.Branches()
+	err = tx.Commit()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	branches := []string{}
-
-	err = iter.ForEach(func(br *plumbing.Reference) error {
-		if !br.Name().IsRemote() {
-			branches = append(branches, br.Name().Short())
-		}
-		return nil
-	})
-
-	if err != nil {
-		return nil, err
+	if svc.git != nil && svc.git.name == name {
+		svc.git = nil
 	}
 
-	return branches, nil
+	return nil
 }
 
 // Fetch fetches references along with the objects necessary to complete
@@ -222,7 +226,11 @@ func (svc *service) Branches() ([]string, error) {
 // no changes to be fetched, or an error.
 func (svc *service) Fetch(remote string) error {
 
-	err := svc.gitRepo.Fetch(&git.FetchOptions{
+	if svc.git == nil {
+		return contract.ErrGitRepositoryNotSet
+	}
+
+	err := svc.git.repo.Fetch(&git.FetchOptions{
 		RemoteName: remote,
 	})
 
@@ -242,23 +250,31 @@ func (svc *service) Pull() error {
 // FetchOptions.RemoteName.
 //Use credentials if needed. Remote also can be empty
 func (svc *service) Push(remote string, auth *contract.Credentials) error {
+	if svc.git == nil {
+		return contract.ErrGitRepositoryNotSet
+	}
+
 	opts := &git.PushOptions{RemoteName: remote}
 
 	if auth != nil {
 		opts.Auth = &http.BasicAuth{Username: auth.Name, Password: auth.Password}
 	}
 
-	return svc.gitRepo.Push(opts)
+	return svc.git.repo.Push(opts)
 }
 
-//Commit - commits changes and log history
-func (svc *service) Commit(msg string) error {
-	wt, err := svc.gitRepo.Worktree()
-	if err != nil {
-		return err
+//Commit - commits changes and returns commit hash
+func (svc *service) Commit(msg string) (string, error) {
+	if svc.git == nil {
+		return "", contract.ErrGitRepositoryNotSet
 	}
 
-	_, err = wt.Commit(msg, &git.CommitOptions{
+	wt, err := svc.git.repo.Worktree()
+	if err != nil {
+		return "", err
+	}
+
+	h, err := wt.Commit(msg, &git.CommitOptions{
 		Author: &object.Signature{
 			Name:  svc.user.Email,
 			Email: svc.user.Email,
@@ -267,10 +283,10 @@ func (svc *service) Commit(msg string) error {
 	})
 
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	return h.String(), nil
 }
 
 func (svc *service) Merge(branch string) error {
@@ -279,7 +295,11 @@ func (svc *service) Merge(branch string) error {
 
 //Checkout - switches branch to specified commit
 func (svc *service) Checkout(commit string) error {
-	wt, err := svc.gitRepo.Worktree()
+	if svc.git == nil {
+		return contract.ErrGitRepositoryNotSet
+	}
+
+	wt, err := svc.git.repo.Worktree()
 	if err != nil {
 		return err
 	}
@@ -295,9 +315,41 @@ func (svc *service) Checkout(commit string) error {
 	return nil
 }
 
-//CheckoutBranch - switch to specified existing branch
+//CheckoutBranch - switch to specified existing branch or creates new branch if it doesn't exist
 func (svc *service) CheckoutBranch(branch string) error {
-	wt, err := svc.gitRepo.Worktree()
+	if branch == "" {
+		return errors.New("Branch name cannot be empty")
+	}
+
+	if svc.git == nil {
+		return contract.ErrGitRepositoryNotSet
+	}
+
+	iter, err := svc.git.repo.Branches()
+	if err != nil {
+		return err
+	}
+
+	var hasBranch bool
+
+	err = iter.ForEach(func(br *plumbing.Reference) error {
+		if br.Name().Short() == branch {
+			hasBranch = true
+			iter.Close()
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
+
+	if !hasBranch {
+		return svc.CreateBranch(branch, "")
+	}
+
+	wt, err := svc.git.repo.Worktree()
 	if err != nil {
 		return err
 	}
@@ -315,7 +367,15 @@ func (svc *service) CheckoutBranch(branch string) error {
 
 //CreateBranch - creates a new branch from specified commit, if commit is empty new branch will be created from current commit
 func (svc *service) CreateBranch(branch, commit string) error {
-	wt, err := svc.gitRepo.Worktree()
+	if branch == "" {
+		return errors.New("Branch name cannot be empty")
+	}
+
+	if svc.git == nil {
+		return contract.ErrGitRepositoryNotSet
+	}
+
+	wt, err := svc.git.repo.Worktree()
 	if err != nil {
 		return err
 	}
@@ -324,7 +384,7 @@ func (svc *service) CreateBranch(branch, commit string) error {
 
 	if commit == "" {
 
-		headRef, err := svc.gitRepo.Head()
+		headRef, err := svc.git.repo.Head()
 		if err != nil {
 			return err
 		}
@@ -347,17 +407,70 @@ func (svc *service) CreateBranch(branch, commit string) error {
 	return nil
 }
 
-//DeleteBranch - removes specified branch
-func (svc *service) DeleteBranch(branch string) error {
+//RemoveBranch - removes specified branch
+func (svc *service) RemoveBranch(branch string) error {
+	if branch == "" {
+		return errors.New("Branch name cannot be empty")
+	}
+
+	if svc.git == nil {
+		return contract.ErrGitRepositoryNotSet
+	}
+
 	ref := plumbing.NewBranchReferenceName(branch)
 
-	return svc.gitRepo.Storer.RemoveReference(ref)
+	return svc.git.repo.Storer.RemoveReference(ref)
+}
+
+//CurrentBranch - returns information where HEAD points now
+func (svc *service) CurrentBranch() (*contract.Branch, error) {
+	if svc.git == nil {
+		return nil, contract.ErrGitRepositoryNotSet
+	}
+
+	headRef, err := svc.git.repo.Head()
+	if err != nil {
+		return nil, err
+	}
+
+	return &contract.Branch{Name: headRef.Name().Short(), Hash: headRef.Hash().String()}, nil
+}
+
+//Branches - returns a list of local branches names
+func (svc *service) Branches() ([]string, error) {
+	if svc.git == nil {
+		return nil, contract.ErrGitRepositoryNotSet
+	}
+
+	iter, err := svc.git.repo.Branches()
+	if err != nil {
+		return nil, err
+	}
+
+	branches := []string{}
+
+	err = iter.ForEach(func(br *plumbing.Reference) error {
+		if !br.Name().IsRemote() {
+			branches = append(branches, br.Name().Short())
+		}
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return branches, nil
 }
 
 //Add - adds the file content to the staging area
 func (svc *service) Add(path string) error {
 
-	wt, err := svc.gitRepo.Worktree()
+	if svc.git == nil {
+		return contract.ErrGitRepositoryNotSet
+	}
+
+	wt, err := svc.git.repo.Worktree()
 	if err != nil {
 		return nil
 	}
@@ -368,12 +481,16 @@ func (svc *service) Add(path string) error {
 //Log - Gets the HEAD history from HEAD, just like command "git log"
 func (svc *service) Log() ([]contract.Commit, error) {
 
-	ref, err := svc.gitRepo.Head()
+	if svc.git == nil {
+		return nil, contract.ErrGitRepositoryNotSet
+	}
+
+	ref, err := svc.git.repo.Head()
 	if err != nil {
 		return nil, err
 	}
 
-	cIter, err := svc.gitRepo.Log(&git.LogOptions{From: ref.Hash()})
+	cIter, err := svc.git.repo.Log(&git.LogOptions{From: ref.Hash()})
 	res := []contract.Commit{}
 
 	err = cIter.ForEach(func(c *object.Commit) error {
