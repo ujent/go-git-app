@@ -785,3 +785,102 @@ func TestCurrentBranch(t *testing.T) {
 		t.Errorf("Wrong branch hash. Must: %s, has: %s\n", h, current.Hash)
 	}
 }
+
+func TestLog(t *testing.T) {
+	s, err := config.ParseTest()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	db, err := sqlx.Connect("mysql", s.GitConnStr)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer db.Close()
+
+	svc, err := New(&contract.User{Name: userName, Email: userEmail}, s, db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	r := "repo_1"
+
+	err = svc.CreateRepository(r)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer svc.RemoveRepository(r)
+
+	fs := svc.Filesystem()
+	if fs == nil {
+		t.Fatal("No filesystem")
+	}
+
+	f, err := fs.Create("README.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.Write([]byte("hello, go-git!"))
+
+	err = svc.Add("README.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	h1, err := svc.Commit("add README")
+	if err != nil {
+		t.Error(err)
+	}
+
+	f, err = fs.Create("Example.txt")
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.Write([]byte("test"))
+
+	err = svc.Add("Example.txt")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	h2, err := svc.Commit("add Example")
+	if err != nil {
+		t.Error(err)
+	}
+
+	log, err := svc.Log()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	must := 2
+
+	if len(log) != must {
+		t.Errorf("Wrong log length. Must: %d, has: %d\n", must, len(log))
+	}
+
+	has1 := false
+	has2 := false
+
+	for _, c := range log {
+		if c.Hash == h1 {
+			has1 = true
+			continue
+		}
+
+		if c.Hash == h2 {
+			has2 = true
+		}
+	}
+
+	if !has1 {
+		t.Error("No first commit in logs")
+	}
+
+	if !has2 {
+		t.Error("No second commit in logs")
+	}
+}

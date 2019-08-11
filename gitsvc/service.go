@@ -127,6 +127,10 @@ func (svc *service) OpenRepository(name string) error {
 		return errors.New("Repository name cannot be empty")
 	}
 
+	if svc.git != nil && svc.git.name == name {
+		return nil
+	}
+
 	fs, err := mysqlfs.New(svc.settings.GitConnStr, filesPrefix+name)
 	if err != nil {
 		return err
