@@ -26,10 +26,11 @@ const gitPrefix = "git_"
 type Service interface {
 	//Remove repository is not supported by go-git
 
+	Repositories() ([]string, error)
 	CreateRepository(name string) error
 	OpenRepository(name string) error
-	Repositories() ([]string, error)
 	RemoveRepository(name string) error
+	CurrentRepository() (name string)
 	Clone(url, repoName string, auth *contract.Credentials) error
 	Fetch(remote string) error
 	Pull() error
@@ -81,6 +82,14 @@ func (svc *service) Filesystem() billy.Filesystem {
 	}
 
 	return nil
+}
+
+func (svc *service) CurrentRepository() (name string) {
+	if svc.git == nil {
+		return ""
+	}
+
+	return svc.git.name
 }
 
 //CreateRepository - creates a new repository
