@@ -289,7 +289,7 @@ func (svc *service) Commit(msg string) (string, error) {
 
 	h, err := wt.Commit(msg, &git.CommitOptions{
 		Author: &object.Signature{
-			Name:  svc.user.Email,
+			Name:  svc.user.Name,
 			Email: svc.user.Email,
 			When:  time.Now(),
 		},

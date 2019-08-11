@@ -884,3 +884,83 @@ func TestLog(t *testing.T) {
 		t.Error("No second commit in logs")
 	}
 }
+
+func TestCommit(t *testing.T) {
+	s, err := config.ParseTest()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	db, err := sqlx.Connect("mysql", s.GitConnStr)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer db.Close()
+
+	svc, err := New(&contract.User{Name: userName, Email: userEmail}, s, db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	r := "repo_1"
+
+	err = svc.CreateRepository(r)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer svc.RemoveRepository(r)
+
+	fs := svc.Filesystem()
+	if fs == nil {
+		t.Fatal("No filesystem")
+	}
+
+	f, err := fs.Create("README.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.Write([]byte("hello, go-git!"))
+
+	err = svc.Add("README.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	msg := "add README"
+	h, err := svc.Commit(msg)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	log, err := svc.Log()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	must := 1
+
+	if len(log) != must {
+		t.Errorf("Wrong log length. Must: %d, has: %d\n", must, len(log))
+	}
+
+	logCommit := log[0]
+
+	if logCommit.Hash != h {
+		t.Errorf("Wrong commit hash. Must: %s, has: %s\n", h, logCommit.Hash)
+	}
+
+	if logCommit.Message != msg {
+		t.Errorf("Wrong commit message. Must: %s, has: %s\n", msg, logCommit.Message)
+	}
+
+	if logCommit.Author.Name != userName {
+		t.Errorf("Wrong commit author name. Must: %s, has: %s\n", userName, logCommit.Author.Name)
+	}
+
+	if logCommit.Author.Email != userEmail {
+		t.Errorf("Wrong commit author email. Must: %s, has: %s\n", userEmail, logCommit.Author.Email)
+	}
+}
