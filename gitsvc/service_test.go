@@ -727,7 +727,8 @@ func TestCheckout(t *testing.T) {
 	}
 }
 
-func TestCurrentBranch(t *testing.T) {
+//test with master
+func TestCurrentBranch1(t *testing.T) {
 	s, err := config.ParseTest()
 	if err != nil {
 		t.Fatal(err)
@@ -783,6 +784,103 @@ func TestCurrentBranch(t *testing.T) {
 
 	if current.Hash != h {
 		t.Errorf("Wrong branch hash. Must: %s, has: %s\n", h, current.Hash)
+	}
+
+	must := "master"
+
+	if current.Name != must {
+		t.Errorf("Wrong branch name. Must: %s, has: %s\n", must, current.Name)
+
+	}
+}
+
+//test with not master branch
+func TestCurrentBranch2(t *testing.T) {
+	s, err := config.ParseTest()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	db, err := sqlx.Connect("mysql", s.GitConnStr)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer db.Close()
+
+	svc, err := New(&contract.User{Name: userName, Email: userEmail}, s, db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	r := "repo_1"
+
+	err = svc.CreateRepository(r)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer svc.RemoveRepository(r)
+
+	fs := svc.Filesystem()
+	if fs == nil {
+		t.Fatal("No filesystem")
+	}
+
+	f, err := fs.Create("README.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.Write([]byte("hello, go-git!"))
+
+	err = svc.Add("README.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	h, err := svc.Commit("add README")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	br := "topic"
+
+	err = svc.CreateBranch(br, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	f, err = fs.Create("Example.txt")
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.Write([]byte("test, go-git!"))
+
+	err = svc.Add("Example.txt")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	h, err = svc.Commit("add example")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	current, err := svc.CurrentBranch()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if current.Hash != h {
+		t.Errorf("Wrong branch hash. Must: %s, has: %s\n", h, current.Hash)
+	}
+
+	must := br
+
+	if current.Name != must {
+		t.Errorf("Wrong branch name. Must: %s, has: %s\n", must, current.Name)
+
 	}
 }
 

@@ -24,8 +24,6 @@ const gitPrefix = "git_"
 
 //Service - provides go-git functionality
 type Service interface {
-	//Remove repository is not supported by go-git
-
 	Repositories() ([]string, error)
 	CreateRepository(name string) error
 	OpenRepository(name string) error
