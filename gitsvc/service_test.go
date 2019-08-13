@@ -8,6 +8,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/ujent/go-git-app/config"
 	"github.com/ujent/go-git-app/contract"
+	"gopkg.in/src-d/go-git.v4"
 )
 
 const userName = "test_user"
@@ -261,9 +262,9 @@ func TestCreateBranch(t *testing.T) {
 
 	defer svc.RemoveRepository(r)
 
-	fs := svc.Filesystem()
-	if fs == nil {
-		t.Fatal("No filesystem")
+	fs, err := svc.Filesystem()
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	f, err := fs.Create("README.md")
@@ -340,9 +341,9 @@ func TestCheckoutBranch1(t *testing.T) {
 
 	defer svc.RemoveRepository(r)
 
-	fs := svc.Filesystem()
-	if fs == nil {
-		t.Fatal("No filesystem")
+	fs, err := svc.Filesystem()
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	f, err := fs.Create("README.md")
@@ -433,9 +434,9 @@ func TestCheckoutBranch2(t *testing.T) {
 
 	defer svc.RemoveRepository(r)
 
-	fs := svc.Filesystem()
-	if fs == nil {
-		t.Fatal("No filesystem")
+	fs, err := svc.Filesystem()
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	f, err := fs.Create("README.md")
@@ -503,9 +504,9 @@ func TestRemoveBranch(t *testing.T) {
 
 	defer svc.RemoveRepository(r)
 
-	fs := svc.Filesystem()
-	if fs == nil {
-		t.Fatal("No filesystem")
+	fs, err := svc.Filesystem()
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	f, err := fs.Create("README.md")
@@ -605,9 +606,9 @@ func TestBranches(t *testing.T) {
 
 	defer svc.RemoveRepository(r)
 
-	fs := svc.Filesystem()
-	if fs == nil {
-		t.Fatal("No filesystem")
+	fs, err := svc.Filesystem()
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	f, err := fs.Create("README.md")
@@ -675,9 +676,9 @@ func TestCheckout(t *testing.T) {
 
 	defer svc.RemoveRepository(r)
 
-	fs := svc.Filesystem()
-	if fs == nil {
-		t.Fatal("No filesystem")
+	fs, err := svc.Filesystem()
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	f, err := fs.Create("README.md")
@@ -756,9 +757,9 @@ func TestCurrentBranch1(t *testing.T) {
 
 	defer svc.RemoveRepository(r)
 
-	fs := svc.Filesystem()
-	if fs == nil {
-		t.Fatal("No filesystem")
+	fs, err := svc.Filesystem()
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	f, err := fs.Create("README.md")
@@ -823,9 +824,9 @@ func TestCurrentBranch2(t *testing.T) {
 
 	defer svc.RemoveRepository(r)
 
-	fs := svc.Filesystem()
-	if fs == nil {
-		t.Fatal("No filesystem")
+	fs, err := svc.Filesystem()
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	f, err := fs.Create("README.md")
@@ -912,9 +913,9 @@ func TestLog(t *testing.T) {
 
 	defer svc.RemoveRepository(r)
 
-	fs := svc.Filesystem()
-	if fs == nil {
-		t.Fatal("No filesystem")
+	fs, err := svc.Filesystem()
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	f, err := fs.Create("README.md")
@@ -1011,9 +1012,9 @@ func TestCommit(t *testing.T) {
 
 	defer svc.RemoveRepository(r)
 
-	fs := svc.Filesystem()
-	if fs == nil {
-		t.Fatal("No filesystem")
+	fs, err := svc.Filesystem()
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	f, err := fs.Create("README.md")
@@ -1060,5 +1061,236 @@ func TestCommit(t *testing.T) {
 
 	if logCommit.Author.Email != userEmail {
 		t.Errorf("Wrong commit author email. Must: %s, has: %s\n", userEmail, logCommit.Author.Email)
+	}
+}
+
+func TestCreateRemote(t *testing.T) {
+	s, err := config.ParseTest()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	db, err := sqlx.Connect("mysql", s.GitConnStr)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer db.Close()
+
+	svc, err := New(&contract.User{Name: userName, Email: userEmail}, s, db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	r := "repo_1"
+
+	err = svc.CreateRepository(r)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer svc.RemoveRepository(r)
+
+	url := "https://github.com/ujent/go-git-mysql"
+	err = svc.CreateRemote(url, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rName := "origin"
+	rem, err := svc.Remote(rName)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(rem.Config().URLs) != 1 {
+		t.Fatalf("Wrong remote number. Must: 1, has: %d\n", len(rem.Config().URLs))
+	}
+
+	if rem.Config().URLs[0] != url {
+		t.Fatalf("Wrong remote url. Must: %s, has: %s\n", url, rem.Config().URLs[0])
+	}
+
+	err = rem.Fetch(&git.FetchOptions{
+		RemoteName: rName,
+	})
+
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestRemoveRemote(t *testing.T) {
+	s, err := config.ParseTest()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	db, err := sqlx.Connect("mysql", s.GitConnStr)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer db.Close()
+
+	svc, err := New(&contract.User{Name: userName, Email: userEmail}, s, db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	r := "repo_1"
+
+	err = svc.CreateRepository(r)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer svc.RemoveRepository(r)
+
+	url := "https://github.com/ujent/go-git-mysql"
+	err = svc.CreateRemote(url, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rName := "origin"
+	rem, err := svc.Remote(rName)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(rem.Config().URLs) != 1 {
+		t.Fatalf("Wrong remote number. Must: 1, has: %d\n", len(rem.Config().URLs))
+	}
+
+	if rem.Config().URLs[0] != url {
+		t.Fatalf("Wrong remote url. Must: %s, has: %s\n", url, rem.Config().URLs[0])
+	}
+
+	err = svc.RemoveRemote(rName)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rem, err = svc.Remote(rName)
+	if err != nil {
+		if err != git.ErrRemoteNotFound {
+			t.Error(err)
+		}
+	} else {
+		t.Error("Remote wasn't removed")
+	}
+}
+
+func TestRemote(t *testing.T) {
+	s, err := config.ParseTest()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	db, err := sqlx.Connect("mysql", s.GitConnStr)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer db.Close()
+
+	svc, err := New(&contract.User{Name: userName, Email: userEmail}, s, db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	r := "repo_1"
+
+	err = svc.CreateRepository(r)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer svc.RemoveRepository(r)
+
+	url := "https://github.com/ujent/go-git-mysql"
+	err = svc.CreateRemote(url, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rName := "origin"
+	rem, err := svc.Remote(rName)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(rem.Config().URLs) != 1 {
+		t.Fatalf("Wrong remote number. Must: 1, has: %d\n", len(rem.Config().URLs))
+	}
+
+	if rem.Config().URLs[0] != url {
+		t.Fatalf("Wrong remote url. Must: %s, has: %s\n", url, rem.Config().URLs[0])
+	}
+}
+
+func TestRemotes(t *testing.T) {
+	s, err := config.ParseTest()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	db, err := sqlx.Connect("mysql", s.GitConnStr)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer db.Close()
+
+	svc, err := New(&contract.User{Name: userName, Email: userEmail}, s, db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	repo := "repo_1"
+
+	err = svc.CreateRepository(repo)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer svc.RemoveRepository(repo)
+
+	url := "https://github.com/ujent/go-git-mysql"
+	err = svc.CreateRemote(url, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rName := "origin"
+	remotes, err := svc.Remotes()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var rem *git.Remote
+
+	for _, r := range remotes {
+		if r.Config().Name == rName {
+			rem = r
+			break
+		}
+	}
+
+	if rem == nil {
+		t.Fatal("Remote wasn't found")
+	}
+
+	if len(rem.Config().URLs) != 1 {
+		t.Fatalf("Wrong remote number. Must: 1, has: %d\n", len(rem.Config().URLs))
+	}
+
+	if rem.Config().URLs[0] != url {
+		t.Fatalf("Wrong remote url. Must: %s, has: %s\n", url, rem.Config().URLs[0])
 	}
 }
