@@ -15,6 +15,7 @@ import (
 	"github.com/ujent/go-git-mysql/mysqlfs"
 	"gopkg.in/src-d/go-billy.v4"
 	"gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/config"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/src-d/go-git.v4/plumbing/cache"
 	"gopkg.in/src-d/go-git.v4/plumbing/format/index"
@@ -47,13 +48,14 @@ type Service interface {
 	Checkout(commit string) error
 	CheckoutBranch(branch string) error
 	CreateBranch(branch, commit string) error
-	//CreateRemoteBranch(branch string) error
 	RemoveBranch(branch string) error
 	CurrentBranch() (*contract.Branch, error)
 	Branches() ([]string, error)
 	Add(path string) error
 	Log() ([]contract.Commit, error)
 	Filesystem() billy.Filesystem
+	CreateRemote(url, name string) error
+	RemoveRemote(name string) error
 }
 
 type service struct {
@@ -680,4 +682,43 @@ func (svc *service) Log() ([]contract.Commit, error) {
 	}
 
 	return res, nil
+}
+
+//CreateRemote - creates a new remote, if name isn't specified it use "origin" by default
+func (svc *service) CreateRemote(url, name string) error {
+	if svc.git == nil {
+		return contract.ErrGitRepositoryNotSet
+	}
+
+	if url == "" {
+		return errors.New("Remote url cannot be empty")
+	}
+
+	if name == "" {
+		name = "origin"
+	}
+
+	_, err := svc.git.repo.CreateRemote(&config.RemoteConfig{
+		Name: name,
+		URLs: []string{url},
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+//RemoveRemote - delete the remote and it's config from the repository
+func (svc *service) RemoveRemote(name string) error {
+	if svc.git == nil {
+		return contract.ErrGitRepositoryNotSet
+	}
+
+	if name == "" {
+		return errors.New("Remote name cannot be empty")
+	}
+
+	return svc.git.repo.DeleteRemote(name)
 }
