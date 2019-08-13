@@ -3,6 +3,7 @@ package gitsvc
 import (
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/src-d/go-git.v4/plumbing/cache"
+	"gopkg.in/src-d/go-git.v4/plumbing/format/index"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/http"
 	"gopkg.in/src-d/go-git.v4/storage/filesystem"
@@ -35,6 +37,11 @@ type Service interface {
 	Push(remote string, auth *contract.Credentials) error
 	Commit(msg string) (string, error)
 	Merge(branch string) error
+	MergeMsgShort() (string, error)
+	MergeMsgFull() (string, error)
+	ConflictFileList() ([]string, error)
+	ConflictResultFile(path string) (billy.File, error)
+	ConflictFiles(path string) ([]contract.MergeFile, error)
 	Checkout(commit string) error
 	CheckoutBranch(branch string) error
 	CreateBranch(branch, commit string) error
@@ -252,14 +259,27 @@ func (svc *service) Fetch(remote string) error {
 	return nil
 }
 
+// Pull incorporates changes from a remote repository into the current branch.
+// Returns nil if the operation is successful, NoErrAlreadyUpToDate if there are
+// no changes to be fetched, or an error.
 func (svc *service) Pull() error {
-	return nil
+
+	if svc.git == nil {
+		return contract.ErrGitRepositoryNotSet
+	}
+
+	w, err := svc.git.repo.Worktree()
+	if err != nil {
+		return err
+	}
+
+	return w.Pull(&git.PullOptions{RemoteName: "origin"})
 }
 
-//Push performs a push to the remote. Returns NoErrAlreadyUpToDate if
+// Push performs a push to the remote. Returns NoErrAlreadyUpToDate if
 // the remote was already up-to-date, from the remote named as
 // FetchOptions.RemoteName.
-//Use credentials if needed. Remote also can be empty
+// Use credentials if needed. Remote also can be empty
 func (svc *service) Push(remote string, auth *contract.Credentials) error {
 	if svc.git == nil {
 		return contract.ErrGitRepositoryNotSet
@@ -300,8 +320,146 @@ func (svc *service) Commit(msg string) (string, error) {
 	return h.String(), nil
 }
 
+//Merge - analog of git merge command
 func (svc *service) Merge(branch string) error {
-	return nil
+	if branch == "" {
+		return errors.New("Branch name cannot be empty")
+	}
+
+	if svc.git == nil {
+		return contract.ErrGitRepositoryNotSet
+	}
+
+	w, err := svc.git.repo.Worktree()
+	if err != nil {
+		return err
+	}
+
+	return w.Merge(branch)
+}
+
+//MergeMsgShort - returns MERGE_MSG file content  with trimming strings which begin from "#"
+func (svc *service) MergeMsgShort() (string, error) {
+	if svc.git == nil {
+		return "", contract.ErrGitRepositoryNotSet
+	}
+
+	msg, err := svc.git.repo.Storer.MergeMsg()
+	if err != nil {
+		return "", err
+	}
+
+	return msg, nil
+}
+
+//MergeMsgFull - returns MERGE_MSG file content  without trimming strings which begin from "#"
+func (svc *service) MergeMsgFull() (string, error) {
+	if svc.git == nil {
+		return "", contract.ErrGitRepositoryNotSet
+	}
+
+	msg, err := svc.git.repo.Storer.MergeMsgFileContent()
+	if err != nil {
+		return "", err
+	}
+
+	return msg, nil
+}
+
+//ConflictFileList - returns pathes of files with conflicts
+func (svc *service) ConflictFileList() ([]string, error) {
+	if svc.git == nil {
+		return nil, contract.ErrGitRepositoryNotSet
+	}
+
+	w, err := svc.git.repo.Worktree()
+	if err != nil {
+		return nil, err
+	}
+
+	withConflicts, err := w.ConflictEntries()
+	if err != nil {
+		return nil, err
+	}
+
+	pathes := []string{}
+	for path := range withConflicts {
+		pathes = append(pathes, path)
+	}
+
+	return pathes, nil
+}
+
+//ConflictResultFile - returns file with unresolved conflicts
+func (svc *service) ConflictResultFile(path string) (billy.File, error) {
+	if svc.git == nil {
+		return nil, contract.ErrGitRepositoryNotSet
+	}
+
+	w, err := svc.git.repo.Worktree()
+	if err != nil {
+		return nil, err
+	}
+
+	f, err := w.Filesystem.OpenFile(path, os.O_RDWR, 0666)
+	if err != nil {
+		return nil, err
+	}
+
+	return f, nil
+}
+
+//ConflictFiles - returns base, ours or theirs files by path of conflict file
+func (svc *service) ConflictFiles(path string) ([]contract.MergeFile, error) {
+	if svc.git == nil {
+		return nil, contract.ErrGitRepositoryNotSet
+	}
+
+	w, err := svc.git.repo.Worktree()
+	if err != nil {
+		return nil, err
+	}
+
+	withConflicts, err := w.ConflictEntries()
+	if err != nil {
+		return nil, err
+	}
+
+	res := []contract.MergeFile{}
+	for p, entries := range withConflicts {
+
+		if path == p {
+			for _, e := range entries {
+				//read base, ours or theirs files
+				f, err := w.ReadFileByStage(path, e.Stage)
+				if err != nil {
+					return nil, err
+				}
+
+				res = append(res, contract.MergeFile{Path: p, Stage: svc.toFileStage(e.Stage), Reader: f})
+			}
+
+			break
+		}
+
+	}
+
+	return res, nil
+}
+
+func (svc *service) toFileStage(st index.Stage) contract.FileStage {
+	switch st {
+	case index.Merged:
+		return contract.Merged
+	case index.AncestorMode:
+		return contract.AncestorMode
+	case index.OurMode:
+		return contract.OurMode
+	case index.TheirMode:
+		return contract.TheirMode
+	default:
+		return contract.Unexpected
+	}
 }
 
 //Checkout - switches branch to specified commit

@@ -10,6 +10,8 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/ujent/go-git-app/contract"
 	"github.com/ujent/go-git-app/gitsvc"
+	"gopkg.in/src-d/go-billy.v4"
+	"gopkg.in/src-d/go-git.v4"
 )
 
 type server struct {
@@ -56,4 +58,80 @@ func (s *server) Start() error {
 	//router.HandleFunc(, s.)
 
 	return nil
+}
+
+func (s *server) handleMergeCommit(msg string) error {
+	_, err := s.gitSvc.Commit(msg)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *server) handleConflictFiles(path string) ([]contract.MergeFile, error) {
+	res, err := s.gitSvc.ConflictFiles(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (s *server) handleConflictResultFile(path string) (billy.File, error) {
+	f, err := s.gitSvc.ConflictResultFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return f, nil
+}
+
+func (s *server) handleMerge(branch string) (string, error) {
+	err := s.gitSvc.Merge(branch)
+
+	if err != nil {
+
+		switch err {
+		case git.ErrHasUncommittedFiles:
+			{
+				//ErrHasUncommittedFiles occurs when there are any unstaged or staged files before merge
+				return "", err
+			}
+		case git.ErrMergeCommitNeeded:
+			{
+				msg, err := s.gitSvc.MergeMsgShort()
+				if err != nil {
+					return "", err
+				}
+
+				return msg, nil
+			}
+		case git.ErrMergeWithConflicts:
+			{
+				//ToDo RA - maybe write to error instead of Stdout?
+
+				msg, err := s.gitSvc.MergeMsgFull()
+				if err != nil {
+					return "", err
+				}
+
+				//ToDo RA - write to Response info about conflicts
+
+				//conflictFiles := s.svc.ConflictFileList()
+				return msg, nil
+
+			}
+		default:
+			{
+				return "", err
+			}
+		}
+
+	} else {
+		//if there is no error it means that it was a fastforward merge
+
+		//ToDo RA - write that all is OK or that it was successful ff merge
+		return "", nil
+	}
 }

@@ -2,6 +2,7 @@ package contract
 
 import (
 	"errors"
+	"io"
 	"time"
 )
 
@@ -39,4 +40,27 @@ type Commit struct {
 type Branch struct {
 	Name string
 	Hash string
+}
+
+// FileStage during merge
+type FileStage int
+
+const (
+	//Unexpected - is unexpected index.Stage
+	Unexpected FileStage = -1
+	// Merged is the default stage, fully merged
+	Merged FileStage = 0
+	// AncestorMode is the base revision
+	AncestorMode FileStage = 1
+	// OurMode is the first tree revision, ours
+	OurMode FileStage = 2
+	// TheirMode is the second tree revision, theirs
+	TheirMode FileStage = 3
+)
+
+//MergeFile - file during merge
+type MergeFile struct {
+	Path   string
+	Stage  FileStage
+	Reader io.Reader
 }
