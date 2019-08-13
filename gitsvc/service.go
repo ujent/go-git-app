@@ -29,6 +29,8 @@ const gitPrefix = "git_"
 
 //Service - provides go-git functionality
 type Service interface {
+	Filesystem() (billy.Filesystem, error)
+	FilesList() ([]string, error)
 	Repositories() ([]string, error)
 	CreateRepository(name string) error
 	OpenRepository(name string) error
@@ -53,9 +55,10 @@ type Service interface {
 	Branches() ([]string, error)
 	Add(path string) error
 	Log() ([]contract.Commit, error)
-	Filesystem() billy.Filesystem
 	CreateRemote(url, name string) error
 	RemoveRemote(name string) error
+	Remotes() ([]*git.Remote, error)
+	Remote(name string) (*git.Remote, error)
 }
 
 type service struct {
@@ -85,14 +88,43 @@ func New(user *contract.User, s *contract.ServerSettings, db *sqlx.DB) (Service,
 	return &service{user: user, settings: s, db: db}, nil
 }
 
-func (svc *service) Filesystem() billy.Filesystem {
-	if svc.git != nil {
-		return svc.git.fs
+//Filesystem returns fs of current repository
+func (svc *service) Filesystem() (billy.Filesystem, error) {
+	if svc.git == nil {
+		return nil, contract.ErrGitRepositoryNotSet
 	}
 
-	return nil
+	return svc.git.fs, nil
+
 }
 
+//FilesList - returns only files in Merged mode, conflict files are excluded
+func (svc *service) FilesList() ([]string, error) {
+	if svc.git == nil {
+		return nil, contract.ErrGitRepositoryNotSet
+	}
+
+	w, err := svc.git.repo.Worktree()
+	if err != nil {
+		return nil, err
+	}
+
+	idx, err := w.Index()
+	if err != nil {
+		return nil, err
+	}
+
+	res := []string{}
+	for _, e := range idx.Entries {
+		if e.Stage == index.Merged {
+			res = append(res, e.Name)
+		}
+	}
+
+	return res, nil
+}
+
+//CurrentRepository returns current repository name
 func (svc *service) CurrentRepository() (name string) {
 	if svc.git == nil {
 		return ""
@@ -686,12 +718,12 @@ func (svc *service) Log() ([]contract.Commit, error) {
 
 //CreateRemote - creates a new remote, if name isn't specified it use "origin" by default
 func (svc *service) CreateRemote(url, name string) error {
-	if svc.git == nil {
-		return contract.ErrGitRepositoryNotSet
-	}
-
 	if url == "" {
 		return errors.New("Remote url cannot be empty")
+	}
+
+	if svc.git == nil {
+		return contract.ErrGitRepositoryNotSet
 	}
 
 	if name == "" {
@@ -712,13 +744,45 @@ func (svc *service) CreateRemote(url, name string) error {
 
 //RemoveRemote - delete the remote and it's config from the repository
 func (svc *service) RemoveRemote(name string) error {
-	if svc.git == nil {
-		return contract.ErrGitRepositoryNotSet
-	}
-
 	if name == "" {
 		return errors.New("Remote name cannot be empty")
 	}
 
+	if svc.git == nil {
+		return contract.ErrGitRepositoryNotSet
+	}
+
 	return svc.git.repo.DeleteRemote(name)
+}
+
+//Remotes - returns a list with all remotes
+func (svc *service) Remotes() ([]*git.Remote, error) {
+	if svc.git == nil {
+		return nil, contract.ErrGitRepositoryNotSet
+	}
+
+	remotes, err := svc.git.repo.Remotes()
+	if err != nil {
+		return nil, err
+	}
+
+	return remotes, nil
+}
+
+//Remote returns a remote if exists or git.ErrRemoteNotFound
+func (svc *service) Remote(name string) (*git.Remote, error) {
+	if name == "" {
+		return nil, errors.New("Remote name cannot be empty")
+	}
+
+	if svc.git == nil {
+		return nil, contract.ErrGitRepositoryNotSet
+	}
+
+	r, err := svc.git.repo.Remote(name)
+	if err != nil {
+		return nil, err
+	}
+
+	return r, nil
 }
