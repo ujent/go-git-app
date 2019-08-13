@@ -2,7 +2,6 @@ package contract
 
 import (
 	"errors"
-	"io"
 	"time"
 )
 
@@ -60,7 +59,7 @@ const (
 
 //MergeFile - file during merge
 type MergeFile struct {
-	Path   string
-	Stage  FileStage
-	Reader io.Reader
+	Path    string
+	Stage   FileStage
+	Content string
 }

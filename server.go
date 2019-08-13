@@ -1,6 +1,8 @@
 package main
 
 import (
+	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -10,7 +12,6 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/ujent/go-git-app/contract"
 	"github.com/ujent/go-git-app/gitsvc"
-	"gopkg.in/src-d/go-billy.v4"
 	"gopkg.in/src-d/go-git.v4"
 )
 
@@ -78,13 +79,18 @@ func (s *server) handleConflictFiles(path string) ([]contract.MergeFile, error) 
 	return res, nil
 }
 
-func (s *server) handleConflictResultFile(path string) (billy.File, error) {
+func (s *server) handleConflictResultFile(path string) (string, error) {
 	f, err := s.gitSvc.ConflictResultFile(path)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	return f, nil
+	bytes, err := ioutil.ReadAll(f)
+	if err != nil && err != io.EOF {
+		return "", err
+	}
+
+	return string(bytes), nil
 }
 
 func (s *server) handleMerge(branch string) (string, error) {
