@@ -13,6 +13,67 @@ import (
 
 const userName = "test_user"
 const userEmail = "test_user@gmail.com"
+const remote = "http://35.239.165.218:9000/gitea/testrepo"
+
+func TestPush(t *testing.T) {
+	s, err := config.ParseTest()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	db, err := sqlx.Connect("mysql", s.GitConnStr)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer db.Close()
+
+	svc, err := New(&contract.User{Name: userName, Email: userEmail}, s, db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	r := "repo_1"
+
+	err = svc.CreateRepository(r)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer svc.RemoveRepository(r)
+
+	fs, err := svc.Filesystem()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	f, err := fs.Create("README.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.Write([]byte("hello, go-git!"))
+
+	err = svc.Add("README.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = svc.Commit("add README")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = svc.CreateRemote(remote, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = svc.Push("", &contract.Credentials{Name: "gitea", Password: "gitea"})
+	if err != nil {
+		t.Error(err)
+	}
+}
 
 func TestRepositories(t *testing.T) {
 	s, err := config.ParseTest()
@@ -1093,7 +1154,7 @@ func TestCreateRemote(t *testing.T) {
 	defer svc.RemoveRepository(r)
 
 	url := "https://github.com/ujent/go-git-mysql"
-	err = svc.CreateRemote(url, "")
+	_, err = svc.CreateRemote(url, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1150,7 +1211,7 @@ func TestRemoveRemote(t *testing.T) {
 	defer svc.RemoveRepository(r)
 
 	url := "https://github.com/ujent/go-git-mysql"
-	err = svc.CreateRemote(url, "")
+	_, err = svc.CreateRemote(url, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1213,7 +1274,7 @@ func TestRemote(t *testing.T) {
 	defer svc.RemoveRepository(r)
 
 	url := "https://github.com/ujent/go-git-mysql"
-	err = svc.CreateRemote(url, "")
+	_, err = svc.CreateRemote(url, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1262,7 +1323,7 @@ func TestRemotes(t *testing.T) {
 	defer svc.RemoveRepository(repo)
 
 	url := "https://github.com/ujent/go-git-mysql"
-	err = svc.CreateRemote(url, "")
+	_, err = svc.CreateRemote(url, "")
 	if err != nil {
 		t.Fatal(err)
 	}
