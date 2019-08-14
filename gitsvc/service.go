@@ -27,35 +27,105 @@ const gitPrefix = "git_"
 
 //Service - provides go-git functionality
 type Service interface {
+	//Filesystem returns fs of current repository
 	Filesystem() (billy.Filesystem, error)
+
+	//FilesList - returns only files in Merged mode, conflict files are excluded
 	FilesList() ([]string, error)
+
+	// Repositories - returns all locally existing repositories
 	Repositories() ([]string, error)
+
+	//CreateRepository - creates a new repository
 	CreateRepository(name string) error
+
+	//OpenRepository - opens an existing repository
 	OpenRepository(name string) error
+
+	//RemoveRepository - removes specified repository permanently
 	RemoveRepository(name string) error
+
+	//CurrentRepository returns current repository name
 	CurrentRepository() (name string)
+
+	// Clone the given repository to the given directory
 	Clone(url, repoName string, auth *contract.Credentials) error
+
+	// Fetch fetches references along with the objects necessary to complete
+	// their histories, from the remote named as FetchOptions.RemoteName.
+	// Remote can be empty (use "origin" by default)
+	//
+	// Returns nil if the operation is successful, NoErrAlreadyUpToDate if there are
+	// no changes to be fetched, or an error.
 	Fetch(remote string) error
+
+	// Pull incorporates changes from a remote repository into the current branch.
+	// Returns nil if the operation is successful, NoErrAlreadyUpToDate if there are
+	// no changes to be fetched, or an error.
 	Pull() error
+
+	// Push performs a push to the remote. Returns NoErrAlreadyUpToDate if
+	// the remote was already up-to-date, from the remote named as
+	// FetchOptions.RemoteName.
+	// If `remote` parameter is empty, use "origin" by default
+	// Use credentials if needed. Remote also can be empty
 	Push(remote string, auth *contract.Credentials) error
+
+	//Commit - commits changes and returns commit hash
 	Commit(msg string) (string, error)
+
+	//Merge - analog of git merge command
 	Merge(branch string) error
+
+	//MergeMsgShort - returns MERGE_MSG file content  with trimming strings which begin from "#"
 	MergeMsgShort() (string, error)
+
+	//MergeMsgFull - returns MERGE_MSG file content  without trimming strings which begin from "#"
 	MergeMsgFull() (string, error)
+
+	//ConflictFileList - returns pathes of files with conflicts
 	ConflictFileList() ([]string, error)
+
+	//ConflictResultFile - returns file with unresolved conflicts
 	ConflictResultFile(path string) (billy.File, error)
+
+	//ConflictFiles - returns base, ours or theirs files by path of conflict file
 	ConflictFiles(path string) ([]contract.MergeFile, error)
+
+	//Checkout - switches branch to specified commit
 	Checkout(commit string) error
+
+	//CheckoutBranch - switch to specified existing branch or creates new branch if it doesn't exist
 	CheckoutBranch(branch string) error
+
+	//CreateBranch - creates a new branch from specified commit, if commit is empty new branch will be created from current commit
 	CreateBranch(branch, commit string) error
+
+	//RemoveBranch - removes specified branch
 	RemoveBranch(branch string) error
+
+	//CurrentBranch - returns information where HEAD points now
 	CurrentBranch() (*contract.Branch, error)
+
+	//Branches - returns a list of local branches names
 	Branches() ([]string, error)
+
+	//Add - adds the file content to the staging area
 	Add(path string) error
+
+	//Log - Gets the HEAD history from HEAD, just like command "git log"
 	Log() ([]contract.Commit, error)
-	CreateRemote(url, name string) error
+
+	//CreateRemote - creates a new remote, if name isn't specified it use "origin" by default
+	CreateRemote(url, name string) (*git.Remote, error)
+
+	//RemoveRemote - delete the remote and it's config from the repository
 	RemoveRemote(name string) error
+
+	//Remotes - returns a list with all remotes
 	Remotes() ([]*git.Remote, error)
+
+	//Remote returns a remote if exists or git.ErrRemoteNotFound
 	Remote(name string) (*git.Remote, error)
 }
 
@@ -313,10 +383,15 @@ func (svc *service) Pull() error {
 // Push performs a push to the remote. Returns NoErrAlreadyUpToDate if
 // the remote was already up-to-date, from the remote named as
 // FetchOptions.RemoteName.
+// If `remote` parameter is empty, use "origin" by default
 // Use credentials if needed. Remote also can be empty
 func (svc *service) Push(remote string, auth *contract.Credentials) error {
 	if svc.git == nil {
 		return contract.ErrGitRepositoryNotSet
+	}
+
+	if remote == "" {
+		remote = "origin"
 	}
 
 	opts := &git.PushOptions{RemoteName: remote}
@@ -710,29 +785,29 @@ func (svc *service) Log() ([]contract.Commit, error) {
 }
 
 //CreateRemote - creates a new remote, if name isn't specified it use "origin" by default
-func (svc *service) CreateRemote(url, name string) error {
+func (svc *service) CreateRemote(url, name string) (*git.Remote, error) {
 	if url == "" {
-		return errors.New("Remote url cannot be empty")
+		return nil, errors.New("Remote url cannot be empty")
 	}
 
 	if svc.git == nil {
-		return contract.ErrGitRepositoryNotSet
+		return nil, contract.ErrGitRepositoryNotSet
 	}
 
 	if name == "" {
 		name = "origin"
 	}
 
-	_, err := svc.git.repo.CreateRemote(&config.RemoteConfig{
+	r, err := svc.git.repo.CreateRemote(&config.RemoteConfig{
 		Name: name,
 		URLs: []string{url},
 	})
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return r, nil
 }
 
 //RemoveRemote - delete the remote and it's config from the repository
