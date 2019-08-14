@@ -3,8 +3,6 @@ package gitsvc
 import (
 	"errors"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"os"
 	"strings"
 	"time"
@@ -472,12 +470,7 @@ func (svc *service) ConflictFiles(path string) ([]contract.MergeFile, error) {
 					return nil, err
 				}
 
-				bytes, err := ioutil.ReadAll(f)
-				if err != nil && err != io.EOF {
-					return nil, err
-				}
-
-				res = append(res, contract.MergeFile{Path: p, Stage: svc.toFileStage(e.Stage), Content: string(bytes)})
+				res = append(res, contract.MergeFile{Path: p, Stage: svc.toFileStage(e.Stage), Reader: f})
 			}
 
 			break
