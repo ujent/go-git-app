@@ -43,6 +43,17 @@ func TestPush(t *testing.T) {
 
 	defer svc.RemoveRepository(r)
 
+	_, err = svc.CreateRemote(remote, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cr := &contract.Credentials{Name: "gitea@gitea.com", Password: "secret123"}
+	err = svc.Pull("", cr)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	fs, err := svc.Filesystem()
 	if err != nil {
 		t.Fatal(err)
@@ -52,7 +63,7 @@ func TestPush(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	f.Write([]byte("hello, go-git!"))
+	f.Write([]byte("Change hello, go-git!"))
 
 	err = svc.Add("README.md")
 	if err != nil {
@@ -64,12 +75,7 @@ func TestPush(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = svc.CreateRemote(remote, "")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	err = svc.Push("", &contract.Credentials{Name: "gitea", Password: "gitea"})
+	err = svc.Push("", cr)
 	if err != nil {
 		t.Error(err)
 	}

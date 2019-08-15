@@ -62,7 +62,7 @@ type Service interface {
 	// Pull incorporates changes from a remote repository into the current branch.
 	// Returns nil if the operation is successful, NoErrAlreadyUpToDate if there are
 	// no changes to be fetched, or an error.
-	Pull() error
+	Pull(remote string, auth *contract.Credentials) error
 
 	// Push performs a push to the remote. Returns NoErrAlreadyUpToDate if
 	// the remote was already up-to-date, from the remote named as
@@ -366,7 +366,7 @@ func (svc *service) Fetch(remote string) error {
 // Pull incorporates changes from a remote repository into the current branch.
 // Returns nil if the operation is successful, NoErrAlreadyUpToDate if there are
 // no changes to be fetched, or an error.
-func (svc *service) Pull() error {
+func (svc *service) Pull(remote string, auth *contract.Credentials) error {
 
 	if svc.git == nil {
 		return contract.ErrGitRepositoryNotSet
@@ -377,7 +377,17 @@ func (svc *service) Pull() error {
 		return err
 	}
 
-	return w.Pull(&git.PullOptions{RemoteName: "origin"})
+	if remote == "" {
+		remote = "origin"
+	}
+
+	opts := &git.PullOptions{RemoteName: remote}
+
+	if auth != nil {
+		opts.Auth = &http.BasicAuth{Username: auth.Name, Password: auth.Password}
+	}
+
+	return w.Pull(opts)
 }
 
 // Push performs a push to the remote. Returns NoErrAlreadyUpToDate if
