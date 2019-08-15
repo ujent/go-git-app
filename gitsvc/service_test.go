@@ -9,11 +9,14 @@ import (
 	"github.com/ujent/go-git-app/config"
 	"github.com/ujent/go-git-app/contract"
 	"gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/plumbing/transport/http"
 )
 
 const userName = "test_user"
 const userEmail = "test_user@gmail.com"
 const remote = "http://35.239.165.218:9000/gitea/testrepo"
+const giteaUser = "gitea@gitea.com"
+const giteaPsw = "secret123"
 
 func TestPush(t *testing.T) {
 	s, err := config.ParseTest()
@@ -48,7 +51,7 @@ func TestPush(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cr := &contract.Credentials{Name: "gitea@gitea.com", Password: "secret123"}
+	cr := &contract.Credentials{Name: giteaUser, Password: giteaPsw}
 	err = svc.Pull("", cr)
 	if err != nil {
 		t.Fatal(err)
@@ -1159,8 +1162,7 @@ func TestCreateRemote(t *testing.T) {
 
 	defer svc.RemoveRepository(r)
 
-	url := "https://github.com/ujent/go-git-mysql"
-	_, err = svc.CreateRemote(url, "")
+	_, err = svc.CreateRemote(remote, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1175,12 +1177,13 @@ func TestCreateRemote(t *testing.T) {
 		t.Fatalf("Wrong remote number. Must: 1, has: %d\n", len(rem.Config().URLs))
 	}
 
-	if rem.Config().URLs[0] != url {
-		t.Fatalf("Wrong remote url. Must: %s, has: %s\n", url, rem.Config().URLs[0])
+	if rem.Config().URLs[0] != remote {
+		t.Fatalf("Wrong remote url. Must: %s, has: %s\n", remote, rem.Config().URLs[0])
 	}
 
 	err = rem.Fetch(&git.FetchOptions{
 		RemoteName: rName,
+		Auth:       &http.BasicAuth{Username: giteaUser, Password: giteaPsw},
 	})
 
 	if err != nil {
