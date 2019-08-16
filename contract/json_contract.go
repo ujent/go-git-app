@@ -69,3 +69,10 @@ type FileInfoRS struct {
 type FilesRS struct {
 	Files []FileInfoRS
 }
+
+//CloneRQ is the request payload for clone repository
+type CloneRQ struct {
+	Auth     *CredentialsPayload `json:"auth,omitempty"`
+	URL      string              `json:"URL"`
+	RepoName string              `json:"repoName"`
+}

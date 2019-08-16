@@ -61,6 +61,7 @@ func (s *server) Start() error {
 		r.Get("/", s.repositories)
 		r.Get("/open/{name}", s.openRepository)
 		r.Post("/", s.createRepository)
+		r.Post("/", s.clone)
 		r.Delete("/", s.deleteRepository)
 	})
 
@@ -80,6 +81,29 @@ func (s *server) Start() error {
 	})
 
 	return nil
+}
+
+func (s *server) clone(w http.ResponseWriter, r *http.Request) {
+	rq := &contract.CloneRQ{}
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(rq)
+
+	if err != nil {
+		s.writeError(w, http.StatusBadRequest, err)
+	}
+
+	if rq.Auth == nil {
+		err = s.gitSvc.Clone(rq.URL, rq.RepoName, nil)
+
+	} else {
+		err = s.gitSvc.Clone(rq.URL, rq.RepoName, &contract.Credentials{Name: rq.Auth.Name, Password: rq.Auth.Psw})
+	}
+
+	if err != nil {
+		s.writeError(w, http.StatusInternalServerError, err)
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func (s *server) files(w http.ResponseWriter, r *http.Request) {
