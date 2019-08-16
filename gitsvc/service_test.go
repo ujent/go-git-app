@@ -15,8 +15,8 @@ import (
 const userName = "test_user"
 const userEmail = "test_user@gmail.com"
 const remote = "http://35.239.165.218:9000/gitea/testrepo"
-const giteaUser = "gitea@gitea.com"
-const giteaPsw = "secret123"
+const remoteUser = "gitea@gitea.com"
+const remotePsw = "secret123"
 
 func TestPush(t *testing.T) {
 	s, err := config.ParseTest()
@@ -51,7 +51,7 @@ func TestPush(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cr := &contract.Credentials{Name: giteaUser, Password: giteaPsw}
+	cr := &contract.Credentials{Name: remoteUser, Password: remotePsw}
 	err = svc.Pull("", cr)
 	if err != nil {
 		t.Fatal(err)
@@ -1183,7 +1183,7 @@ func TestCreateRemote(t *testing.T) {
 
 	err = rem.Fetch(&git.FetchOptions{
 		RemoteName: rName,
-		Auth:       &http.BasicAuth{Username: giteaUser, Password: giteaPsw},
+		Auth:       &http.BasicAuth{Username: remoteUser, Password: remotePsw},
 	})
 
 	if err != nil {
