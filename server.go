@@ -71,7 +71,41 @@ func (s *server) Start() error {
 		r.Delete("/", s.deleteBranch)
 	})
 
+	r.Route("/log", func(r chi.Router) {
+		r.Get("/")
+	})
+
 	return nil
+}
+
+func (s *server) log(w http.ResponseWriter, r *http.Request) {
+	commits, err := s.gitSvc.Log()
+	if err != nil {
+		s.writeError(w, http.StatusBadRequest, err)
+	}
+
+	res := []contract.CommitRS{}
+
+	for _, c := range commits {
+		res = append(res, s.toCommitRS(c))
+	}
+
+	s.writeJSON(w, http.StatusOK, &contract.LogRS{Commits: res})
+}
+
+func (s *server) toCommitRS(c contract.Commit) contract.CommitRS {
+
+	res := contract.CommitRS{
+		Hash:    c.Hash,
+		Message: c.Message,
+		Date:    c.Date,
+	}
+
+	if c.Author != nil {
+		res.Author = &contract.UserRS{Name: c.Author.Name, Email: c.Author.Email}
+	}
+
+	return res
 }
 
 func (s *server) createBranch(w http.ResponseWriter, r *http.Request) {

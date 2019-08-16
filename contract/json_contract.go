@@ -1,5 +1,7 @@
 package contract
 
+import "time"
+
 //CredentialsPayload base user information for operations which requires auth
 type CredentialsPayload struct {
 	Name string `json:"name"`
@@ -36,4 +38,23 @@ type BranchesRS struct {
 type BranchRS struct {
 	Name      string `json:"name"`
 	IsCurrent bool   `json:"isCurrent"`
+}
+
+//UserRS -  common user information
+type UserRS struct {
+	Name  string
+	Email string
+}
+
+//LogRS - the response to log request
+type LogRS struct {
+	Commits []CommitRS `json:"commits"`
+}
+
+//CommitRS - base commit information
+type CommitRS struct {
+	Author  *UserRS   `json:"author"`
+	Hash    string    `json:"hash"`
+	Message string    `json:"msg"`
+	Date    time.Time `json:"date"`
 }
