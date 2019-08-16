@@ -58,32 +58,121 @@ func (s *server) Start() error {
 	}
 
 	r.Route("/repositories", func(r chi.Router) {
-		r.Post("/", s.createRepository)
 		r.Get("/", s.repositories)
-		r.Get("/open/name", s.openRepository)
+		r.Get("/open/{name}", s.openRepository)
+		r.Post("/", s.createRepository)
 		r.Delete("/", s.deleteRepository)
+	})
+
+	r.Route("/branches", func(r chi.Router) {
+		r.Get("/", s.branches)
+		r.Get("/checkout/{name}", s.checkoutBranch)
+		r.Post("/", s.createBranch)
+		r.Delete("/", s.deleteBranch)
 	})
 
 	return nil
 }
 
-func (s *server) writeJSON(w http.ResponseWriter, statusCode int, payload interface{}) {
+func (s *server) createBranch(w http.ResponseWriter, r *http.Request) {
+	rq := &contract.BranchRQ{}
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(rq)
 
-	json, err := json.Marshal(payload)
 	if err != nil {
-		s.logger.Println(err)
-		w.WriteHeader(http.StatusInternalServerError)
+		s.writeError(w, http.StatusBadRequest, err)
+	}
+
+	if rq.Name == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("name cannot be empty"))
+
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(statusCode)
-	w.Write(json)
+	err = s.gitSvc.CreateBranch(rq.Name, "")
+	if err != nil {
+		s.writeError(w, http.StatusInternalServerError, err)
+
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
-func (s *server) writeError(w http.ResponseWriter, statusCode int, err error) {
-	w.WriteHeader(statusCode)
-	w.Write([]byte(err.Error()))
+func (s *server) deleteBranch(w http.ResponseWriter, r *http.Request) {
+	rq := &contract.BranchRQ{}
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(rq)
+
+	if err != nil {
+		s.writeError(w, http.StatusBadRequest, err)
+	}
+
+	if rq.Name == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("name cannot be empty"))
+
+		return
+	}
+
+	err = s.gitSvc.RemoveBranch(rq.Name)
+	if err != nil {
+		s.writeError(w, http.StatusInternalServerError, err)
+
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func (s *server) checkoutBranch(w http.ResponseWriter, r *http.Request) {
+
+	name := chi.URLParam(r, "name")
+
+	if name == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("name cannot be empty"))
+
+		return
+	}
+
+	err := s.gitSvc.CheckoutBranch(name)
+	if err != nil {
+		s.writeError(w, http.StatusInternalServerError, err)
+
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func (s *server) branches(w http.ResponseWriter, r *http.Request) {
+	branches, err := s.gitSvc.Branches()
+	if err != nil {
+		s.writeError(w, http.StatusInternalServerError, err)
+
+		return
+	}
+
+	n, err := s.gitSvc.CurrentBranch()
+	if err != nil {
+		s.writeError(w, http.StatusInternalServerError, err)
+
+		return
+	}
+
+	res := []contract.BranchRS{}
+
+	for _, b := range branches {
+		if b == n.Name {
+			res = append(res, contract.BranchRS{Name: b, IsCurrent: true})
+		} else {
+			res = append(res, contract.BranchRS{Name: n.Name, IsCurrent: false})
+		}
+	}
+
+	s.writeJSON(w, http.StatusOK, &contract.BranchesRS{Branches: res})
 }
 
 func (s *server) createRepository(w http.ResponseWriter, r *http.Request) {
@@ -161,14 +250,25 @@ func (s *server) openRepository(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) repositories(w http.ResponseWriter, r *http.Request) {
-	res, err := s.gitSvc.Repositories()
+	repos, err := s.gitSvc.Repositories()
 	if err != nil {
 		s.writeError(w, http.StatusInternalServerError, err)
 
 		return
 	}
 
-	s.writeJSON(w, http.StatusOK, &contract.RepositoriesRS{Names: res})
+	n := s.gitSvc.CurrentRepository()
+	res := []contract.RepoRS{}
+
+	for _, r := range repos {
+		if r == n {
+			res = append(res, contract.RepoRS{Name: r, IsCurrent: true})
+		} else {
+			res = append(res, contract.RepoRS{Name: r, IsCurrent: false})
+		}
+	}
+
+	s.writeJSON(w, http.StatusOK, &contract.RepositoriesRS{Repos: res})
 }
 
 func (s *server) handleMergeCommit(msg string) error {
@@ -250,4 +350,23 @@ func (s *server) handleMerge(branch string) (string, error) {
 		//ToDo RA - write that all is OK or that it was successful ff merge
 		return "", nil
 	}
+}
+
+func (s *server) writeJSON(w http.ResponseWriter, statusCode int, payload interface{}) {
+
+	json, err := json.Marshal(payload)
+	if err != nil {
+		s.logger.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	w.Write(json)
+}
+
+func (s *server) writeError(w http.ResponseWriter, statusCode int, err error) {
+	w.WriteHeader(statusCode)
+	w.Write([]byte(err.Error()))
 }
