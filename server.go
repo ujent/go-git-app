@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"io"
 	"io/ioutil"
 	"log"
@@ -50,15 +51,124 @@ func (s *server) Start() error {
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("welcome"))
 	})
+
 	err := http.ListenAndServe(":"+s.settings.Port, r)
 	if err != nil {
 		return err
 	}
-	//r.HandleFunc()
-	//router := http.NewServeMux()
-	//router.HandleFunc(, s.)
+
+	r.Route("/repositories", func(r chi.Router) {
+		r.Post("/", s.createRepository)
+		r.Get("/", s.repositories)
+		r.Get("/open/name", s.openRepository)
+		r.Delete("/", s.deleteRepository)
+	})
 
 	return nil
+}
+
+func (s *server) writeJSON(w http.ResponseWriter, statusCode int, payload interface{}) {
+
+	json, err := json.Marshal(payload)
+	if err != nil {
+		s.logger.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	w.Write(json)
+}
+
+func (s *server) writeError(w http.ResponseWriter, statusCode int, err error) {
+	w.WriteHeader(statusCode)
+	w.Write([]byte(err.Error()))
+}
+
+func (s *server) createRepository(w http.ResponseWriter, r *http.Request) {
+
+	repo := &contract.RepoRQ{}
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(repo)
+
+	if err != nil {
+		s.writeError(w, http.StatusBadRequest, err)
+	}
+
+	if repo.Name == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("name cannot be empty"))
+
+		return
+	}
+
+	err = s.gitSvc.CreateRepository(repo.Name)
+	if err != nil {
+		s.writeError(w, http.StatusInternalServerError, err)
+
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func (s *server) deleteRepository(w http.ResponseWriter, r *http.Request) {
+	repo := &contract.RepoRQ{}
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(repo)
+
+	if err != nil {
+		s.writeError(w, http.StatusBadRequest, err)
+	}
+
+	if repo.Name == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("name cannot be empty"))
+
+		return
+	}
+
+	err = s.gitSvc.RemoveRepository(repo.Name)
+	if err != nil {
+		s.writeError(w, http.StatusInternalServerError, err)
+
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func (s *server) openRepository(w http.ResponseWriter, r *http.Request) {
+
+	name := chi.URLParam(r, "name")
+
+	if name == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("name cannot be empty"))
+
+		return
+	}
+
+	err := s.gitSvc.OpenRepository(name)
+	if err != nil {
+		s.writeError(w, http.StatusInternalServerError, err)
+
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func (s *server) repositories(w http.ResponseWriter, r *http.Request) {
+	res, err := s.gitSvc.Repositories()
+	if err != nil {
+		s.writeError(w, http.StatusInternalServerError, err)
+
+		return
+	}
+
+	s.writeJSON(w, http.StatusOK, &contract.RepositoriesRS{Names: res})
 }
 
 func (s *server) handleMergeCommit(msg string) error {

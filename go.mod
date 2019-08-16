@@ -3,14 +3,18 @@ module github.com/ujent/go-git-app
 go 1.12
 
 require (
+	github.com/codegangsta/inject v0.0.0-20150114235600-33e0aa1cb7c0 // indirect
 	github.com/gliderlabs/ssh v0.2.2 // indirect
 	github.com/go-chi/chi v4.0.2+incompatible
+	github.com/go-martini/martini v0.0.0-20170121215854-22fa46961aab // indirect
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/google/go-cmp v0.3.0 // indirect
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/kevinburke/ssh_config v0.0.0-20190725054713-01f96b0aa0cd // indirect
 	github.com/lib/pq v1.2.0 // indirect
+	github.com/martini-contrib/render v0.0.0-20150707142108-ec18f8345a11
 	github.com/mattn/go-sqlite3 v1.11.0 // indirect
+	github.com/oxtoacart/bpool v0.0.0-20190530202638-03653db5a59c // indirect
 	github.com/ujent/go-git-mysql v0.0.0-20190807142715-fbc9b2c784de
 
 	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4 // indirect
