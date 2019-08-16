@@ -31,7 +31,7 @@ type Service interface {
 	Filesystem() (billy.Filesystem, error)
 
 	//FilesList - returns only files in Merged mode, conflict files are excluded
-	FilesList() ([]string, error)
+	FilesList() ([]contract.FileInfo, error)
 
 	// Repositories - returns all locally existing repositories
 	Repositories() ([]string, error)
@@ -89,7 +89,7 @@ type Service interface {
 	//ConflictResultFile - returns file with unresolved conflicts
 	ConflictResultFile(path string) (billy.File, error)
 
-	//ConflictFiles - returns base, ours or theirs files by path of conflict file
+	//FilesList - returns current repository files pathes
 	ConflictFiles(path string) ([]contract.MergeFile, error)
 
 	//Checkout - switches branch to specified commit
@@ -166,8 +166,10 @@ func (svc *service) Filesystem() (billy.Filesystem, error) {
 
 }
 
-//FilesList - returns only files in Merged mode, conflict files are excluded
-func (svc *service) FilesList() ([]string, error) {
+type empty struct{}
+
+//FilesList - returns current repository files pathes
+func (svc *service) FilesList() ([]contract.FileInfo, error) {
 	if svc.git == nil {
 		return nil, contract.ErrGitRepositoryNotSet
 	}
@@ -182,11 +184,21 @@ func (svc *service) FilesList() ([]string, error) {
 		return nil, err
 	}
 
-	res := []string{}
+	res := []contract.FileInfo{}
+	conf := make(map[string]struct{})
+
+	var c empty
+
 	for _, e := range idx.Entries {
 		if e.Stage == index.Merged {
-			res = append(res, e.Name)
+			res = append(res, contract.FileInfo{Path: e.Name})
+		} else {
+			conf[e.Name] = c
 		}
+	}
+
+	for p := range conf {
+		res = append(res, contract.FileInfo{Path: p, IsConflict: true})
 	}
 
 	return res, nil

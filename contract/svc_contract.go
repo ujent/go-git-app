@@ -64,3 +64,9 @@ type MergeFile struct {
 	Stage  FileStage
 	Reader io.Reader
 }
+
+//FileInfo - common information about files in repository
+type FileInfo struct {
+	Path       string
+	IsConflict bool
+}

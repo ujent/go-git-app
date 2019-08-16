@@ -58,3 +58,14 @@ type CommitRS struct {
 	Message string    `json:"msg"`
 	Date    time.Time `json:"date"`
 }
+
+//FileInfoRS - common information about files in repository
+type FileInfoRS struct {
+	Path       string `json:"path"`
+	IsConflict bool   `json:"isConflict"`
+}
+
+//FilesRS - the response to files request
+type FilesRS struct {
+	Files []FileInfoRS
+}

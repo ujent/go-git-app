@@ -72,13 +72,31 @@ func (s *server) Start() error {
 	})
 
 	r.Route("/log", func(r chi.Router) {
-		r.Get("/")
+		r.Get("/", s.logs)
+	})
+
+	r.Route("/files", func(r chi.Router) {
+		r.Get("/all", s.files)
 	})
 
 	return nil
 }
 
-func (s *server) log(w http.ResponseWriter, r *http.Request) {
+func (s *server) files(w http.ResponseWriter, r *http.Request) {
+	files, err := s.gitSvc.FilesList()
+	if err != nil {
+		s.writeError(w, http.StatusBadRequest, err)
+	}
+
+	res := []contract.FileInfoRS{}
+	for _, f := range files {
+		res = append(res, contract.FileInfoRS{Path: f.Path, IsConflict: f.IsConflict})
+	}
+
+	s.writeJSON(w, http.StatusOK, &contract.FilesRS{Files: res})
+}
+
+func (s *server) logs(w http.ResponseWriter, r *http.Request) {
 	commits, err := s.gitSvc.Log()
 	if err != nil {
 		s.writeError(w, http.StatusBadRequest, err)
