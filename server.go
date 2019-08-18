@@ -61,7 +61,7 @@ func (s *server) Start() error {
 		r.Get("/", s.repositories)
 		r.Get("/open/{name}", s.openRepository)
 		r.Post("/", s.createRepository)
-		r.Post("/", s.clone)
+		r.Post("/clone", s.clone)
 		r.Delete("/", s.deleteRepository)
 	})
 
@@ -84,7 +84,65 @@ func (s *server) Start() error {
 		r.Post("/", s.commit)
 	})
 
+	r.Route("/pull", func(r chi.Router) {
+		r.Post("/", s.pull)
+	})
+
+	r.Route("/push", func(r chi.Router) {
+		r.Post("/", s.push)
+	})
+
 	return nil
+}
+
+func (s *server) pull(w http.ResponseWriter, r *http.Request) {
+	rq := &contract.PullRQ{}
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(rq)
+
+	if err != nil {
+		s.writeError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	if rq.Auth == nil {
+		err = s.gitSvc.Pull(rq.Remote, nil)
+
+	} else {
+		err = s.gitSvc.Pull(rq.Remote, &contract.Credentials{Name: rq.Auth.Name, Password: rq.Auth.Psw})
+	}
+
+	if err != nil {
+		s.writeError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func (s *server) push(w http.ResponseWriter, r *http.Request) {
+	rq := &contract.PushRQ{}
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(rq)
+
+	if err != nil {
+		s.writeError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	if rq.Auth == nil {
+		err = s.gitSvc.Push(rq.Remote, nil)
+
+	} else {
+		err = s.gitSvc.Push(rq.Remote, &contract.Credentials{Name: rq.Auth.Name, Password: rq.Auth.Psw})
+	}
+
+	if err != nil {
+		s.writeError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func (s *server) commit(w http.ResponseWriter, r *http.Request) {

@@ -81,3 +81,20 @@ type CloneRQ struct {
 type CommitRQ struct {
 	Message string `json:"message"`
 }
+
+// PullRQ - request for pull operation
+type PullRQ struct {
+	Auth   *CredentialsPayload `json:"auth,omitempty"`
+	Remote string              `json:"remote"`
+}
+
+// PushRQ - request for push operation
+type PushRQ struct {
+	Auth   *CredentialsPayload `json:"auth,omitempty"`
+	Remote string              `json:"remote"`
+}
+
+// MergeRQ - request for merge operation
+type MergeRQ struct {
+	Branch string `json:"branch"`
+}
