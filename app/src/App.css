@@ -23,6 +23,23 @@ h2 {
   margin-top: 0;
 }
 
+select {
+  height: 23px;
+  min-width: 120px;
+}
+
+textarea {
+  resize: none;
+  box-sizing: border-box;
+}
+
+textarea:disabled {
+  background-color: #ececec;
+}
+
+input {
+  line-height: 17px;
+}
 
 .app-wrapper {
   background-color: #ffffff;
@@ -34,7 +51,8 @@ h2 {
 
 .app-main {
   display: flex;
-  padding: 20px;
+  justify-content: space-between;
+  padding: 30px;
 
 }
 
@@ -55,16 +73,21 @@ input[type='radio'].visually-hidden {
 }
 
 .button {
+  min-width: 80px;
   text-align: center;
   vertical-align: middle;
   color: #ffffff;
   font-weight: bold;
-  line-height: 21px;
+  line-height: 22px;
   text-transform: uppercase;
 
   background-color:#81b3d2;
   border: none;
   cursor: pointer;
+}
+
+.medium-button {
+  min-width: 150px;
 }
 
 .button:focus,
@@ -83,12 +106,91 @@ input[type='radio'].visually-hidden {
   margin: 0;
 }
 
-
 .commands-list hr {
   margin: 20px 0;
   border-top: 1px dotted;
 }
 
-.repo-content {
+.commands-list .credentials {
+  margin-top: 6px;
+}
+
+.commands-list .credentials input:first-child {
+  margin-right: 8px;
+} 
+
+.command-block-content {
   display: flex;
 }
+
+.command-block-input {
+  flex-grow: 1;
+}
+
+.command-block button:first-child {
+  margin-right: 8px;
+}
+
+.commit-command button, .commit-command textarea {
+  display: block;
+}
+
+.commit-command button:first-child{
+  margin-bottom: 6px;
+}
+
+.commit-command textarea{
+  width: 100%;
+}
+
+.main-content {
+  flex-grow: 1;
+  margin-left: 100px;
+}
+
+.output {
+  margin-bottom: 20px;
+}
+
+.output textarea {
+  width: 100%;
+}
+
+.repo-content {
+  display: flex;
+  justify-content: space-between;
+}
+
+.main-settings {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.main-settings label {
+  margin-right: 12px;
+}
+
+.repo-files {
+  width: 40%;
+}
+
+.files-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.file-content {
+  width: 60%;
+}
+
+.file-content textarea {
+  width: 100%;
+}
+
+.file-content-buttons {
+  text-align: right;
+  margin-bottom: 6px;
+}
+
