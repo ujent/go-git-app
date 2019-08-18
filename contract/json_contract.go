@@ -76,3 +76,8 @@ type CloneRQ struct {
 	URL      string              `json:"URL"`
 	RepoName string              `json:"repoName"`
 }
+
+// CommitRQ - request for commit operation
+type CommitRQ struct {
+	Message string `json:"message"`
+}

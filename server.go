@@ -80,7 +80,30 @@ func (s *server) Start() error {
 		r.Get("/all", s.files)
 	})
 
+	r.Route("/commit", func(r chi.Router) {
+		r.Post("/", s.commit)
+	})
+
 	return nil
+}
+
+func (s *server) commit(w http.ResponseWriter, r *http.Request) {
+	rq := &contract.CommitRQ{}
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(rq)
+
+	if err != nil {
+		s.writeError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	_, err = s.gitSvc.Commit(rq.Message)
+	if err != nil {
+		s.writeError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func (s *server) clone(w http.ResponseWriter, r *http.Request) {
@@ -90,6 +113,7 @@ func (s *server) clone(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		s.writeError(w, http.StatusBadRequest, err)
+		return
 	}
 
 	if rq.Auth == nil {
@@ -101,6 +125,7 @@ func (s *server) clone(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		s.writeError(w, http.StatusInternalServerError, err)
+		return
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -110,6 +135,7 @@ func (s *server) files(w http.ResponseWriter, r *http.Request) {
 	files, err := s.gitSvc.FilesList()
 	if err != nil {
 		s.writeError(w, http.StatusBadRequest, err)
+		return
 	}
 
 	res := []contract.FileInfoRS{}
@@ -124,6 +150,7 @@ func (s *server) logs(w http.ResponseWriter, r *http.Request) {
 	commits, err := s.gitSvc.Log()
 	if err != nil {
 		s.writeError(w, http.StatusBadRequest, err)
+		return
 	}
 
 	res := []contract.CommitRS{}
@@ -157,6 +184,7 @@ func (s *server) createBranch(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		s.writeError(w, http.StatusBadRequest, err)
+		return
 	}
 
 	if rq.Name == "" {
@@ -183,6 +211,7 @@ func (s *server) deleteBranch(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		s.writeError(w, http.StatusBadRequest, err)
+		return
 	}
 
 	if rq.Name == "" {
@@ -259,6 +288,7 @@ func (s *server) createRepository(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		s.writeError(w, http.StatusBadRequest, err)
+		return
 	}
 
 	if repo.Name == "" {
@@ -285,6 +315,7 @@ func (s *server) deleteRepository(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		s.writeError(w, http.StatusBadRequest, err)
+		return
 	}
 
 	if repo.Name == "" {
