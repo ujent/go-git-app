@@ -101,6 +101,7 @@ export function getBranches() {
         api.getBranches().then(
             branches => {
                 dispatch(setBranches(branches));
+                dispatch(getRepoFiles())
             },
             err => {
                 dispatch(showMessage(err.message));
@@ -128,7 +129,7 @@ export function switchBranch(name) {
 
 export function getRepoFiles() {
     return (dispatch, getState) => {
-        api.getRepoFiles(name).then(
+        api.getRepoFiles().then(
             files => dispatch(setFiles(files)),
             err => {
                 dispatch(showMessage(err.message));
