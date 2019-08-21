@@ -52,7 +52,7 @@ func TestPush(t *testing.T) {
 	}
 
 	cr := &contract.Credentials{Name: remoteUser, Password: remotePsw}
-	err = svc.Pull("", cr)
+	_, err = svc.Pull("", cr)
 	if err != nil {
 		t.Fatal(err)
 	}

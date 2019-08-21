@@ -56,6 +56,11 @@ func (s *server) Start() error {
 		return err
 	}
 
+	r.Route("/users", func(r chi.Router) {
+		r.Post("/switch", s.switchUser)
+		r.Get("/", s.users)
+	})
+
 	r.Route("/repositories", func(r chi.Router) {
 		r.Get("/", s.repositories)
 		r.Get("/open/{name}", s.openRepository)
@@ -96,6 +101,50 @@ func (s *server) Start() error {
 	})
 
 	return nil
+}
+
+func (s *server) users(w http.ResponseWriter, r *http.Request) {
+	users := contract.TestUsers
+	current := s.gitSvc.CurrentUser()
+
+	res := []contract.UserRS{}
+
+	for _, u := range users {
+		if u.Name == current.Name {
+			res = append(res, contract.UserRS{Name: current.Name, Email: current.Email, IsCurrent: true})
+		} else {
+			res = append(res, contract.UserRS{Name: u.Name, Email: u.Email})
+		}
+	}
+
+	s.writeJSON(w, http.StatusOK, &contract.UsersRS{Users: res})
+}
+
+func (s *server) switchUser(w http.ResponseWriter, r *http.Request) {
+	rq := &contract.SwitchUserRQ{}
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(rq)
+
+	if err != nil {
+		s.writeError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	if rq.Name == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("name cannot be empty"))
+
+		return
+	}
+
+	err = s.gitSvc.SwitchUser(&contract.User{Name: rq.Name, Email: rq.Name + "@gogit.com"})
+
+	if err != nil {
+		s.writeError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func (s *server) pull(w http.ResponseWriter, r *http.Request) {

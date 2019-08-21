@@ -42,8 +42,9 @@ type BranchRS struct {
 
 //UserRS -  common user information
 type UserRS struct {
-	Name  string
-	Email string
+	Name      string `json:"name"`
+	Email     string `json:"email"`
+	IsCurrent bool   `json:isCurrent`
 }
 
 //LogRS - the response to log request
@@ -102,4 +103,14 @@ type MergeRQ struct {
 //MsgResult - common result returns message
 type MsgResult struct {
 	Msg string `json:"msg"`
+}
+
+//SwitchUserRQ - request for changing user from which we are using app
+type SwitchUserRQ struct {
+	Name string `json:"name"`
+}
+
+//UsersRS - response for users request
+type UsersRS struct {
+	Users []UserRS `json:"users"`
 }

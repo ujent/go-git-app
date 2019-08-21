@@ -27,6 +27,13 @@ const gitPrefix = "git_"
 
 //Service - provides go-git functionality
 type Service interface {
+
+	//CurrentUser - current login user
+	CurrentUser() *contract.User
+
+	//SwitchUser - change user from which we are using app
+	SwitchUser(user *contract.User) error
+
 	//Filesystem returns fs of current repository
 	Filesystem() (billy.Filesystem, error)
 
@@ -145,6 +152,10 @@ type repository struct {
 //New - create an instance of gitSvc
 func New(user *contract.User, s *contract.ServerSettings, db *sqlx.DB) (Service, error) {
 
+	if user == nil {
+		return nil, errors.New("user cannot be empty")
+	}
+
 	if user.Name == "" {
 		return nil, errors.New("userName cannot be empty")
 	}
@@ -154,6 +165,34 @@ func New(user *contract.User, s *contract.ServerSettings, db *sqlx.DB) (Service,
 	}
 
 	return &service{user: user, settings: s, db: db}, nil
+}
+
+func (svc *service) SwitchUser(user *contract.User) error {
+
+	if user == nil {
+		return errors.New("user cannot be empty")
+	}
+
+	if user.Name == "" {
+		return errors.New("userName cannot be empty")
+	}
+
+	if user.Email == "" {
+		return errors.New("userEmail cannot be empty")
+	}
+
+	if user.Name == svc.user.Name && user.Email == svc.user.Email {
+		return nil
+	}
+
+	svc.user = user
+	svc.git = nil
+
+	return nil
+}
+
+func (svc *service) CurrentUser() *contract.User {
+	return svc.user
 }
 
 //Filesystem returns fs of current repository
@@ -220,12 +259,17 @@ func (svc *service) CreateRepository(name string) error {
 		return errors.New("Repository name cannot be empty")
 	}
 
-	fs, err := mysqlfs.New(svc.settings.GitConnStr, filesPrefix+name)
+	filesTableName, gitTableName, err := svc.tablesNames(name)
 	if err != nil {
 		return err
 	}
 
-	gitFs, err := mysqlfs.New(svc.settings.GitConnStr, gitPrefix+name)
+	fs, err := mysqlfs.New(svc.settings.GitConnStr, filesTableName)
+	if err != nil {
+		return err
+	}
+
+	gitFs, err := mysqlfs.New(svc.settings.GitConnStr, gitTableName)
 	if err != nil {
 		return err
 	}
@@ -242,6 +286,21 @@ func (svc *service) CreateRepository(name string) error {
 	return nil
 }
 
+func (svc *service) tablesNames(repoName string) (filesTableName, gitTableName string, err error) {
+	if svc.user == nil {
+		return "", "", errors.New("user cannot be empty")
+	}
+
+	if svc.user.Name == "" {
+		return "", "", errors.New("userName cannot be empty")
+	}
+
+	filesTableName = filesPrefix + svc.user.Name + "_" + repoName
+	gitTableName = gitPrefix + svc.user.Name + "_" + repoName
+
+	return filesTableName, gitTableName, nil
+}
+
 //OpenRepository - opens an existing repository
 func (svc *service) OpenRepository(name string) error {
 	if name == "" {
@@ -252,12 +311,17 @@ func (svc *service) OpenRepository(name string) error {
 		return nil
 	}
 
-	fs, err := mysqlfs.New(svc.settings.GitConnStr, filesPrefix+name)
+	filesTableName, gitTableName, err := svc.tablesNames(name)
 	if err != nil {
 		return err
 	}
 
-	gitFs, err := mysqlfs.New(svc.settings.GitConnStr, gitPrefix+name)
+	fs, err := mysqlfs.New(svc.settings.GitConnStr, filesTableName)
+	if err != nil {
+		return err
+	}
+
+	gitFs, err := mysqlfs.New(svc.settings.GitConnStr, gitTableName)
 	if err != nil {
 		return err
 	}
@@ -277,12 +341,17 @@ func (svc *service) OpenRepository(name string) error {
 // Clone the given repository to the given directory
 func (svc *service) Clone(url, repoName string, c *contract.Credentials) error {
 
-	fs, err := mysqlfs.New(svc.settings.GitConnStr, filesPrefix+repoName)
+	filesTableName, gitTableName, err := svc.tablesNames(repoName)
 	if err != nil {
 		return err
 	}
 
-	gitFs, err := mysqlfs.New(svc.settings.GitConnStr, gitPrefix+repoName)
+	fs, err := mysqlfs.New(svc.settings.GitConnStr, filesTableName)
+	if err != nil {
+		return err
+	}
+
+	gitFs, err := mysqlfs.New(svc.settings.GitConnStr, gitTableName)
 	if err != nil {
 		return err
 	}
@@ -330,8 +399,10 @@ func (svc *service) Repositories() ([]string, error) {
 //RemoveRepository - removes specified repository permanently
 func (svc *service) RemoveRepository(name string) error {
 
-	filesTable := filesPrefix + name
-	gitTable := gitPrefix + name
+	filesTable, gitTable, err := svc.tablesNames(name)
+	if err != nil {
+		return err
+	}
 
 	tx, err := svc.db.Begin()
 	if err != nil {
