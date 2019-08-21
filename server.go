@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -81,7 +82,7 @@ func (s *server) Start() error {
 	})
 
 	r.Route("/files", func(r chi.Router) {
-		r.Get("/all", s.files)
+		r.Get("/", s.files)
 	})
 
 	r.Route("/commit", func(r chi.Router) {
@@ -137,7 +138,23 @@ func (s *server) switchUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = s.gitSvc.SwitchUser(&contract.User{Name: rq.Name, Email: rq.Name + "@gogit.com"})
+	var user *contract.User
+
+	for _, u := range contract.TestUsers {
+		if u.Name == rq.Name {
+			user = &u
+			break
+		}
+	}
+
+	if user == nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(fmt.Sprintf("User %s doesn't exist", rq.Name)))
+
+		return
+	}
+
+	err = s.gitSvc.SwitchUser(user)
 
 	if err != nil {
 		s.writeError(w, http.StatusBadRequest, err)

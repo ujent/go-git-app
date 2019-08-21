@@ -38,8 +38,8 @@ function fetchApi(url, options = {}) {
     );
 }
 
-export function switchUser(user) {
-    const query = JSON.stringify({ name: user });
+export function switchUser(name) {
+    const query = JSON.stringify({ name: name });
 
     return fetchApi('/users/switch', {
         method: 'POST',
@@ -51,26 +51,27 @@ export function switchUser(user) {
 }
 
 export function getUsers() {
-    return fetchApi('/users', {
+    return fetchApi('/users', {});
+}
+
+export function getRepositories() {
+    return fetchApi('/repositories', {});
+}
+
+export function switchRepo(name) {
+
+    return fetchApi('/repositories/open/' + name, {
     });
 }
 
-/* export function getBenefits(rq, user) {
-    const query = queryString.stringify(rq);
+export function getBranches() {
+    return fetchApi('/branches', {});
+}
 
-    return fetchApi('/benefits?' + query, {
-      headers: {
-        Authorization: 'Bearer ' + user
-      }
-    });
-  }
+export function switchBranch(name) {
+    return fetchApi('/branches/checkout/' + name, {});
+}
 
-  export function stopFreeco(user) {
-    return fetchApi('/stop', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + user
-      }
-    });
-  } */
+export function getRepoFiles() {
+    return fetchApi('files', {});
+}

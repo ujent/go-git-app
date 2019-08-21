@@ -44,7 +44,7 @@ type BranchRS struct {
 type UserRS struct {
 	Name      string `json:"name"`
 	Email     string `json:"email"`
-	IsCurrent bool   `json:isCurrent`
+	IsCurrent bool   `json:"isCurrent"`
 }
 
 //LogRS - the response to log request
