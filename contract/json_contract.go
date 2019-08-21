@@ -98,3 +98,8 @@ type PushRQ struct {
 type MergeRQ struct {
 	Branch string `json:"branch"`
 }
+
+//MsgResult - common result returns message
+type MsgResult struct {
+	Msg string `json:"msg"`
+}

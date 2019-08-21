@@ -13,7 +13,6 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/ujent/go-git-app/contract"
 	"github.com/ujent/go-git-app/gitsvc"
-	"gopkg.in/src-d/go-git.v4"
 )
 
 type server struct {
@@ -92,6 +91,10 @@ func (s *server) Start() error {
 		r.Post("/", s.push)
 	})
 
+	r.Route("/merge", func(r chi.Router) {
+		r.Post("/", s.merge)
+	})
+
 	return nil
 }
 
@@ -105,15 +108,21 @@ func (s *server) pull(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var msg string
 	if rq.Auth == nil {
-		err = s.gitSvc.Pull(rq.Remote, nil)
+		msg, err = s.gitSvc.Pull(rq.Remote, nil)
 
 	} else {
-		err = s.gitSvc.Pull(rq.Remote, &contract.Credentials{Name: rq.Auth.Name, Password: rq.Auth.Psw})
+		msg, err = s.gitSvc.Pull(rq.Remote, &contract.Credentials{Name: rq.Auth.Name, Password: rq.Auth.Psw})
 	}
 
 	if err != nil {
-		s.writeError(w, http.StatusInternalServerError, err)
+		if msg != "" {
+			s.writeJSON(w, http.StatusOK, &contract.MsgResult{Msg: msg})
+		} else {
+			s.writeError(w, http.StatusInternalServerError, err)
+		}
+
 		return
 	}
 
@@ -468,8 +477,29 @@ func (s *server) handleConflictResultFile(path string) (string, error) {
 	return string(bytes), nil
 }
 
-func (s *server) handleMerge(branch string) (string, error) {
-	err := s.gitSvc.Merge(branch)
+func (s *server) merge(w http.ResponseWriter, r *http.Request) {
+
+}
+
+/*
+func (s *server) merge(w http.ResponseWriter, r *http.Request) {
+	rq := &contract.MergeRQ{}
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(rq)
+
+	if err != nil {
+		s.writeError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	if rq.Branch == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("branch cannot be empty"))
+
+		return
+	}
+
+	err = s.gitSvc.Merge(rq.Branch)
 
 	if err != nil {
 
@@ -516,7 +546,7 @@ func (s *server) handleMerge(branch string) (string, error) {
 		return "", nil
 	}
 }
-
+*/
 func (s *server) writeJSON(w http.ResponseWriter, statusCode int, payload interface{}) {
 
 	json, err := json.Marshal(payload)

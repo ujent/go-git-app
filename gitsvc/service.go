@@ -62,7 +62,7 @@ type Service interface {
 	// Pull incorporates changes from a remote repository into the current branch.
 	// Returns nil if the operation is successful, NoErrAlreadyUpToDate if there are
 	// no changes to be fetched, or an error.
-	Pull(remote string, auth *contract.Credentials) error
+	Pull(remote string, auth *contract.Credentials) (string, error)
 
 	// Push performs a push to the remote. Returns NoErrAlreadyUpToDate if
 	// the remote was already up-to-date, from the remote named as
@@ -75,7 +75,7 @@ type Service interface {
 	Commit(msg string) (string, error)
 
 	//Merge - analog of git merge command
-	Merge(branch string) error
+	Merge(branch string) (string, error)
 
 	//MergeMsgShort - returns MERGE_MSG file content  with trimming strings which begin from "#"
 	MergeMsgShort() (string, error)
@@ -380,15 +380,15 @@ func (svc *service) Fetch(remote string, auth *contract.Credentials) error {
 // Pull incorporates changes from a remote repository into the current branch.
 // Returns nil if the operation is successful, NoErrAlreadyUpToDate if there are
 // no changes to be fetched, or an error.
-func (svc *service) Pull(remote string, auth *contract.Credentials) error {
+func (svc *service) Pull(remote string, auth *contract.Credentials) (string, error) {
 
 	if svc.git == nil {
-		return contract.ErrGitRepositoryNotSet
+		return "", contract.ErrGitRepositoryNotSet
 	}
 
 	w, err := svc.git.repo.Worktree()
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if remote == "" {
@@ -454,18 +454,18 @@ func (svc *service) Commit(msg string) (string, error) {
 }
 
 //Merge - analog of git merge command
-func (svc *service) Merge(branch string) error {
+func (svc *service) Merge(branch string) (string, error) {
 	if branch == "" {
-		return errors.New("Branch name cannot be empty")
+		return "", errors.New("Branch name cannot be empty")
 	}
 
 	if svc.git == nil {
-		return contract.ErrGitRepositoryNotSet
+		return "", contract.ErrGitRepositoryNotSet
 	}
 
 	w, err := svc.git.repo.Worktree()
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	return w.Merge(branch)
