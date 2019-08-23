@@ -3,7 +3,7 @@ import './App.css';
 import Settings from './containers/SettingsContainer'
 import Output from './components/Output'
 
-function App() {
+const App = props => {
   return (
     <div className="app-wrapper">
       <header className="App-header">
@@ -101,7 +101,7 @@ function App() {
         </section>
         <div className="main-content">
           <Settings />
-          <Output message="" />
+          <Output message={props.outputMsg} />
           <section className="repo-content">
             <h2 className="visually-hidden">Repository content</h2>
             <div className="repo-files">

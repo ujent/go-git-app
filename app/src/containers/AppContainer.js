@@ -5,6 +5,7 @@ import App from '../App';
 
 const mapStateToProps = (state, ownProps) => {
   return {
+    outputMsg: state.output
   };
 };
 
