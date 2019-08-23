@@ -15,13 +15,13 @@ type RepoRQ struct {
 
 //RepositoriesRS - the response to repositories request
 type RepositoriesRS struct {
-	Repos []RepoRS `json:"repos"`
+	Repos   []RepoRS `json:"repos"`
+	Current string   `json:"current"`
 }
 
 //RepoRS - base info about repository
 type RepoRS struct {
-	Name      string `json:"name"`
-	IsCurrent bool   `json:"isCurrent"`
+	Name string `json:"name"`
 }
 
 //BranchRQ is the request payload for operations with repository
@@ -32,19 +32,18 @@ type BranchRQ struct {
 //BranchesRS - the response to branches request
 type BranchesRS struct {
 	Branches []BranchRS `json:"branches"`
+	Current  string     `json:"current"`
 }
 
 //BranchRS - base info about branch
 type BranchRS struct {
-	Name      string `json:"name"`
-	IsCurrent bool   `json:"isCurrent"`
+	Name string `json:"name"`
 }
 
 //UserRS -  common user information
 type UserRS struct {
-	Name      string `json:"name"`
-	Email     string `json:"email"`
-	IsCurrent bool   `json:"isCurrent"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
 }
 
 //LogRS - the response to log request
@@ -112,5 +111,6 @@ type SwitchUserRQ struct {
 
 //UsersRS - response for users request
 type UsersRS struct {
-	Users []UserRS `json:"users"`
+	Users   []UserRS `json:"users"`
+	Current string   `json:"current"`
 }

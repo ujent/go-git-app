@@ -8,6 +8,12 @@ export function showMessage(msg) {
     };
 }
 
+export function resetMessage() {
+    return {
+        type: ActionType.RESET_MSG,
+    };
+}
+
 export function showError(err) {
     const msg = `Error code: ${err.status}
     Message: ${err.message}`
@@ -18,21 +24,22 @@ export function showError(err) {
     };
 }
 
-export function setUsers(users) {
+export function setUsers(users, current) {
     return {
         type: ActionType.SET_USERS,
-        users
+        users,
+        current
     };
 }
 
 export function getUsers() {
     return (dispatch, getState) => {
         api.getUsers().then(
-            users => {
-                dispatch(setUsers(users));
+            rs => {
+                dispatch(setUsers(rs.users, rs.current));
             },
             err => {
-                dispatch(showMessage(err.message));
+                dispatch(showError(err));
             }
         );
     }
@@ -46,27 +53,28 @@ export function switchUser(name) {
                 dispatch(resetBranch)
             },
             err => {
-                dispatch(showMessage(err.message));
+                dispatch(showError(err));
             }
         );
     }
 }
 
-export function setRepositories(repos) {
+export function setRepositories(repos, current) {
     return {
         type: ActionType.SET_REPOSITORIES,
-        repos
+        repos,
+        current
     };
 }
 
 export function getRepositories() {
     return (dispatch, getState) => {
         api.getRepositories().then(
-            repos => {
-                dispatch(setRepositories(repos));
+            rs => {
+                dispatch(setRepositories(rs.repos, rs.current));
             },
             err => {
-                dispatch(showMessage(err.message));
+                dispatch(showError(err));
             }
         );
     }
@@ -83,28 +91,29 @@ export function switchRepo(name) {
         api.switchRepo(name).then(
             () => { dispatch(getBranches) },
             err => {
-                dispatch(showMessage(err.message));
+                dispatch(showError(err));
             }
         );
     }
 }
 
-export function setBranches(branches) {
+export function setBranches(branches, current) {
     return {
         type: ActionType.SET_BRANCHES,
-        branches
+        branches,
+        current
     };
 }
 
 export function getBranches() {
     return (dispatch, getState) => {
         api.getBranches().then(
-            branches => {
-                dispatch(setBranches(branches));
+            rs => {
+                dispatch(setBranches(rs.branches, rs.current));
                 dispatch(getRepoFiles())
             },
             err => {
-                dispatch(showMessage(err.message));
+                dispatch(showError(err));
             }
         );
     }
@@ -121,7 +130,7 @@ export function switchBranch(name) {
         api.switchBranch(name).then(
             () => dispatch(getRepoFiles()),
             err => {
-                dispatch(showMessage(err.message));
+                dispatch(showError(err));
             }
         );
     }
@@ -132,7 +141,7 @@ export function getRepoFiles() {
         api.getRepoFiles().then(
             files => dispatch(setFiles(files)),
             err => {
-                dispatch(showMessage(err.message));
+                dispatch(showError(err));
             }
         );
     }

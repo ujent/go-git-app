@@ -109,16 +109,18 @@ func (s *server) users(w http.ResponseWriter, r *http.Request) {
 	current := s.gitSvc.CurrentUser()
 
 	res := []contract.UserRS{}
+	var cur string
 
 	for _, u := range users {
 		if u.Name == current.Name {
-			res = append(res, contract.UserRS{Name: current.Name, Email: current.Email, IsCurrent: true})
+			res = append(res, contract.UserRS{Name: current.Name, Email: current.Email})
+			cur = current.Name
 		} else {
 			res = append(res, contract.UserRS{Name: u.Name, Email: u.Email})
 		}
 	}
 
-	s.writeJSON(w, http.StatusOK, &contract.UsersRS{Users: res})
+	s.writeJSON(w, http.StatusOK, &contract.UsersRS{Users: res, Current: cur})
 }
 
 func (s *server) switchUser(w http.ResponseWriter, r *http.Request) {
@@ -401,16 +403,18 @@ func (s *server) branches(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res := []contract.BranchRS{}
+	var cur string
 
 	for _, b := range branches {
 		if b == n.Name {
-			res = append(res, contract.BranchRS{Name: b, IsCurrent: true})
+			res = append(res, contract.BranchRS{Name: b})
+			cur = b
 		} else {
-			res = append(res, contract.BranchRS{Name: n.Name, IsCurrent: false})
+			res = append(res, contract.BranchRS{Name: n.Name})
 		}
 	}
 
-	s.writeJSON(w, http.StatusOK, &contract.BranchesRS{Branches: res})
+	s.writeJSON(w, http.StatusOK, &contract.BranchesRS{Branches: res, Current: cur})
 }
 
 func (s *server) createRepository(w http.ResponseWriter, r *http.Request) {
@@ -499,16 +503,18 @@ func (s *server) repositories(w http.ResponseWriter, r *http.Request) {
 
 	n := s.gitSvc.CurrentRepository()
 	res := []contract.RepoRS{}
+	var cur string
 
 	for _, r := range repos {
 		if r == n {
-			res = append(res, contract.RepoRS{Name: r, IsCurrent: true})
+			res = append(res, contract.RepoRS{Name: r})
+			cur = r
 		} else {
-			res = append(res, contract.RepoRS{Name: r, IsCurrent: false})
+			res = append(res, contract.RepoRS{Name: r})
 		}
 	}
 
-	s.writeJSON(w, http.StatusOK, &contract.RepositoriesRS{Repos: res})
+	s.writeJSON(w, http.StatusOK, &contract.RepositoriesRS{Repos: res, Current: cur})
 }
 
 func (s *server) handleMergeCommit(msg string) error {

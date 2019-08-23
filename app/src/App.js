@@ -1,5 +1,6 @@
 import React from 'react';
 import './App.css';
+import Output from './components/Output'
 
 function App() {
   return (
@@ -18,7 +19,8 @@ function App() {
             <li className="command-block">
               <div className="command-block-content">
                 <button type="button" className="button">Merge</button>
-                <select placeholder="branch" className="command-block-input">
+                <select placeholder="branch" className="command-block-input" defaultValue="">
+                  <option value="" disabled hidden>select</option>
                   <option value="branch1">branch1</option>
                   <option value="branch2">branch2</option>
                 </select></div>
@@ -61,7 +63,8 @@ function App() {
             <li className="command-block">
               <div className="command-block-content">
                 <button type="button" className="button medium-button">Remove repo</button>
-                <select placeholder="select" className="command-block-input">
+                <select placeholder="select" className="command-block-input" defaultValue="">
+                  <option value="" disabled hidden>select</option>
                   <option value="repo1">repo1</option>
                   <option value="repo2">repo2</option>
                 </select>
@@ -71,7 +74,8 @@ function App() {
             <li className="command-block">
               <div className="command-block-content">
                 <button type="button" className="button medium-button">Checkout branch</button>
-                <select placeholder="select" className="command-block-input">
+                <select placeholder="select" className="command-block-input" defaultValue="">
+                  <option value="" disabled hidden>select</option>
                   <option value="branch1">branch1</option>
                   <option value="branch2">branch2</option>
                 </select>
@@ -81,7 +85,8 @@ function App() {
             <li className="command-block">
               <div className="command-block-content">
                 <button type="button" className="button medium-button">Remove branch</button>
-                <select placeholder="select" className="command-block-input">
+                <select placeholder="select" className="command-block-input" defaultValue="">
+                  <option value="" disabled hidden>select</option>
                   <option value="branch1">branch1</option>
                   <option value="branch2">branch2</option>
                 </select>
@@ -97,29 +102,31 @@ function App() {
           <section className="main-settings">
             <div>
               <label htmlFor="userSelectID">User</label>
-              <select id="userSelectID">
+              <select id="userSelectID" defaultValue="">
+                <option value="" disabled hidden>select</option>
                 <option value="user1">user1</option>
                 <option value="user2">user2</option>
+                <option value="user3">user3</option>
               </select>
             </div>
             <div>
               <label htmlFor="repoSelectID">Repository</label>
-              <select id="repoSelectID">
+              <select id="repoSelectID" defaultValue="">
+                <option value="" disabled hidden>select</option>
                 <option value="repo1">repo1</option>
                 <option value="repo2">repo2</option>
               </select>
             </div>
             <div>
               <label htmlFor="branchSelectID">Branch</label>
-              <select id="branchSelectID">
+              <select id="branchSelectID" defaultValue="">
+                <option value="" disabled hidden>select</option>
                 <option value="branch1">branch1</option>
                 <option value="branch2">branch2</option>
               </select>
             </div>
           </section>
-          <section className="output">
-            <textarea disabled rows="6" placeholder="output"></textarea>
-          </section>
+          <Output message="" />
           <section className="repo-content">
             <h2 className="visually-hidden">Repository content</h2>
             <div className="repo-files">
