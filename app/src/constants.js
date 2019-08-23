@@ -1,5 +1,4 @@
 export const ActionType = {
-    SET_USERS: 'SET_USERS',
     SET_REPOSITORIES: 'SET_REPOSITORIES',
     SET_BRANCHES: 'SET_BRANCHES',
     SHOW_MSG: 'SHOW_MSG',

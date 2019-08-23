@@ -25,21 +25,21 @@ function getInitialState() {
 
 
   const initialState = {
-    users: [],
+    users: ['user1', 'user2', 'user3'],
     repositories: [],
     branches: [],
     settings: {
-      currentUser: "",
-      prevUser: "",
-      currentRepo: "",
-      prevRepo: "",
-      currentBranch: "",
-      prevBranch: ""
+      currentUser: '',
+      prevUser: '',
+      currentRepo: '',
+      prevRepo: '',
+      currentBranch: '',
+      prevBranch: ''
     },
-    output: "",
+    output: '',
     fileContent: {
       isVisible: false,
-      content: ""
+      content: ''
     },
     files: []
 

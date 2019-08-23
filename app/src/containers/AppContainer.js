@@ -10,7 +10,6 @@ const mapStateToProps = (state, ownProps) => {
 
 const mapDispatchToProps = (dispatch, ownProps) => {
   return {
-    getUsers: () => dispatch(actions.getUsers()),
     getRepositories: () => dispatch(actions.getRepositories()),
     getBranches: () => dispatch(actions.getBranches())
   };

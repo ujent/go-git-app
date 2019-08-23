@@ -108,9 +108,3 @@ type MsgResult struct {
 type SwitchUserRQ struct {
 	Name string `json:"name"`
 }
-
-//UsersRS - response for users request
-type UsersRS struct {
-	Users   []UserRS `json:"users"`
-	Current string   `json:"current"`
-}

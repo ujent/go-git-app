@@ -5,13 +5,18 @@ import Settings from '../components/Settings';
 
 const mapStateToProps = (state, ownProps) => {
     return {
-
+        users: state.users,
+        selectedUser: state.settings.currentUser,
+        repos: state.repositories,
+        selectedRepo: state.settings.currentRepo,
+        branches: state.branches,
+        selectedBranch: state.settings.currentBranch
     };
 };
 
 const mapDispatchToProps = (dispatch, ownProps) => {
     return {
-        handleSwitchUser: (user) => dispatch(actions.switchUser(user)),
+        handleSelectUser: (user) => dispatch(actions.switchUser(user)),
         handleSelectRepo: (name) => dispatch(actions.switchRepo(name)),
         handleSelectBranch: (name) => dispatch(actions.switchBranch(name))
     };

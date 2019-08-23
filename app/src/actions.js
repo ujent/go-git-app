@@ -24,27 +24,6 @@ export function showError(err) {
     };
 }
 
-export function setUsers(users, current) {
-    return {
-        type: ActionType.SET_USERS,
-        users,
-        current
-    };
-}
-
-export function getUsers() {
-    return (dispatch, getState) => {
-        api.getUsers().then(
-            rs => {
-                dispatch(setUsers(rs.users, rs.current));
-            },
-            err => {
-                dispatch(showError(err));
-            }
-        );
-    }
-}
-
 export function switchUser(name) {
     return (dispatch, getState) => {
         api.switchUser(name).then(

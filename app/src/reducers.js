@@ -2,16 +2,6 @@ import { ActionType } from './constants';
 
 export const rootReducer = (state = {}, action) => {
     switch (action.type) {
-        case ActionType.SET_USERS: {
-            const prev = state.settings.currentRepo
-            return Object.assign({}, state, {
-                users: action.users,
-                settings: Object.assign({}, state.settings, {
-                    currentUser: action.current,
-                    prevUser: prev
-                })
-            });
-        }
         case ActionType.SET_BRANCHES: {
             const prev = state.settings.currentRepo
             return Object.assign({}, state, {

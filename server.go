@@ -59,7 +59,6 @@ func (s *server) Start() error {
 
 	r.Route("/users", func(r chi.Router) {
 		r.Post("/switch", s.switchUser)
-		r.Get("/", s.users)
 	})
 
 	r.Route("/repositories", func(r chi.Router) {
@@ -102,25 +101,6 @@ func (s *server) Start() error {
 	})
 
 	return nil
-}
-
-func (s *server) users(w http.ResponseWriter, r *http.Request) {
-	users := contract.TestUsers
-	current := s.gitSvc.CurrentUser()
-
-	res := []contract.UserRS{}
-	var cur string
-
-	for _, u := range users {
-		if u.Name == current.Name {
-			res = append(res, contract.UserRS{Name: current.Name, Email: current.Email})
-			cur = current.Name
-		} else {
-			res = append(res, contract.UserRS{Name: u.Name, Email: u.Email})
-		}
-	}
-
-	s.writeJSON(w, http.StatusOK, &contract.UsersRS{Users: res, Current: cur})
 }
 
 func (s *server) switchUser(w http.ResponseWriter, r *http.Request) {

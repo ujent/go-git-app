@@ -50,10 +50,6 @@ export function switchUser(name) {
     });
 }
 
-export function getUsers() {
-    return fetchApi('/users', {});
-}
-
 export function getRepositories() {
     return fetchApi('/repositories', {});
 }

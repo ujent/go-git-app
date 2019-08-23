@@ -1,5 +1,6 @@
 import React from 'react';
 import './App.css';
+import Settings from './containers/SettingsContainer'
 import Output from './components/Output'
 
 function App() {
@@ -99,33 +100,7 @@ function App() {
           </ul>
         </section>
         <div className="main-content">
-          <section className="main-settings">
-            <div>
-              <label htmlFor="userSelectID">User</label>
-              <select id="userSelectID" defaultValue="">
-                <option value="" disabled hidden>select</option>
-                <option value="user1">user1</option>
-                <option value="user2">user2</option>
-                <option value="user3">user3</option>
-              </select>
-            </div>
-            <div>
-              <label htmlFor="repoSelectID">Repository</label>
-              <select id="repoSelectID" defaultValue="">
-                <option value="" disabled hidden>select</option>
-                <option value="repo1">repo1</option>
-                <option value="repo2">repo2</option>
-              </select>
-            </div>
-            <div>
-              <label htmlFor="branchSelectID">Branch</label>
-              <select id="branchSelectID" defaultValue="">
-                <option value="" disabled hidden>select</option>
-                <option value="branch1">branch1</option>
-                <option value="branch2">branch2</option>
-              </select>
-            </div>
-          </section>
+          <Settings />
           <Output message="" />
           <section className="repo-content">
             <h2 className="visually-hidden">Repository content</h2>
