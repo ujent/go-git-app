@@ -5,7 +5,7 @@ const Clone = props => {
     return (
         <li>
             <div className="command-block command-block-content">
-                <button type="button" className="button">Clone</button>
+                <button type="button" className="button" disabled={!props.isAvailable}>Clone</button>
                 <input type="text" placeholder="URL" className="command-block-input" />
             </div>
             <div className="credentials">

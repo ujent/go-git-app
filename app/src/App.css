@@ -90,14 +90,18 @@ input[type='radio'].visually-hidden {
   min-width: 150px;
 }
 
-.button:focus,
-.button:hover {
+.button:focus:not([disabled]),
+.button:hover:not([disabled]) {
   background-color: #669ec0;
 }
 
-.button:active {
+.button:active:not([disabled]) {
   color: rgba(255, 255, 255, 0.3);
   background-color: #5496bd;
+}
+
+.button:disabled {
+  opacity: 0.6;
 }
 
 .commands-list {

@@ -4,7 +4,7 @@ import '../../App.css';
 const Log = props => {
     return (
         <li>
-            <button type="button" className="button">Log</button>
+            <button type="button" className="button" disabled={!props.isAvailable}>Log</button>
         </li>
     );
 }

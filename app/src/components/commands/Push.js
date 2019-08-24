@@ -5,7 +5,7 @@ const Push = props => {
     return (
         <li>
             <div className="command-block command-block-content">
-                <button type="button" className="button">Push</button>
+                <button type="button" className="button" disabled={!props.isAvailable}>Push</button>
                 <input type="text" placeholder="remote" className="command-block-input" />
             </div>
             <div className="credentials">

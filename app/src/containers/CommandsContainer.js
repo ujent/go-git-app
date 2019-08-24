@@ -6,7 +6,10 @@ import Commands from '../components/Commands';
 const mapStateToProps = (state, ownProps) => {
   return {
     repositories: state.repositories,
-    branches: state.branches
+    branches: state.branches,
+    currentUser: state.settings.currentUser,
+    currentRepo: state.settings.currentRepo,
+    currentBranch: state.settings.currentBranch
   };
 };
 
