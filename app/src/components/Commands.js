@@ -16,16 +16,15 @@ const Commands = props => {
         <section className="commands">
             <h2>Commands</h2>
             <ul className="commands-list">
-                <Commit />
-                <Merge />
-                <Clone />
-                <Pull />
-                <Push />
-                <RemoveRepo />
-                <CheckoutBranch />
-                <RemoveBranch />
-                <Log />
-
+                <Commit action={props.handleCommit} />
+                <Merge action={props.handleMerge} branches={props.branches} />
+                <Clone action={props.handleClone} />
+                <Pull action={props.handlePull} />
+                <Push action={props.handlePush} />
+                <RemoveRepo action={props.handleRemoveRepo} repositories={props.repositories} />
+                <CheckoutBranch action={props.handleCheckoutBranch} branches={props.branches} />
+                <RemoveBranch action={props.handleRemoveBranch} branches={props.branches} />
+                <Log action={props.handleLog} />
             </ul>
         </section>
     );

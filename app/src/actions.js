@@ -133,23 +133,112 @@ export function setFiles(files) {
     };
 }
 
-/* export function changeBenefitsFilter(newFilter) {
-  return {
-    type: ActionType.CHANGE_BENEFITS_FILTER,
-    newFilter
-  };
+export function checkoutBranch() {
+    return (dispatch, getState) => {
+        api.checkoutBranch().then(
+            rs => {
+
+            },
+            err => {
+                dispatch(showError(err));
+            }
+        );
+    }
 }
 
-export function startFreeco() {
-  return (dispatch, getState) => {
-    const user = getUser(getState);
-    api.startFreeco(user).then(
-      () => {
-        dispatch(getProcessInfo());
-      },
-      err => {
-        dispatch(showError(err));
-      }
-    );
-  };
-}*/
+export function clone() {
+    return (dispatch, getState) => {
+        api.clone().then(
+            rs => {
+
+            },
+            err => {
+                dispatch(showError(err));
+            }
+        );
+    }
+}
+export function commit() {
+    return (dispatch, getState) => {
+        api.commit().then(
+            rs => {
+
+            },
+            err => {
+                dispatch(showError(err));
+            }
+        );
+    }
+}
+export function log() {
+    return (dispatch, getState) => {
+        api.log().then(
+            rs => {
+
+            },
+            err => {
+                dispatch(showError(err));
+            }
+        );
+    }
+}
+export function merge() {
+    return (dispatch, getState) => {
+        api.merge().then(
+            rs => {
+
+            },
+            err => {
+                dispatch(showError(err));
+            }
+        );
+    }
+}
+export function pull() {
+    return (dispatch, getState) => {
+        api.pull().then(
+            rs => {
+
+            },
+            err => {
+                dispatch(showError(err));
+            }
+        );
+    }
+}
+export function push() {
+    return (dispatch, getState) => {
+        api.push().then(
+            rs => {
+
+            },
+            err => {
+                dispatch(showError(err));
+            }
+        );
+    }
+}
+export function removeBranch() {
+    return (dispatch, getState) => {
+        api.removeBranch().then(
+            rs => {
+
+            },
+            err => {
+                dispatch(showError(err));
+            }
+        );
+    }
+}
+export function removeRepo() {
+    return (dispatch, getState) => {
+        api.removeRepo().then(
+            rs => {
+
+            },
+            err => {
+                dispatch(showError(err));
+            }
+        );
+    }
+}

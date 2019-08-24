@@ -71,3 +71,22 @@ export function switchBranch(name) {
 export function getRepoFiles() {
     return fetchApi('files', {});
 }
+
+export function commit() {
+}
+export function checkoutBranch() {
+}
+export function clone() {
+}
+export function log() {
+}
+export function merge() {
+}
+export function pull() {
+}
+export function push() {
+}
+export function removeBranch() {
+}
+export function removeRepo() {
+}
