@@ -10,7 +10,13 @@ type CredentialsPayload struct {
 
 //RepoRQ is the request payload for operations with repository
 type RepoRQ struct {
-	Name string `json:"name"`
+	User string `json:"user"`
+	Repo string `json:"repo"`
+}
+
+//RepositoriesRQ - the request for repositories operation
+type RepositoriesRQ struct {
+	User string `json:"user"`
 }
 
 //RepositoriesRS - the response to repositories request
@@ -26,7 +32,15 @@ type RepoRS struct {
 
 //BranchRQ is the request payload for operations with repository
 type BranchRQ struct {
-	Name string `json:"name"`
+	Branch string `json:"branch"`
+	User   string `json:"user"`
+	Repo   string `json:"repo"`
+}
+
+//BranchesRQ - the request for branches operation
+type BranchesRQ struct {
+	User       string `json:"user"`
+	Repository string `json:"repo"`
 }
 
 //BranchesRS - the response to branches request
@@ -48,7 +62,8 @@ type UserRS struct {
 
 //LogRS - the response to log request
 type LogRS struct {
-	Commits []CommitRS `json:"commits"`
+	Base    *BaseRequestRQ `json:"base"`
+	Commits []CommitRS     `json:"commits"`
 }
 
 //CommitRS - base commit information
@@ -65,6 +80,11 @@ type FileInfoRS struct {
 	IsConflict bool   `json:"isConflict"`
 }
 
+//FilesRQ - the files request
+type FilesRQ struct {
+	Base *BaseRequestRQ `json:"base"`
+}
+
 //FilesRS - the response to files request
 type FilesRS struct {
 	Files []FileInfoRS
@@ -72,6 +92,7 @@ type FilesRS struct {
 
 //CloneRQ is the request payload for clone repository
 type CloneRQ struct {
+	User     string              `json:"user"`
 	Auth     *CredentialsPayload `json:"auth,omitempty"`
 	URL      string              `json:"URL"`
 	RepoName string              `json:"repoName"`
@@ -79,24 +100,28 @@ type CloneRQ struct {
 
 // CommitRQ - request for commit operation
 type CommitRQ struct {
-	Message string `json:"message"`
+	Base    *BaseRequestRQ `json:"base"`
+	Message string         `json:"message"`
 }
 
 // PullRQ - request for pull operation
 type PullRQ struct {
+	Base   *BaseRequestRQ      `json:"base"`
 	Auth   *CredentialsPayload `json:"auth,omitempty"`
 	Remote string              `json:"remote"`
 }
 
 // PushRQ - request for push operation
 type PushRQ struct {
+	Base   *BaseRequestRQ      `json:"base"`
 	Auth   *CredentialsPayload `json:"auth,omitempty"`
 	Remote string              `json:"remote"`
 }
 
 // MergeRQ - request for merge operation
 type MergeRQ struct {
-	Branch string `json:"branch"`
+	Base   *BaseRequestRQ `json:"base"`
+	Branch string         `json:"branch"`
 }
 
 //MsgResult - common result returns message
@@ -107,4 +132,11 @@ type MsgResult struct {
 //SwitchUserRQ - request for changing user from which we are using app
 type SwitchUserRQ struct {
 	Name string `json:"name"`
+}
+
+// BaseRequestRQ - rq for most git operations
+type BaseRequestRQ struct {
+	User       string `json:"user"`
+	Repository string `json:"repo"`
+	Branch     string `json:"branch"`
 }

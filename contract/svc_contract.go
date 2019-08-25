@@ -6,9 +6,6 @@ import (
 	"time"
 )
 
-//TestUsers - users for experiments with go-git
-var TestUsers = []User{User{Name: "user1", Email: "user1@test.com"}, User{Name: "user2", Email: "user2@test.com"}, User{Name: "user3", Email: "user3@test.com"}}
-
 //ErrGitRepositoryNotSet - occurs when repository wasn't chosen
 var ErrGitRepositoryNotSet = errors.New("Git repository isn't set")
 
@@ -17,6 +14,13 @@ type ServerSettings struct {
 	Port       string
 	GitConnStr string
 	GitRemote  string
+}
+
+// BaseRequest - rq for most git operations
+type BaseRequest struct {
+	User       *User
+	Repository string
+	Branch     string
 }
 
 //User -  current user information

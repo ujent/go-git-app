@@ -2,9 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
-	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -22,7 +19,7 @@ type server struct {
 	gitSvc   gitsvc.Service
 }
 
-func newServer(settings *contract.ServerSettings, user *contract.User, logger *log.Logger) (*server, error) {
+func newServer(settings *contract.ServerSettings, logger *log.Logger) (*server, error) {
 	db, err := sqlx.Connect("mysql", settings.GitConnStr)
 
 	if err != nil {
@@ -31,7 +28,7 @@ func newServer(settings *contract.ServerSettings, user *contract.User, logger *l
 
 	defer db.Close()
 
-	gitSvc, err := gitsvc.New(user, settings, db)
+	gitSvc, err := gitsvc.New(settings, db)
 	if err != nil {
 		return nil, err
 	}
@@ -120,23 +117,7 @@ func (s *server) switchUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var user *contract.User
-
-	for _, u := range contract.TestUsers {
-		if u.Name == rq.Name {
-			user = &u
-			break
-		}
-	}
-
-	if user == nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(fmt.Sprintf("User %s doesn't exist", rq.Name)))
-
-		return
-	}
-
-	err = s.gitSvc.SwitchUser(user)
+	err = s.gitSvc.SwitchUser(&contract.User{Name: rq.Name})
 
 	if err != nil {
 		s.writeError(w, http.StatusBadRequest, err)
@@ -158,10 +139,10 @@ func (s *server) pull(w http.ResponseWriter, r *http.Request) {
 
 	var msg string
 	if rq.Auth == nil {
-		msg, err = s.gitSvc.Pull(rq.Remote, nil)
+		msg, err = s.gitSvc.Pull(s.toBaseRequest(rq.Base), rq.Remote, nil)
 
 	} else {
-		msg, err = s.gitSvc.Pull(rq.Remote, &contract.Credentials{Name: rq.Auth.Name, Password: rq.Auth.Psw})
+		msg, err = s.gitSvc.Pull(s.toBaseRequest(rq.Base), rq.Remote, &contract.Credentials{Name: rq.Auth.Name, Password: rq.Auth.Psw})
 	}
 
 	if err != nil {
@@ -188,10 +169,10 @@ func (s *server) push(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if rq.Auth == nil {
-		err = s.gitSvc.Push(rq.Remote, nil)
+		err = s.gitSvc.Push(s.toBaseRequest(rq.Base), rq.Remote, nil)
 
 	} else {
-		err = s.gitSvc.Push(rq.Remote, &contract.Credentials{Name: rq.Auth.Name, Password: rq.Auth.Psw})
+		err = s.gitSvc.Push(s.toBaseRequest(rq.Base), rq.Remote, &contract.Credentials{Name: rq.Auth.Name, Password: rq.Auth.Psw})
 	}
 
 	if err != nil {
@@ -212,13 +193,21 @@ func (s *server) commit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = s.gitSvc.Commit(rq.Message)
+	_, err = s.gitSvc.Commit(s.toBaseRequest(rq.Base), rq.Message)
 	if err != nil {
 		s.writeError(w, http.StatusInternalServerError, err)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+func (s *server) toBaseRequest(rq *contract.BaseRequestRQ) *contract.BaseRequest {
+	if rq == nil {
+		return nil
+	}
+
+	return &contract.BaseRequest{Repository: rq.Repository, Branch: rq.Branch, User: &contract.User{Name: rq.User}}
 }
 
 func (s *server) clone(w http.ResponseWriter, r *http.Request) {
@@ -232,10 +221,10 @@ func (s *server) clone(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if rq.Auth == nil {
-		err = s.gitSvc.Clone(rq.URL, rq.RepoName, nil)
+		err = s.gitSvc.Clone(rq.User, rq.URL, rq.RepoName, nil)
 
 	} else {
-		err = s.gitSvc.Clone(rq.URL, rq.RepoName, &contract.Credentials{Name: rq.Auth.Name, Password: rq.Auth.Psw})
+		err = s.gitSvc.Clone(rq.User, rq.URL, rq.RepoName, &contract.Credentials{Name: rq.Auth.Name, Password: rq.Auth.Psw})
 	}
 
 	if err != nil {
@@ -247,7 +236,34 @@ func (s *server) clone(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) files(w http.ResponseWriter, r *http.Request) {
-	files, err := s.gitSvc.FilesList()
+	branch := chi.URLParam(r, "branch")
+
+	if branch == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("branch cannot be empty"))
+
+		return
+	}
+
+	repo := chi.URLParam(r, "repo")
+
+	if repo == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("repo cannot be empty"))
+
+		return
+	}
+
+	user := chi.URLParam(r, "user")
+
+	if user == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("user cannot be empty"))
+
+		return
+	}
+
+	files, err := s.gitSvc.FilesList(&contract.BaseRequest{User: &contract.User{Name: user}, Repository: repo, Branch: branch})
 	if err != nil {
 		s.writeError(w, http.StatusBadRequest, err)
 		return
@@ -262,7 +278,34 @@ func (s *server) files(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) logs(w http.ResponseWriter, r *http.Request) {
-	commits, err := s.gitSvc.Log()
+	branch := chi.URLParam(r, "branch")
+
+	if branch == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("branch cannot be empty"))
+
+		return
+	}
+
+	repo := chi.URLParam(r, "repo")
+
+	if repo == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("repo cannot be empty"))
+
+		return
+	}
+
+	user := chi.URLParam(r, "user")
+
+	if user == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("user cannot be empty"))
+
+		return
+	}
+
+	commits, err := s.gitSvc.Log(&contract.BaseRequest{User: &contract.User{Name: user}, Repository: repo, Branch: branch})
 	if err != nil {
 		s.writeError(w, http.StatusBadRequest, err)
 		return
@@ -302,14 +345,7 @@ func (s *server) createBranch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if rq.Name == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("name cannot be empty"))
-
-		return
-	}
-
-	err = s.gitSvc.CreateBranch(rq.Name, "")
+	err = s.gitSvc.CreateBranch(rq.User, rq.Repo, rq.Branch, "")
 	if err != nil {
 		s.writeError(w, http.StatusInternalServerError, err)
 
@@ -329,14 +365,7 @@ func (s *server) deleteBranch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if rq.Name == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("name cannot be empty"))
-
-		return
-	}
-
-	err = s.gitSvc.RemoveBranch(rq.Name)
+	err = s.gitSvc.RemoveBranch(rq.User, rq.Repo, rq.Branch)
 	if err != nil {
 		s.writeError(w, http.StatusInternalServerError, err)
 
@@ -348,16 +377,34 @@ func (s *server) deleteBranch(w http.ResponseWriter, r *http.Request) {
 
 func (s *server) checkoutBranch(w http.ResponseWriter, r *http.Request) {
 
-	name := chi.URLParam(r, "name")
+	branch := chi.URLParam(r, "branch")
 
-	if name == "" {
+	if branch == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("name cannot be empty"))
+		w.Write([]byte("branch cannot be empty"))
 
 		return
 	}
 
-	err := s.gitSvc.CheckoutBranch(name)
+	repo := chi.URLParam(r, "repo")
+
+	if repo == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("repo cannot be empty"))
+
+		return
+	}
+
+	user := chi.URLParam(r, "user")
+
+	if user == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("user cannot be empty"))
+
+		return
+	}
+
+	err := s.gitSvc.CheckoutBranch(user, repo, branch)
 	if err != nil {
 		s.writeError(w, http.StatusInternalServerError, err)
 
@@ -368,7 +415,25 @@ func (s *server) checkoutBranch(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) branches(w http.ResponseWriter, r *http.Request) {
-	branches, err := s.gitSvc.Branches()
+	repo := chi.URLParam(r, "repo")
+
+	if repo == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("repo cannot be empty"))
+
+		return
+	}
+
+	user := chi.URLParam(r, "user")
+
+	if user == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("user cannot be empty"))
+
+		return
+	}
+
+	branches, err := s.gitSvc.Branches(user, repo)
 	if err != nil {
 		s.writeError(w, http.StatusInternalServerError, err)
 
@@ -399,23 +464,30 @@ func (s *server) branches(w http.ResponseWriter, r *http.Request) {
 
 func (s *server) createRepository(w http.ResponseWriter, r *http.Request) {
 
-	repo := &contract.RepoRQ{}
+	rq := &contract.RepoRQ{}
 	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(repo)
+	err := decoder.Decode(rq)
 
 	if err != nil {
 		s.writeError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	if repo.Name == "" {
+	if rq.Repo == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("name cannot be empty"))
+		w.Write([]byte("repo cannot be empty"))
 
 		return
 	}
 
-	err = s.gitSvc.CreateRepository(repo.Name)
+	if rq.User == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("user cannot be empty"))
+
+		return
+	}
+
+	err = s.gitSvc.CreateRepository(rq.User, rq.Repo)
 	if err != nil {
 		s.writeError(w, http.StatusInternalServerError, err)
 
@@ -426,23 +498,30 @@ func (s *server) createRepository(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) deleteRepository(w http.ResponseWriter, r *http.Request) {
-	repo := &contract.RepoRQ{}
+	rq := &contract.RepoRQ{}
 	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(repo)
+	err := decoder.Decode(rq)
 
 	if err != nil {
 		s.writeError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	if repo.Name == "" {
+	if rq.Repo == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("name cannot be empty"))
+		w.Write([]byte("repo cannot be empty"))
 
 		return
 	}
 
-	err = s.gitSvc.RemoveRepository(repo.Name)
+	if rq.User == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("user cannot be empty"))
+
+		return
+	}
+
+	err = s.gitSvc.RemoveRepository(rq.User, rq.Repo)
 	if err != nil {
 		s.writeError(w, http.StatusInternalServerError, err)
 
@@ -454,16 +533,25 @@ func (s *server) deleteRepository(w http.ResponseWriter, r *http.Request) {
 
 func (s *server) openRepository(w http.ResponseWriter, r *http.Request) {
 
-	name := chi.URLParam(r, "name")
+	repo := chi.URLParam(r, "repo")
 
-	if name == "" {
+	if repo == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("name cannot be empty"))
+		w.Write([]byte("repo cannot be empty"))
 
 		return
 	}
 
-	err := s.gitSvc.OpenRepository(name)
+	user := chi.URLParam(r, "user")
+
+	if user == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("user cannot be empty"))
+
+		return
+	}
+
+	err := s.gitSvc.OpenRepository(user, repo)
 	if err != nil {
 		s.writeError(w, http.StatusInternalServerError, err)
 
@@ -474,7 +562,16 @@ func (s *server) openRepository(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) repositories(w http.ResponseWriter, r *http.Request) {
-	repos, err := s.gitSvc.Repositories()
+	user := chi.URLParam(r, "user")
+
+	if user == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("user cannot be empty"))
+
+		return
+	}
+
+	repos, err := s.gitSvc.Repositories(user)
 	if err != nil {
 		s.writeError(w, http.StatusInternalServerError, err)
 
@@ -497,7 +594,7 @@ func (s *server) repositories(w http.ResponseWriter, r *http.Request) {
 	s.writeJSON(w, http.StatusOK, &contract.RepositoriesRS{Repos: res, Current: cur})
 }
 
-func (s *server) handleMergeCommit(msg string) error {
+/*func (s *server) handleMergeCommit(msg string) error {
 	_, err := s.gitSvc.Commit(msg)
 	if err != nil {
 		return err
@@ -527,7 +624,7 @@ func (s *server) handleConflictResultFile(path string) (string, error) {
 	}
 
 	return string(bytes), nil
-}
+}*/
 
 func (s *server) merge(w http.ResponseWriter, r *http.Request) {
 

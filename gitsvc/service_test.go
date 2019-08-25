@@ -32,32 +32,33 @@ func TestPush(t *testing.T) {
 
 	defer db.Close()
 
-	svc, err := New(&contract.User{Name: userName, Email: userEmail}, s, db)
+	svc, err := New(s, db)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	r := "repo_1"
 
-	err = svc.CreateRepository(r)
+	err = svc.CreateRepository(userName, r)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	defer svc.RemoveRepository(r)
+	defer svc.RemoveRepository(userName, r)
 
-	_, err = svc.CreateRemote(remote, "")
+	_, err = svc.CreateRemote(userName, r, remote, "")
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	cr := &contract.Credentials{Name: remoteUser, Password: remotePsw}
-	_, err = svc.Pull("", cr)
+	rq := &contract.BaseRequest{User: &contract.User{Name: userName, Email: userEmail}, Repository: r, Branch: ""}
+	_, err = svc.Pull(rq, "", cr)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	fs, err := svc.Filesystem()
+	fs, err := svc.Filesystem(userName, r)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -68,17 +69,17 @@ func TestPush(t *testing.T) {
 	}
 	f.Write([]byte("Change hello, go-git!"))
 
-	err = svc.Add("README.md")
+	err = svc.Add(rq, "README.md")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	_, err = svc.Commit("add README")
+	_, err = svc.Commit(rq, "add README")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = svc.Push("", cr)
+	err = svc.Push(rq, "", cr)
 	if err != nil {
 		t.Error(err)
 	}
@@ -98,7 +99,7 @@ func TestRepositories(t *testing.T) {
 
 	defer db.Close()
 
-	svc, err := New(&contract.User{Name: userName, Email: userEmail}, s, db)
+	svc, err := New(s, db)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -106,21 +107,21 @@ func TestRepositories(t *testing.T) {
 	r1 := "repo_1"
 	r2 := "repo_2"
 
-	err = svc.CreateRepository(r1)
+	err = svc.CreateRepository(userName, r1)
 	if err != nil {
 		t.Error(err)
 	}
 
-	defer svc.RemoveRepository(r1)
+	defer svc.RemoveRepository(userName, r1)
 
-	err = svc.CreateRepository(r2)
+	err = svc.CreateRepository(userName, r2)
 	if err != nil {
 		t.Error(err)
 	}
 
-	defer svc.RemoveRepository(r2)
+	defer svc.RemoveRepository(userName, r2)
 
-	repos, err := svc.Repositories()
+	repos, err := svc.Repositories(userName)
 	if err != nil {
 		t.Error(err)
 	}
@@ -147,21 +148,21 @@ func TestCreateRepository(t *testing.T) {
 
 	defer db.Close()
 
-	svc, err := New(&contract.User{Name: userName, Email: userEmail}, s, db)
+	svc, err := New(s, db)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	r1 := "repo_1"
 
-	err = svc.CreateRepository(r1)
+	err = svc.CreateRepository(userName, r1)
 	if err != nil {
 		t.Error(err)
 	}
 
-	defer svc.RemoveRepository(r1)
+	defer svc.RemoveRepository(userName, r1)
 
-	repos, err := svc.Repositories()
+	repos, err := svc.Repositories(userName)
 	if err != nil {
 		t.Error(err)
 	}
@@ -190,26 +191,26 @@ func TestRemoveRepository(t *testing.T) {
 
 	defer db.Close()
 
-	svc, err := New(&contract.User{Name: userName, Email: userEmail}, s, db)
+	svc, err := New(s, db)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	r1 := "repo_1"
 
-	err = svc.CreateRepository(r1)
+	err = svc.CreateRepository(userName, r1)
 	if err != nil {
 		t.Error(err)
 	}
 
-	defer svc.RemoveRepository(r1)
+	defer svc.RemoveRepository(userName, r1)
 
-	err = svc.RemoveRepository(r1)
+	err = svc.RemoveRepository(userName, r1)
 	if err != nil {
 		t.Error(err)
 	}
 
-	repos, err := svc.Repositories()
+	repos, err := svc.Repositories(userName)
 	if err != nil {
 		t.Error(err)
 	}
@@ -234,19 +235,19 @@ func TestCurrentRepository(t *testing.T) {
 
 	defer db.Close()
 
-	svc, err := New(&contract.User{Name: userName, Email: userEmail}, s, db)
+	svc, err := New(s, db)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	r1 := "repo_1"
 
-	err = svc.CreateRepository(r1)
+	err = svc.CreateRepository(userName, r1)
 	if err != nil {
 		t.Error(err)
 	}
 
-	defer svc.RemoveRepository(r1)
+	defer svc.RemoveRepository(userName, r1)
 
 	name := svc.CurrentRepository()
 
@@ -269,30 +270,30 @@ func TestOpenRepository(t *testing.T) {
 
 	defer db.Close()
 
-	svc, err := New(&contract.User{Name: userName, Email: userEmail}, s, db)
+	svc, err := New(s, db)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	r1 := "repo_1"
 
-	err = svc.CreateRepository(r1)
+	err = svc.CreateRepository(userName, r1)
 	if err != nil {
 		t.Error(err)
 	}
 
-	defer svc.RemoveRepository(r1)
+	defer svc.RemoveRepository(userName, r1)
 
 	r2 := "repo_2"
 
-	err = svc.CreateRepository(r2)
+	err = svc.CreateRepository(userName, r2)
 	if err != nil {
 		t.Error(err)
 	}
 
-	defer svc.RemoveRepository(r2)
+	defer svc.RemoveRepository(userName, r2)
 
-	err = svc.OpenRepository(r1)
+	err = svc.OpenRepository(userName, r1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -318,21 +319,23 @@ func TestCreateBranch(t *testing.T) {
 
 	defer db.Close()
 
-	svc, err := New(&contract.User{Name: userName, Email: userEmail}, s, db)
+	svc, err := New(s, db)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	r := "repo_1"
 
-	err = svc.CreateRepository(r)
+	err = svc.CreateRepository(userName, r)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	defer svc.RemoveRepository(r)
+	defer svc.RemoveRepository(userName, r)
 
-	fs, err := svc.Filesystem()
+	rq := &contract.BaseRequest{User: &contract.User{Name: userName, Email: userEmail}, Repository: r, Branch: ""}
+	fs, err := svc.Filesystem(userName, r)
+
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -343,24 +346,24 @@ func TestCreateBranch(t *testing.T) {
 	}
 	f.Write([]byte("hello, go-git!"))
 
-	err = svc.Add("README.md")
+	err = svc.Add(rq, "README.md")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	_, err = svc.Commit("add README")
+	_, err = svc.Commit(rq, "add README")
 	if err != nil {
 		t.Error(err)
 	}
 
 	b := "test_branch"
 
-	err = svc.CreateBranch(b, "")
+	err = svc.CreateBranch(userName, r, b, "")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	branches, err := svc.Branches()
+	branches, err := svc.Branches(userName, r)
 	fmt.Println(branches)
 
 	var hasBranch bool
@@ -376,7 +379,7 @@ func TestCreateBranch(t *testing.T) {
 		t.Errorf("Branch %s not found\n", b)
 	}
 
-	err = svc.RemoveRepository(r)
+	err = svc.RemoveRepository(userName, r)
 	if err != nil {
 		t.Error(err)
 	}
@@ -397,21 +400,23 @@ func TestCheckoutBranch1(t *testing.T) {
 
 	defer db.Close()
 
-	svc, err := New(&contract.User{Name: userName, Email: userEmail}, s, db)
+	svc, err := New(s, db)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	r := "repo_1"
 
-	err = svc.CreateRepository(r)
+	err = svc.CreateRepository(userName, r)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	defer svc.RemoveRepository(r)
+	defer svc.RemoveRepository(userName, r)
 
-	fs, err := svc.Filesystem()
+	rq1 := &contract.BaseRequest{User: &contract.User{Name: userName, Email: userEmail}, Repository: r, Branch: ""}
+	fs, err := svc.Filesystem(userName, r)
+
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -422,19 +427,19 @@ func TestCheckoutBranch1(t *testing.T) {
 	}
 	f.Write([]byte("hello, go-git!"))
 
-	err = svc.Add("README.md")
+	err = svc.Add(rq1, "README.md")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	masterHash, err := svc.Commit("add README")
+	masterHash, err := svc.Commit(rq1, "add README")
 	if err != nil {
 		t.Error(err)
 	}
 
 	b := "test_branch"
 
-	err = svc.CreateBranch(b, "")
+	err = svc.CreateBranch(userName, r, b, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -445,18 +450,20 @@ func TestCheckoutBranch1(t *testing.T) {
 	}
 	f.Write([]byte("test"))
 
-	err = svc.Add("Example.txt")
+	rq2 := &contract.BaseRequest{User: &contract.User{Name: userName, Email: userEmail}, Repository: r, Branch: b}
+	err = svc.Add(rq2, "Example.txt")
+
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	_, err = svc.Commit("add Example")
+	_, err = svc.Commit(rq2, "add Example")
 	if err != nil {
 		t.Error(err)
 	}
 
 	mbr := "master"
-	err = svc.CheckoutBranch(mbr)
+	err = svc.CheckoutBranch(userName, r, mbr)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -490,21 +497,23 @@ func TestCheckoutBranch2(t *testing.T) {
 
 	defer db.Close()
 
-	svc, err := New(&contract.User{Name: userName, Email: userEmail}, s, db)
+	svc, err := New(s, db)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	r := "repo_1"
 
-	err = svc.CreateRepository(r)
+	err = svc.CreateRepository(userName, r)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	defer svc.RemoveRepository(r)
+	defer svc.RemoveRepository(userName, r)
 
-	fs, err := svc.Filesystem()
+	rq := &contract.BaseRequest{User: &contract.User{Name: userName, Email: userEmail}, Repository: r, Branch: ""}
+	fs, err := svc.Filesystem(userName, r)
+
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -515,19 +524,19 @@ func TestCheckoutBranch2(t *testing.T) {
 	}
 	f.Write([]byte("hello, go-git!"))
 
-	err = svc.Add("README.md")
+	err = svc.Add(rq, "README.md")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	brHash, err := svc.Commit("add README")
+	brHash, err := svc.Commit(rq, "add README")
 	if err != nil {
 		t.Error(err)
 	}
 
 	b := "test_branch"
 
-	err = svc.CheckoutBranch(b)
+	err = svc.CheckoutBranch(userName, r, b)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -560,21 +569,23 @@ func TestRemoveBranch(t *testing.T) {
 
 	defer db.Close()
 
-	svc, err := New(&contract.User{Name: userName, Email: userEmail}, s, db)
+	svc, err := New(s, db)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	r := "repo_1"
 
-	err = svc.CreateRepository(r)
+	err = svc.CreateRepository(userName, r)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	defer svc.RemoveRepository(r)
+	defer svc.RemoveRepository(userName, r)
 
-	fs, err := svc.Filesystem()
+	rq := &contract.BaseRequest{User: &contract.User{Name: userName, Email: userEmail}, Repository: r, Branch: ""}
+	fs, err := svc.Filesystem(userName, r)
+
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -585,24 +596,24 @@ func TestRemoveBranch(t *testing.T) {
 	}
 	f.Write([]byte("hello, go-git!"))
 
-	err = svc.Add("README.md")
+	err = svc.Add(rq, "README.md")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	_, err = svc.Commit("add README")
+	_, err = svc.Commit(rq, "add README")
 	if err != nil {
 		t.Error(err)
 	}
 
 	b := "test_branch"
 
-	err = svc.CreateBranch(b, "")
+	err = svc.CreateBranch(userName, r, b, "")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	branches, err := svc.Branches()
+	branches, err := svc.Branches(userName, r)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -622,12 +633,12 @@ func TestRemoveBranch(t *testing.T) {
 		t.Errorf("Branch %s not found\n", b)
 	}
 
-	err = svc.RemoveBranch(b)
+	err = svc.RemoveBranch(userName, r, b)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	branches, err = svc.Branches()
+	branches, err = svc.Branches(userName, r)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -662,21 +673,23 @@ func TestBranches(t *testing.T) {
 
 	defer db.Close()
 
-	svc, err := New(&contract.User{Name: userName, Email: userEmail}, s, db)
+	svc, err := New(s, db)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	r := "repo_1"
 
-	err = svc.CreateRepository(r)
+	err = svc.CreateRepository(userName, r)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	defer svc.RemoveRepository(r)
+	defer svc.RemoveRepository(userName, r)
 
-	fs, err := svc.Filesystem()
+	rq := &contract.BaseRequest{User: &contract.User{Name: userName, Email: userEmail}, Repository: r, Branch: ""}
+	fs, err := svc.Filesystem(userName, r)
+
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -687,24 +700,24 @@ func TestBranches(t *testing.T) {
 	}
 	f.Write([]byte("hello, go-git!"))
 
-	err = svc.Add("README.md")
+	err = svc.Add(rq, "README.md")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	_, err = svc.Commit("add README")
+	_, err = svc.Commit(rq, "add README")
 	if err != nil {
 		t.Error(err)
 	}
 
 	b := "test_branch"
 
-	err = svc.CreateBranch(b, "")
+	err = svc.CreateBranch(userName, r, b, "")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	branches, err := svc.Branches()
+	branches, err := svc.Branches(userName, r)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -732,21 +745,23 @@ func TestCheckout(t *testing.T) {
 
 	defer db.Close()
 
-	svc, err := New(&contract.User{Name: userName, Email: userEmail}, s, db)
+	svc, err := New(s, db)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	r := "repo_1"
 
-	err = svc.CreateRepository(r)
+	err = svc.CreateRepository(userName, r)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	defer svc.RemoveRepository(r)
+	defer svc.RemoveRepository(userName, r)
 
-	fs, err := svc.Filesystem()
+	rq := &contract.BaseRequest{User: &contract.User{Name: userName, Email: userEmail}, Repository: r, Branch: ""}
+	fs, err := svc.Filesystem(userName, r)
+
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -757,12 +772,12 @@ func TestCheckout(t *testing.T) {
 	}
 	f.Write([]byte("hello, go-git!"))
 
-	err = svc.Add("README.md")
+	err = svc.Add(rq, "README.md")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	h1, err := svc.Commit("add README")
+	h1, err := svc.Commit(rq, "add README")
 	if err != nil {
 		t.Error(err)
 	}
@@ -773,17 +788,18 @@ func TestCheckout(t *testing.T) {
 	}
 	f.Write([]byte("test"))
 
-	err = svc.Add("Example.txt")
+	err = svc.Add(rq, "Example.txt")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	_, err = svc.Commit("add Example")
+	rq.Branch = "master"
+	_, err = svc.Commit(rq, "add Example")
 	if err != nil {
 		t.Error(err)
 	}
 
-	err = svc.Checkout(h1)
+	err = svc.Checkout(userName, r, h1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -813,21 +829,23 @@ func TestCurrentBranch1(t *testing.T) {
 
 	defer db.Close()
 
-	svc, err := New(&contract.User{Name: userName, Email: userEmail}, s, db)
+	svc, err := New(s, db)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	r := "repo_1"
 
-	err = svc.CreateRepository(r)
+	err = svc.CreateRepository(userName, r)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	defer svc.RemoveRepository(r)
+	defer svc.RemoveRepository(userName, r)
 
-	fs, err := svc.Filesystem()
+	rq := &contract.BaseRequest{User: &contract.User{Name: userName, Email: userEmail}, Repository: r, Branch: ""}
+	fs, err := svc.Filesystem(userName, r)
+
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -838,12 +856,12 @@ func TestCurrentBranch1(t *testing.T) {
 	}
 	f.Write([]byte("hello, go-git!"))
 
-	err = svc.Add("README.md")
+	err = svc.Add(rq, "README.md")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	h, err := svc.Commit("add README")
+	h, err := svc.Commit(rq, "add README")
 	if err != nil {
 		t.Error(err)
 	}
@@ -880,21 +898,23 @@ func TestCurrentBranch2(t *testing.T) {
 
 	defer db.Close()
 
-	svc, err := New(&contract.User{Name: userName, Email: userEmail}, s, db)
+	svc, err := New(s, db)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	r := "repo_1"
 
-	err = svc.CreateRepository(r)
+	err = svc.CreateRepository(userName, r)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	defer svc.RemoveRepository(r)
+	defer svc.RemoveRepository(userName, r)
 
-	fs, err := svc.Filesystem()
+	rq1 := &contract.BaseRequest{User: &contract.User{Name: userName, Email: userEmail}, Repository: r, Branch: ""}
+	fs, err := svc.Filesystem(userName, r)
+
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -905,19 +925,19 @@ func TestCurrentBranch2(t *testing.T) {
 	}
 	f.Write([]byte("hello, go-git!"))
 
-	err = svc.Add("README.md")
+	err = svc.Add(rq1, "README.md")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	h, err := svc.Commit("add README")
+	h, err := svc.Commit(rq1, "add README")
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	br := "topic"
 
-	err = svc.CreateBranch(br, "")
+	err = svc.CreateBranch(userName, r, br, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -928,12 +948,14 @@ func TestCurrentBranch2(t *testing.T) {
 	}
 	f.Write([]byte("test, go-git!"))
 
-	err = svc.Add("Example.txt")
+	rq2 := &contract.BaseRequest{User: &contract.User{Name: userName, Email: userEmail}, Repository: r, Branch: br}
+	err = svc.Add(rq2, "Example.txt")
+
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	h, err = svc.Commit("add example")
+	h, err = svc.Commit(rq2, "add example")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -969,21 +991,23 @@ func TestLog(t *testing.T) {
 
 	defer db.Close()
 
-	svc, err := New(&contract.User{Name: userName, Email: userEmail}, s, db)
+	svc, err := New(s, db)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	r := "repo_1"
 
-	err = svc.CreateRepository(r)
+	err = svc.CreateRepository(userName, r)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	defer svc.RemoveRepository(r)
+	defer svc.RemoveRepository(userName, r)
 
-	fs, err := svc.Filesystem()
+	rq := &contract.BaseRequest{User: &contract.User{Name: userName, Email: userEmail}, Repository: r, Branch: ""}
+	fs, err := svc.Filesystem(userName, r)
+
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -994,12 +1018,12 @@ func TestLog(t *testing.T) {
 	}
 	f.Write([]byte("hello, go-git!"))
 
-	err = svc.Add("README.md")
+	err = svc.Add(rq, "README.md")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	h1, err := svc.Commit("add README")
+	h1, err := svc.Commit(rq, "add README")
 	if err != nil {
 		t.Error(err)
 	}
@@ -1010,17 +1034,18 @@ func TestLog(t *testing.T) {
 	}
 	f.Write([]byte("test"))
 
-	err = svc.Add("Example.txt")
+	rq.Branch = "master"
+	err = svc.Add(rq, "Example.txt")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	h2, err := svc.Commit("add Example")
+	h2, err := svc.Commit(rq, "add Example")
 	if err != nil {
 		t.Error(err)
 	}
 
-	log, err := svc.Log()
+	log, err := svc.Log(rq)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1068,21 +1093,23 @@ func TestCommit(t *testing.T) {
 
 	defer db.Close()
 
-	svc, err := New(&contract.User{Name: userName, Email: userEmail}, s, db)
+	svc, err := New(s, db)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	r := "repo_1"
 
-	err = svc.CreateRepository(r)
+	err = svc.CreateRepository(userName, r)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	defer svc.RemoveRepository(r)
+	defer svc.RemoveRepository(userName, r)
 
-	fs, err := svc.Filesystem()
+	rq := &contract.BaseRequest{User: &contract.User{Name: userName, Email: userEmail}, Repository: r, Branch: ""}
+	fs, err := svc.Filesystem(userName, r)
+
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1093,18 +1120,20 @@ func TestCommit(t *testing.T) {
 	}
 	f.Write([]byte("hello, go-git!"))
 
-	err = svc.Add("README.md")
+	err = svc.Add(rq, "README.md")
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	msg := "add README"
-	h, err := svc.Commit(msg)
+	h, err := svc.Commit(rq, msg)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	log, err := svc.Log()
+	rq.Branch = "master"
+
+	log, err := svc.Log(rq)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1148,27 +1177,27 @@ func TestCreateRemote(t *testing.T) {
 
 	defer db.Close()
 
-	svc, err := New(&contract.User{Name: userName, Email: userEmail}, s, db)
+	svc, err := New(s, db)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	r := "repo_1"
 
-	err = svc.CreateRepository(r)
+	err = svc.CreateRepository(userName, r)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	defer svc.RemoveRepository(r)
+	defer svc.RemoveRepository(userName, r)
 
-	_, err = svc.CreateRemote(remote, "")
+	_, err = svc.CreateRemote(userName, r, remote, "")
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	rName := "origin"
-	rem, err := svc.Remote(rName)
+	rem, err := svc.Remote(userName, r, rName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1205,28 +1234,27 @@ func TestRemoveRemote(t *testing.T) {
 
 	defer db.Close()
 
-	svc, err := New(&contract.User{Name: userName, Email: userEmail}, s, db)
+	svc, err := New(s, db)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	r := "repo_1"
 
-	err = svc.CreateRepository(r)
+	err = svc.CreateRepository(userName, r)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	defer svc.RemoveRepository(r)
+	defer svc.RemoveRepository(userName, r)
 
-	url := "https://github.com/ujent/go-git-mysql"
-	_, err = svc.CreateRemote(url, "")
+	_, err = svc.CreateRemote(userName, r, remote, "")
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	rName := "origin"
-	rem, err := svc.Remote(rName)
+	rem, err := svc.Remote(userName, r, rName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1235,16 +1263,16 @@ func TestRemoveRemote(t *testing.T) {
 		t.Fatalf("Wrong remote number. Must: 1, has: %d\n", len(rem.Config().URLs))
 	}
 
-	if rem.Config().URLs[0] != url {
-		t.Fatalf("Wrong remote url. Must: %s, has: %s\n", url, rem.Config().URLs[0])
+	if rem.Config().URLs[0] != remote {
+		t.Fatalf("Wrong remote url. Must: %s, has: %s\n", remote, rem.Config().URLs[0])
 	}
 
-	err = svc.RemoveRemote(rName)
+	err = svc.RemoveRemote(userName, r, rName)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	rem, err = svc.Remote(rName)
+	rem, err = svc.Remote(userName, r, rName)
 	if err != nil {
 		if err != git.ErrRemoteNotFound {
 			t.Error(err)
@@ -1268,28 +1296,27 @@ func TestRemote(t *testing.T) {
 
 	defer db.Close()
 
-	svc, err := New(&contract.User{Name: userName, Email: userEmail}, s, db)
+	svc, err := New(s, db)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	r := "repo_1"
 
-	err = svc.CreateRepository(r)
+	err = svc.CreateRepository(userName, r)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	defer svc.RemoveRepository(r)
+	defer svc.RemoveRepository(userName, r)
 
-	url := "https://github.com/ujent/go-git-mysql"
-	_, err = svc.CreateRemote(url, "")
+	_, err = svc.CreateRemote(userName, r, remote, "")
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	rName := "origin"
-	rem, err := svc.Remote(rName)
+	rem, err := svc.Remote(userName, r, rName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1298,8 +1325,8 @@ func TestRemote(t *testing.T) {
 		t.Fatalf("Wrong remote number. Must: 1, has: %d\n", len(rem.Config().URLs))
 	}
 
-	if rem.Config().URLs[0] != url {
-		t.Fatalf("Wrong remote url. Must: %s, has: %s\n", url, rem.Config().URLs[0])
+	if rem.Config().URLs[0] != remote {
+		t.Fatalf("Wrong remote url. Must: %s, has: %s\n", remote, rem.Config().URLs[0])
 	}
 }
 
@@ -1317,28 +1344,27 @@ func TestRemotes(t *testing.T) {
 
 	defer db.Close()
 
-	svc, err := New(&contract.User{Name: userName, Email: userEmail}, s, db)
+	svc, err := New(s, db)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	repo := "repo_1"
 
-	err = svc.CreateRepository(repo)
+	err = svc.CreateRepository(userName, repo)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	defer svc.RemoveRepository(repo)
+	defer svc.RemoveRepository(userName, repo)
 
-	url := "https://github.com/ujent/go-git-mysql"
-	_, err = svc.CreateRemote(url, "")
+	_, err = svc.CreateRemote(userName, repo, remote, "")
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	rName := "origin"
-	remotes, err := svc.Remotes()
+	remotes, err := svc.Remotes(userName, repo)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1360,7 +1386,7 @@ func TestRemotes(t *testing.T) {
 		t.Fatalf("Wrong remote number. Must: 1, has: %d\n", len(rem.Config().URLs))
 	}
 
-	if rem.Config().URLs[0] != url {
-		t.Fatalf("Wrong remote url. Must: %s, has: %s\n", url, rem.Config().URLs[0])
+	if rem.Config().URLs[0] != remote {
+		t.Fatalf("Wrong remote url. Must: %s, has: %s\n", remote, rem.Config().URLs[0])
 	}
 }

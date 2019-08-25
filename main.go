@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/ujent/go-git-app/config"
-	"github.com/ujent/go-git-app/contract"
 )
 
 const userName = "Jack Jonson"
@@ -22,7 +21,7 @@ func main() {
 
 	log.Println("Config was successfully parsed")
 
-	server, err := newServer(settings, &contract.TestUsers[0], logger)
+	server, err := newServer(settings, logger)
 	if err != nil {
 		log.Fatal(err)
 	}

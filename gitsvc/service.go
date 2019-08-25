@@ -35,28 +35,28 @@ type Service interface {
 	SwitchUser(user *contract.User) error
 
 	//Filesystem returns fs of current repository
-	Filesystem() (billy.Filesystem, error)
+	Filesystem(user, repo string) (billy.Filesystem, error)
 
 	//FilesList - returns only files in Merged mode, conflict files are excluded
-	FilesList() ([]contract.FileInfo, error)
+	FilesList(rq *contract.BaseRequest) ([]contract.FileInfo, error)
 
 	// Repositories - returns all locally existing repositories
-	Repositories() ([]string, error)
+	Repositories(user string) ([]string, error)
 
 	//CreateRepository - creates a new repository
-	CreateRepository(name string) error
+	CreateRepository(user, repo string) error
 
 	//OpenRepository - opens an existing repository
-	OpenRepository(name string) error
+	OpenRepository(user, repo string) error
 
 	//RemoveRepository - removes specified repository permanently
-	RemoveRepository(name string) error
+	RemoveRepository(user, repo string) error
 
 	//CurrentRepository returns current repository name
 	CurrentRepository() (name string)
 
 	// Clone the given repository to the given directory
-	Clone(url, repoName string, auth *contract.Credentials) error
+	Clone(user, url, repoName string, auth *contract.Credentials) error
 
 	// Fetch fetches references along with the objects necessary to complete
 	// their histories, from the remote named as FetchOptions.RemoteName.
@@ -64,76 +64,76 @@ type Service interface {
 	//
 	// Returns nil if the operation is successful, NoErrAlreadyUpToDate if there are
 	// no changes to be fetched, or an error.
-	Fetch(remote string, auth *contract.Credentials) error
+	Fetch(user, repo, remote string, auth *contract.Credentials) error
 
 	// Pull incorporates changes from a remote repository into the current branch.
 	// Returns nil if the operation is successful, NoErrAlreadyUpToDate if there are
 	// no changes to be fetched, or an error.
-	Pull(remote string, auth *contract.Credentials) (string, error)
+	Pull(rq *contract.BaseRequest, remote string, auth *contract.Credentials) (string, error)
 
 	// Push performs a push to the remote. Returns NoErrAlreadyUpToDate if
 	// the remote was already up-to-date, from the remote named as
 	// FetchOptions.RemoteName.
 	// If `remote` parameter is empty, use "origin" by default
 	// Use credentials if needed. Remote also can be empty
-	Push(remote string, auth *contract.Credentials) error
+	Push(rq *contract.BaseRequest, remote string, auth *contract.Credentials) error
 
 	//Commit - commits changes and returns commit hash
-	Commit(msg string) (string, error)
+	Commit(rq *contract.BaseRequest, msg string) (string, error)
 
 	//Merge - analog of git merge command
-	Merge(branch string) (string, error)
+	Merge(rq *contract.BaseRequest, branch string) (string, error)
 
 	//MergeMsgShort - returns MERGE_MSG file content  with trimming strings which begin from "#"
-	MergeMsgShort() (string, error)
+	MergeMsgShort(rq *contract.BaseRequest) (string, error)
 
 	//MergeMsgFull - returns MERGE_MSG file content  without trimming strings which begin from "#"
-	MergeMsgFull() (string, error)
+	MergeMsgFull(rq *contract.BaseRequest) (string, error)
 
 	//ConflictFileList - returns pathes of files with conflicts
-	ConflictFileList() ([]string, error)
+	ConflictFileList(rq *contract.BaseRequest) ([]string, error)
 
 	//ConflictResultFile - returns file with unresolved conflicts
-	ConflictResultFile(path string) (billy.File, error)
+	ConflictResultFile(rq *contract.BaseRequest, path string) (billy.File, error)
 
 	//FilesList - returns current repository files pathes
-	ConflictFiles(path string) ([]contract.MergeFile, error)
+	ConflictFiles(rq *contract.BaseRequest, path string) ([]contract.MergeFile, error)
 
 	//Checkout - switches branch to specified commit
-	Checkout(commit string) error
+	Checkout(user, repo string, commit string) error
 
 	//CheckoutBranch - switch to specified existing branch or creates new branch if it doesn't exist
-	CheckoutBranch(branch string) error
+	CheckoutBranch(user, repo, branch string) error
 
 	//CreateBranch - creates a new branch from specified commit, if commit is empty new branch will be created from current commit
-	CreateBranch(branch, commit string) error
+	CreateBranch(user, repo, branch, commit string) error
 
 	//RemoveBranch - removes specified branch
-	RemoveBranch(branch string) error
+	RemoveBranch(user, repo, branch string) error
 
 	//CurrentBranch - returns information where HEAD points now
 	CurrentBranch() (*contract.Branch, error)
 
 	//Branches - returns a list of local branches names
-	Branches() ([]string, error)
+	Branches(user, repo string) ([]string, error)
 
 	//Add - adds the file content to the staging area
-	Add(path string) error
+	Add(rq *contract.BaseRequest, path string) error
 
 	//Log - Gets the HEAD history from HEAD, just like command "git log"
-	Log() ([]contract.Commit, error)
+	Log(rq *contract.BaseRequest) ([]contract.Commit, error)
 
 	//CreateRemote - creates a new remote, if name isn't specified it use "origin" by default
-	CreateRemote(url, name string) (*git.Remote, error)
+	CreateRemote(user, repo, url, name string) (*git.Remote, error)
 
 	//RemoveRemote - delete the remote and it's config from the repository
-	RemoveRemote(name string) error
+	RemoveRemote(user, repo, name string) error
 
 	//Remotes - returns a list with all remotes
-	Remotes() ([]*git.Remote, error)
+	Remotes(user, repo string) ([]*git.Remote, error)
 
 	//Remote returns a remote if exists or git.ErrRemoteNotFound
-	Remote(name string) (*git.Remote, error)
+	Remote(user, repo, name string) (*git.Remote, error)
 }
 
 type service struct {
@@ -150,21 +150,9 @@ type repository struct {
 }
 
 //New - create an instance of gitSvc
-func New(user *contract.User, s *contract.ServerSettings, db *sqlx.DB) (Service, error) {
+func New(s *contract.ServerSettings, db *sqlx.DB) (Service, error) {
 
-	if user == nil {
-		return nil, errors.New("user cannot be empty")
-	}
-
-	if user.Name == "" {
-		return nil, errors.New("userName cannot be empty")
-	}
-
-	if user.Email == "" {
-		return nil, errors.New("userEmail cannot be empty")
-	}
-
-	return &service{user: user, settings: s, db: db}, nil
+	return &service{user: &contract.User{}, settings: s, db: db}, nil
 }
 
 func (svc *service) SwitchUser(user *contract.User) error {
@@ -178,10 +166,12 @@ func (svc *service) SwitchUser(user *contract.User) error {
 	}
 
 	if user.Email == "" {
-		return errors.New("userEmail cannot be empty")
+		user.Email = user.Name + "@test.com"
 	}
 
-	if user.Name == svc.user.Name && user.Email == svc.user.Email {
+	if user.Name == svc.user.Name {
+		svc.user.Email = user.Email
+
 		return nil
 	}
 
@@ -195,10 +185,87 @@ func (svc *service) CurrentUser() *contract.User {
 	return svc.user
 }
 
+func (svc *service) setSettings(user *contract.User, repo, branch string) error {
+
+	err := svc.SwitchUser(user)
+	if err != nil {
+		return err
+	}
+
+	if svc.git == nil || (svc.git != nil && svc.git.name != repo) {
+
+		err = svc.OpenRepository(user.Name, repo)
+		if err != nil {
+			return err
+		}
+	}
+
+	if branch != "" {
+		currBr, err := svc.CurrentBranch()
+		if err != nil {
+			return err
+		}
+
+		if currBr.Name != branch {
+			err = svc.CheckoutBranch(user.Name, repo, branch)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func (svc *service) validateBaseRQ(rq *contract.BaseRequest) error {
+	if rq == nil {
+		return errors.New("rq cannot be nil")
+	}
+
+	if rq.User == nil {
+		return errors.New("User cannot be empty")
+	}
+
+	if rq.Repository == "" {
+		return errors.New("Repository cannot be empty")
+	}
+
+	if rq.Branch == "" {
+		return errors.New("Branch cannot be empty")
+	}
+
+	return nil
+}
+
+func (svc *service) validateBaseRQWithoutBranch(rq *contract.BaseRequest) error {
+	if rq == nil {
+		return errors.New("rq cannot be nil")
+	}
+
+	if rq.User == nil {
+		return errors.New("User cannot be empty")
+	}
+
+	if rq.Repository == "" {
+		return errors.New("Repository cannot be empty")
+	}
+
+	return nil
+}
+
 //Filesystem returns fs of current repository
-func (svc *service) Filesystem() (billy.Filesystem, error) {
-	if svc.git == nil {
-		return nil, contract.ErrGitRepositoryNotSet
+func (svc *service) Filesystem(user, repo string) (billy.Filesystem, error) {
+	if user == "" {
+		return nil, errors.New("User cannot be empty")
+	}
+
+	if repo == "" {
+		return nil, errors.New("Repository cannot be empty")
+	}
+
+	err := svc.setSettings(&contract.User{Name: user}, repo, "")
+	if err != nil {
+		return nil, err
 	}
 
 	return svc.git.fs, nil
@@ -208,9 +275,16 @@ func (svc *service) Filesystem() (billy.Filesystem, error) {
 type empty struct{}
 
 //FilesList - returns current repository files pathes
-func (svc *service) FilesList() ([]contract.FileInfo, error) {
-	if svc.git == nil {
-		return nil, contract.ErrGitRepositoryNotSet
+func (svc *service) FilesList(rq *contract.BaseRequest) ([]contract.FileInfo, error) {
+
+	err := svc.validateBaseRQ(rq)
+	if err != nil {
+		return nil, err
+	}
+
+	err = svc.setSettings(rq.User, rq.Repository, rq.Branch)
+	if err != nil {
+		return nil, err
 	}
 
 	w, err := svc.git.repo.Worktree()
@@ -253,13 +327,18 @@ func (svc *service) CurrentRepository() (name string) {
 }
 
 //CreateRepository - creates a new repository
-func (svc *service) CreateRepository(name string) error {
+func (svc *service) CreateRepository(user, repo string) error {
 
-	if name == "" {
+	if repo == "" {
 		return errors.New("Repository name cannot be empty")
 	}
 
-	filesTableName, gitTableName, err := svc.tablesNames(name)
+	err := svc.SwitchUser(&contract.User{Name: user})
+	if err != nil {
+		return err
+	}
+
+	filesTableName, gitTableName, err := svc.tablesNames(user, repo)
 	if err != nil {
 		return err
 	}
@@ -277,7 +356,7 @@ func (svc *service) CreateRepository(name string) error {
 	st := filesystem.NewStorage(fs, cache.NewObjectLRUDefault())
 	r, err := git.Init(st, gitFs)
 
-	svc.git = &repository{name: name, fs: gitFs, repo: r}
+	svc.git = &repository{name: repo, fs: gitFs, repo: r}
 
 	if err != nil {
 		return err
@@ -286,32 +365,38 @@ func (svc *service) CreateRepository(name string) error {
 	return nil
 }
 
-func (svc *service) tablesNames(repoName string) (filesTableName, gitTableName string, err error) {
+func (svc *service) tablesNames(user, repoName string) (filesTableName, gitTableName string, err error) {
 	if svc.user == nil {
 		return "", "", errors.New("user cannot be empty")
 	}
 
-	if svc.user.Name == "" {
+	if user == "" {
 		return "", "", errors.New("userName cannot be empty")
 	}
 
-	filesTableName = filesPrefix + svc.user.Name + "_" + repoName
-	gitTableName = gitPrefix + svc.user.Name + "_" + repoName
+	filesTableName = filesPrefix + user + "_" + repoName
+	gitTableName = gitPrefix + user + "_" + repoName
 
 	return filesTableName, gitTableName, nil
 }
 
 //OpenRepository - opens an existing repository
-func (svc *service) OpenRepository(name string) error {
-	if name == "" {
+func (svc *service) OpenRepository(user, repo string) error {
+
+	if repo == "" {
 		return errors.New("Repository name cannot be empty")
 	}
 
-	if svc.git != nil && svc.git.name == name {
+	err := svc.SwitchUser(&contract.User{Name: user})
+	if err != nil {
+		return err
+	}
+
+	if svc.git != nil && svc.git.name == repo {
 		return nil
 	}
 
-	filesTableName, gitTableName, err := svc.tablesNames(name)
+	filesTableName, gitTableName, err := svc.tablesNames(user, repo)
 	if err != nil {
 		return err
 	}
@@ -333,15 +418,20 @@ func (svc *service) OpenRepository(name string) error {
 		return err
 	}
 
-	svc.git = &repository{name: name, fs: gitFs, repo: r}
+	svc.git = &repository{name: repo, fs: gitFs, repo: r}
 
 	return nil
 }
 
 // Clone the given repository to the given directory
-func (svc *service) Clone(url, repoName string, c *contract.Credentials) error {
+func (svc *service) Clone(user, url, repoName string, c *contract.Credentials) error {
 
-	filesTableName, gitTableName, err := svc.tablesNames(repoName)
+	err := svc.SwitchUser(&contract.User{Name: user})
+	if err != nil {
+		return err
+	}
+
+	filesTableName, gitTableName, err := svc.tablesNames(user, repoName)
 	if err != nil {
 		return err
 	}
@@ -381,7 +471,10 @@ func (svc *service) Clone(url, repoName string, c *contract.Credentials) error {
 }
 
 // Repositories - returns all locally existing repositories
-func (svc *service) Repositories() ([]string, error) {
+func (svc *service) Repositories(user string) ([]string, error) {
+	if user == "" {
+		return nil, errors.New("user cannot be empty")
+	}
 
 	tables := []string{}
 	svc.db.Select(&tables, "SELECT table_name FROM information_schema.tables ORDER BY table_name ASC")
@@ -389,7 +482,12 @@ func (svc *service) Repositories() ([]string, error) {
 	repos := []string{}
 	for _, t := range tables {
 		if strings.HasPrefix(t, gitPrefix) {
-			repos = append(repos, strings.TrimPrefix(t, gitPrefix))
+			temp := strings.TrimPrefix(t, gitPrefix)
+			userPrefix := user + "_"
+
+			if strings.HasPrefix(temp, userPrefix) {
+				repos = append(repos, strings.TrimPrefix(temp, userPrefix))
+			}
 		}
 	}
 
@@ -397,9 +495,13 @@ func (svc *service) Repositories() ([]string, error) {
 }
 
 //RemoveRepository - removes specified repository permanently
-func (svc *service) RemoveRepository(name string) error {
+func (svc *service) RemoveRepository(user, repo string) error {
+	err := svc.SwitchUser(&contract.User{Name: user})
+	if err != nil {
+		return err
+	}
 
-	filesTable, gitTable, err := svc.tablesNames(name)
+	filesTable, gitTable, err := svc.tablesNames(user, repo)
 	if err != nil {
 		return err
 	}
@@ -416,7 +518,7 @@ func (svc *service) RemoveRepository(name string) error {
 		return err
 	}
 
-	if svc.git != nil && svc.git.name == name {
+	if svc.git != nil && svc.git.name == repo {
 		svc.git = nil
 	}
 
@@ -429,10 +531,11 @@ func (svc *service) RemoveRepository(name string) error {
 //
 // Returns nil if the operation is successful, NoErrAlreadyUpToDate if there are
 // no changes to be fetched, or an error.
-func (svc *service) Fetch(remote string, auth *contract.Credentials) error {
+func (svc *service) Fetch(user, repo, remote string, auth *contract.Credentials) error {
 
-	if svc.git == nil {
-		return contract.ErrGitRepositoryNotSet
+	err := svc.setSettings(&contract.User{Name: user}, repo, "")
+	if err != nil {
+		return err
 	}
 
 	if remote == "" {
@@ -451,10 +554,16 @@ func (svc *service) Fetch(remote string, auth *contract.Credentials) error {
 // Pull incorporates changes from a remote repository into the current branch.
 // Returns nil if the operation is successful, NoErrAlreadyUpToDate if there are
 // no changes to be fetched, or an error.
-func (svc *service) Pull(remote string, auth *contract.Credentials) (string, error) {
+func (svc *service) Pull(rq *contract.BaseRequest, remote string, auth *contract.Credentials) (string, error) {
 
-	if svc.git == nil {
-		return "", contract.ErrGitRepositoryNotSet
+	err := svc.validateBaseRQWithoutBranch(rq)
+	if err != nil {
+		return "", err
+	}
+
+	err = svc.setSettings(rq.User, rq.Repository, rq.Branch)
+	if err != nil {
+		return "", err
 	}
 
 	w, err := svc.git.repo.Worktree()
@@ -480,9 +589,16 @@ func (svc *service) Pull(remote string, auth *contract.Credentials) (string, err
 // FetchOptions.RemoteName.
 // If `remote` parameter is empty, use "origin" by default
 // Use credentials if needed. Remote also can be empty
-func (svc *service) Push(remote string, auth *contract.Credentials) error {
-	if svc.git == nil {
-		return contract.ErrGitRepositoryNotSet
+func (svc *service) Push(rq *contract.BaseRequest, remote string, auth *contract.Credentials) error {
+
+	err := svc.validateBaseRQWithoutBranch(rq)
+	if err != nil {
+		return err
+	}
+
+	err = svc.setSettings(rq.User, rq.Repository, rq.Branch)
+	if err != nil {
+		return err
 	}
 
 	if remote == "" {
@@ -499,9 +615,16 @@ func (svc *service) Push(remote string, auth *contract.Credentials) error {
 }
 
 //Commit - commits changes and returns commit hash
-func (svc *service) Commit(msg string) (string, error) {
-	if svc.git == nil {
-		return "", contract.ErrGitRepositoryNotSet
+func (svc *service) Commit(rq *contract.BaseRequest, msg string) (string, error) {
+
+	err := svc.validateBaseRQWithoutBranch(rq)
+	if err != nil {
+		return "", err
+	}
+
+	err = svc.setSettings(rq.User, rq.Repository, rq.Branch)
+	if err != nil {
+		return "", err
 	}
 
 	wt, err := svc.git.repo.Worktree()
@@ -525,13 +648,19 @@ func (svc *service) Commit(msg string) (string, error) {
 }
 
 //Merge - analog of git merge command
-func (svc *service) Merge(branch string) (string, error) {
+func (svc *service) Merge(rq *contract.BaseRequest, branch string) (string, error) {
 	if branch == "" {
 		return "", errors.New("Branch name cannot be empty")
 	}
 
-	if svc.git == nil {
-		return "", contract.ErrGitRepositoryNotSet
+	err := svc.validateBaseRQ(rq)
+	if err != nil {
+		return "", err
+	}
+
+	err = svc.setSettings(rq.User, rq.Repository, rq.Branch)
+	if err != nil {
+		return "", err
 	}
 
 	w, err := svc.git.repo.Worktree()
@@ -543,9 +672,15 @@ func (svc *service) Merge(branch string) (string, error) {
 }
 
 //MergeMsgShort - returns MERGE_MSG file content  with trimming strings which begin from "#"
-func (svc *service) MergeMsgShort() (string, error) {
-	if svc.git == nil {
-		return "", contract.ErrGitRepositoryNotSet
+func (svc *service) MergeMsgShort(rq *contract.BaseRequest) (string, error) {
+	err := svc.validateBaseRQ(rq)
+	if err != nil {
+		return "", err
+	}
+
+	err = svc.setSettings(rq.User, rq.Repository, rq.Branch)
+	if err != nil {
+		return "", err
 	}
 
 	msg, err := svc.git.repo.Storer.MergeMsg()
@@ -557,9 +692,15 @@ func (svc *service) MergeMsgShort() (string, error) {
 }
 
 //MergeMsgFull - returns MERGE_MSG file content  without trimming strings which begin from "#"
-func (svc *service) MergeMsgFull() (string, error) {
-	if svc.git == nil {
-		return "", contract.ErrGitRepositoryNotSet
+func (svc *service) MergeMsgFull(rq *contract.BaseRequest) (string, error) {
+	err := svc.validateBaseRQ(rq)
+	if err != nil {
+		return "", err
+	}
+
+	err = svc.setSettings(rq.User, rq.Repository, rq.Branch)
+	if err != nil {
+		return "", err
 	}
 
 	msg, err := svc.git.repo.Storer.MergeMsgFileContent()
@@ -571,9 +712,15 @@ func (svc *service) MergeMsgFull() (string, error) {
 }
 
 //ConflictFileList - returns pathes of files with conflicts
-func (svc *service) ConflictFileList() ([]string, error) {
-	if svc.git == nil {
-		return nil, contract.ErrGitRepositoryNotSet
+func (svc *service) ConflictFileList(rq *contract.BaseRequest) ([]string, error) {
+	err := svc.validateBaseRQ(rq)
+	if err != nil {
+		return nil, err
+	}
+
+	err = svc.setSettings(rq.User, rq.Repository, rq.Branch)
+	if err != nil {
+		return nil, err
 	}
 
 	w, err := svc.git.repo.Worktree()
@@ -595,9 +742,15 @@ func (svc *service) ConflictFileList() ([]string, error) {
 }
 
 //ConflictResultFile - returns file with unresolved conflicts
-func (svc *service) ConflictResultFile(path string) (billy.File, error) {
-	if svc.git == nil {
-		return nil, contract.ErrGitRepositoryNotSet
+func (svc *service) ConflictResultFile(rq *contract.BaseRequest, path string) (billy.File, error) {
+	err := svc.validateBaseRQ(rq)
+	if err != nil {
+		return nil, err
+	}
+
+	err = svc.setSettings(rq.User, rq.Repository, rq.Branch)
+	if err != nil {
+		return nil, err
 	}
 
 	w, err := svc.git.repo.Worktree()
@@ -614,9 +767,15 @@ func (svc *service) ConflictResultFile(path string) (billy.File, error) {
 }
 
 //ConflictFiles - returns base, ours or theirs files by path of conflict file
-func (svc *service) ConflictFiles(path string) ([]contract.MergeFile, error) {
-	if svc.git == nil {
-		return nil, contract.ErrGitRepositoryNotSet
+func (svc *service) ConflictFiles(rq *contract.BaseRequest, path string) ([]contract.MergeFile, error) {
+	err := svc.validateBaseRQ(rq)
+	if err != nil {
+		return nil, err
+	}
+
+	err = svc.setSettings(rq.User, rq.Repository, rq.Branch)
+	if err != nil {
+		return nil, err
 	}
 
 	w, err := svc.git.repo.Worktree()
@@ -667,9 +826,18 @@ func (svc *service) toFileStage(st index.Stage) contract.FileStage {
 }
 
 //Checkout - switches branch to specified commit
-func (svc *service) Checkout(commit string) error {
-	if svc.git == nil {
-		return contract.ErrGitRepositoryNotSet
+func (svc *service) Checkout(user, repo string, commit string) error {
+	if user == "" {
+		return errors.New("User cannot be empty")
+	}
+
+	if repo == "" {
+		return errors.New("Repository cannot be empty")
+	}
+
+	err := svc.setSettings(&contract.User{Name: user}, repo, "")
+	if err != nil {
+		return err
 	}
 
 	wt, err := svc.git.repo.Worktree()
@@ -689,13 +857,22 @@ func (svc *service) Checkout(commit string) error {
 }
 
 //CheckoutBranch - switch to specified existing branch or creates new branch if it doesn't exist
-func (svc *service) CheckoutBranch(branch string) error {
+func (svc *service) CheckoutBranch(user, repo, branch string) error {
 	if branch == "" {
 		return errors.New("Branch name cannot be empty")
 	}
 
-	if svc.git == nil {
-		return contract.ErrGitRepositoryNotSet
+	if user == "" {
+		return errors.New("User cannot be empty")
+	}
+
+	if repo == "" {
+		return errors.New("Repository cannot be empty")
+	}
+
+	err := svc.setSettings(&contract.User{Name: user}, repo, "")
+	if err != nil {
+		return err
 	}
 
 	iter, err := svc.git.repo.Branches()
@@ -719,7 +896,7 @@ func (svc *service) CheckoutBranch(branch string) error {
 	}
 
 	if !hasBranch {
-		return svc.CreateBranch(branch, "")
+		return svc.CreateBranch(user, repo, branch, "")
 	}
 
 	wt, err := svc.git.repo.Worktree()
@@ -739,13 +916,22 @@ func (svc *service) CheckoutBranch(branch string) error {
 }
 
 //CreateBranch - creates a new branch from specified commit, if commit is empty new branch will be created from current commit
-func (svc *service) CreateBranch(branch, commit string) error {
+func (svc *service) CreateBranch(user, repo, branch, commit string) error {
 	if branch == "" {
 		return errors.New("Branch name cannot be empty")
 	}
 
-	if svc.git == nil {
-		return contract.ErrGitRepositoryNotSet
+	if user == "" {
+		return errors.New("User cannot be empty")
+	}
+
+	if repo == "" {
+		return errors.New("Repository cannot be empty")
+	}
+
+	err := svc.setSettings(&contract.User{Name: user}, repo, "")
+	if err != nil {
+		return err
 	}
 
 	wt, err := svc.git.repo.Worktree()
@@ -781,13 +967,22 @@ func (svc *service) CreateBranch(branch, commit string) error {
 }
 
 //RemoveBranch - removes specified branch
-func (svc *service) RemoveBranch(branch string) error {
+func (svc *service) RemoveBranch(user, repo, branch string) error {
 	if branch == "" {
 		return errors.New("Branch name cannot be empty")
 	}
 
-	if svc.git == nil {
-		return contract.ErrGitRepositoryNotSet
+	if user == "" {
+		return errors.New("User cannot be empty")
+	}
+
+	if repo == "" {
+		return errors.New("Repository cannot be empty")
+	}
+
+	err := svc.setSettings(&contract.User{Name: user}, repo, "")
+	if err != nil {
+		return err
 	}
 
 	ref := plumbing.NewBranchReferenceName(branch)
@@ -810,9 +1005,18 @@ func (svc *service) CurrentBranch() (*contract.Branch, error) {
 }
 
 //Branches - returns a list of local branches names
-func (svc *service) Branches() ([]string, error) {
-	if svc.git == nil {
-		return nil, contract.ErrGitRepositoryNotSet
+func (svc *service) Branches(user, repo string) ([]string, error) {
+	if user == "" {
+		return nil, errors.New("User cannot be empty")
+	}
+
+	if repo == "" {
+		return nil, errors.New("Repository cannot be empty")
+	}
+
+	err := svc.setSettings(&contract.User{Name: user}, repo, "")
+	if err != nil {
+		return nil, err
 	}
 
 	iter, err := svc.git.repo.Branches()
@@ -837,10 +1041,16 @@ func (svc *service) Branches() ([]string, error) {
 }
 
 //Add - adds the file content to the staging area
-func (svc *service) Add(path string) error {
+func (svc *service) Add(rq *contract.BaseRequest, path string) error {
 
-	if svc.git == nil {
-		return contract.ErrGitRepositoryNotSet
+	err := svc.validateBaseRQWithoutBranch(rq)
+	if err != nil {
+		return err
+	}
+
+	err = svc.setSettings(rq.User, rq.Repository, rq.Branch)
+	if err != nil {
+		return nil
 	}
 
 	wt, err := svc.git.repo.Worktree()
@@ -852,10 +1062,16 @@ func (svc *service) Add(path string) error {
 }
 
 //Log - Gets the HEAD history from HEAD, just like command "git log"
-func (svc *service) Log() ([]contract.Commit, error) {
+func (svc *service) Log(rq *contract.BaseRequest) ([]contract.Commit, error) {
 
-	if svc.git == nil {
-		return nil, contract.ErrGitRepositoryNotSet
+	err := svc.validateBaseRQ(rq)
+	if err != nil {
+		return nil, err
+	}
+
+	err = svc.setSettings(rq.User, rq.Repository, rq.Branch)
+	if err != nil {
+		return nil, nil
 	}
 
 	ref, err := svc.git.repo.Head()
@@ -880,13 +1096,22 @@ func (svc *service) Log() ([]contract.Commit, error) {
 }
 
 //CreateRemote - creates a new remote, if name isn't specified it use "origin" by default
-func (svc *service) CreateRemote(url, name string) (*git.Remote, error) {
+func (svc *service) CreateRemote(user, repo, url, name string) (*git.Remote, error) {
 	if url == "" {
 		return nil, errors.New("Remote url cannot be empty")
 	}
 
-	if svc.git == nil {
-		return nil, contract.ErrGitRepositoryNotSet
+	if user == "" {
+		return nil, errors.New("User cannot be empty")
+	}
+
+	if repo == "" {
+		return nil, errors.New("Repository cannot be empty")
+	}
+
+	err := svc.setSettings(&contract.User{Name: user}, repo, "")
+	if err != nil {
+		return nil, err
 	}
 
 	if name == "" {
@@ -906,22 +1131,40 @@ func (svc *service) CreateRemote(url, name string) (*git.Remote, error) {
 }
 
 //RemoveRemote - delete the remote and it's config from the repository
-func (svc *service) RemoveRemote(name string) error {
+func (svc *service) RemoveRemote(user, repo, name string) error {
 	if name == "" {
 		return errors.New("Remote name cannot be empty")
 	}
 
-	if svc.git == nil {
-		return contract.ErrGitRepositoryNotSet
+	if user == "" {
+		return errors.New("User cannot be empty")
+	}
+
+	if repo == "" {
+		return errors.New("Repository cannot be empty")
+	}
+
+	err := svc.setSettings(&contract.User{Name: user}, repo, "")
+	if err != nil {
+		return err
 	}
 
 	return svc.git.repo.DeleteRemote(name)
 }
 
 //Remotes - returns a list with all remotes
-func (svc *service) Remotes() ([]*git.Remote, error) {
-	if svc.git == nil {
-		return nil, contract.ErrGitRepositoryNotSet
+func (svc *service) Remotes(user, repo string) ([]*git.Remote, error) {
+	if user == "" {
+		return nil, errors.New("User cannot be empty")
+	}
+
+	if repo == "" {
+		return nil, errors.New("Repository cannot be empty")
+	}
+
+	err := svc.setSettings(&contract.User{Name: user}, repo, "")
+	if err != nil {
+		return nil, err
 	}
 
 	remotes, err := svc.git.repo.Remotes()
@@ -933,13 +1176,22 @@ func (svc *service) Remotes() ([]*git.Remote, error) {
 }
 
 //Remote returns a remote if exists or git.ErrRemoteNotFound
-func (svc *service) Remote(name string) (*git.Remote, error) {
+func (svc *service) Remote(user, repo, name string) (*git.Remote, error) {
 	if name == "" {
 		return nil, errors.New("Remote name cannot be empty")
 	}
 
-	if svc.git == nil {
-		return nil, contract.ErrGitRepositoryNotSet
+	if user == "" {
+		return nil, errors.New("User cannot be empty")
+	}
+
+	if repo == "" {
+		return nil, errors.New("Repository cannot be empty")
+	}
+
+	err := svc.setSettings(&contract.User{Name: user}, repo, "")
+	if err != nil {
+		return nil, err
 	}
 
 	r, err := svc.git.repo.Remote(name)
