@@ -15,15 +15,15 @@ const mapStateToProps = (state, ownProps) => {
 
 const mapDispatchToProps = (dispatch, ownProps) => {
   return {
-    handleCommit: (msg) => dispatch(actions.commit()),
-    handleCheckoutBranch: () => dispatch(actions.checkoutBranch()),
-    handleClone: () => dispatch(actions.clone()),
+    handleCommit: (msg) => dispatch(actions.commit(msg)),
+    handleCheckoutBranch: (name) => dispatch(actions.switchBranch(name)),
+    handleClone: (url, authName, authPsw) => dispatch(actions.clone(url, authName, authPsw)),
     handleLog: () => dispatch(actions.log()),
-    handleMerge: () => dispatch(actions.merge()),
-    handlePull: () => dispatch(actions.pull()),
-    handlePush: () => dispatch(actions.push()),
-    handleRemoveBranch: () => dispatch(actions.removeBranch()),
-    handleRemoveRepo: () => dispatch(actions.removeRepo()),
+    handlePull: (remote, authName, authPsw) => dispatch(actions.pull(remote, authName, authPsw)),
+    handlePush: (remote, authName, authPsw) => dispatch(actions.push(remote, authName, authPsw)),
+    handleRemoveBranch: (branch) => dispatch(actions.removeBranch(branch)),
+    handleRemoveRepo: (repo) => dispatch(actions.removeRepo(repo)),
+    handleMerge: () => dispatch(actions.merge())
   };
 };
 const CommandsContainer = connect(mapStateToProps, mapDispatchToProps)(Commands);

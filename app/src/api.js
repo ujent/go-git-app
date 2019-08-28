@@ -50,43 +50,129 @@ export function switchUser(name) {
     });
 }
 
-export function getRepositories() {
-    return fetchApi('/repositories', {});
+export function getRepositories(user) {
+    return fetchApi('/repositories/' + user, {});
 }
 
-export function switchRepo(name) {
+export function getCurrentRepository(user) {
+    return fetchApi('/repositories/current/' + user, {});
+}
 
-    return fetchApi('/repositories/open/' + name, {
+export function switchRepo(user, repo) {
+    const query = queryString.stringify({ repo: repo, user: user });
+
+    return fetchApi('/repositories/open?' + query, {});
+}
+
+
+export function getBranches(user, repo) {
+    const query = queryString.stringify({ repo: repo, user: user });
+
+    return fetchApi('/branches?' + query, {});
+}
+
+export function checkoutBranch(user, repo, branch) {
+    const query = JSON.stringify({ repo: repo, user: user, branch: branch });
+
+    return fetchApi('/branches/checkout', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: query
     });
 }
 
-export function getBranches() {
-    return fetchApi('/branches', {});
+export function getRepoFiles(user, repo, branch) {
+    const query = queryString.stringify({ repo: repo, user: user, branch: branch });
+
+    return fetchApi('files?' + query, {});
 }
 
-export function switchBranch(name) {
-    return fetchApi('/branches/checkout/' + name, {});
+export function commit(settings, msg) {
+    const query = JSON.stringify({ base: settings, message: msg });
+
+    return fetchApi('/commit', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: query
+    });
 }
 
-export function getRepoFiles() {
-    return fetchApi('files', {});
+export function clone(user, url, authName, authPsw) {
+    const query = authName ?
+        JSON.stringify({ user: user, URL: url, auth: { name: authName, psw: authPsw } })
+        : JSON.stringify({ user: user, URL: url });
+
+    return fetchApi('/clone', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: query
+    });
 }
 
-export function commit() {
+
+export function log(user, repo, branch) {
+    const query = queryString.stringify({ repo: repo, user: user, branch: branch });
+
+    return fetchApi('/log?' + query, {});
 }
-export function checkoutBranch() {
+
+export function pull(settings, remote, authName, authPsw) {
+    const query = authName ?
+        JSON.stringify({ base: settings, remote: remote, auth: { name: authName, psw: authPsw } })
+        : JSON.stringify({ base: settings, remote: remote });
+
+    return fetchApi('/pull', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: query
+    });
 }
-export function clone() {
+
+export function push(settings, remote, authName, authPsw) {
+    const query = authName ?
+        JSON.stringify({ base: settings, remote: remote, auth: { name: authName, psw: authPsw } })
+        : JSON.stringify({ base: settings, remote: remote });
+
+    return fetchApi('/push', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: query
+    });
 }
-export function log() {
+
+export function removeBranch(user, repo, branch) {
+    const query = JSON.stringify({ repo: repo, user: user, branch: branch });
+
+    return fetchApi('/branches', {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: query
+    });
 }
+
+export function removeRepo(user, repo) {
+    const query = JSON.stringify({ repo: repo, user: user });
+
+    return fetchApi('/repositories', {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: query
+    });
+}
+
 export function merge() {
-}
-export function pull() {
-}
-export function push() {
-}
-export function removeBranch() {
-}
-export function removeRepo() {
 }

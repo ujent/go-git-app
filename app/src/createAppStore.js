@@ -30,11 +30,8 @@ function getInitialState() {
     branches: [],
     settings: {
       currentUser: '',
-      prevUser: '',
       currentRepo: '',
-      prevRepo: '',
-      currentBranch: '',
-      prevBranch: ''
+      currentBranch: ''
     },
     output: '',
     fileContent: {

@@ -21,8 +21,7 @@ type RepositoriesRQ struct {
 
 //RepositoriesRS - the response to repositories request
 type RepositoriesRS struct {
-	Repos   []RepoRS `json:"repos"`
-	Current string   `json:"current"`
+	Repos []RepoRS `json:"repos"`
 }
 
 //RepoRS - base info about repository
@@ -62,8 +61,7 @@ type UserRS struct {
 
 //LogRS - the response to log request
 type LogRS struct {
-	Base    *BaseRequestRQ `json:"base"`
-	Commits []CommitRS     `json:"commits"`
+	Commits []CommitRS `json:"commits"`
 }
 
 //CommitRS - base commit information
@@ -92,10 +90,9 @@ type FilesRS struct {
 
 //CloneRQ is the request payload for clone repository
 type CloneRQ struct {
-	User     string              `json:"user"`
-	Auth     *CredentialsPayload `json:"auth,omitempty"`
-	URL      string              `json:"URL"`
-	RepoName string              `json:"repoName"`
+	User string              `json:"user"`
+	Auth *CredentialsPayload `json:"auth,omitempty"`
+	URL  string              `json:"URL"`
 }
 
 // CommitRQ - request for commit operation

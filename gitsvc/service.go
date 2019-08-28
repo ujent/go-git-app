@@ -56,7 +56,7 @@ type Service interface {
 	CurrentRepository() (name string)
 
 	// Clone the given repository to the given directory
-	Clone(user, url, repoName string, auth *contract.Credentials) error
+	Clone(user, url string, auth *contract.Credentials) (string, error)
 
 	// Fetch fetches references along with the objects necessary to complete
 	// their histories, from the remote named as FetchOptions.RemoteName.
@@ -424,26 +424,38 @@ func (svc *service) OpenRepository(user, repo string) error {
 }
 
 // Clone the given repository to the given directory
-func (svc *service) Clone(user, url, repoName string, c *contract.Credentials) error {
+func (svc *service) Clone(user, url string, auth *contract.Credentials) (string, error) {
+
+	if url == "" {
+		return "", errors.New("URL cannot be empty")
+	}
+
+	splitted := strings.Split(url, "/")
+	last := splitted[len(splitted)-1]
+	repoName := strings.TrimSuffix(last, ".git")
+
+	if repoName == "" {
+		return "", errors.New("wrong URL for clone operation")
+	}
 
 	err := svc.SwitchUser(&contract.User{Name: user})
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	filesTableName, gitTableName, err := svc.tablesNames(user, repoName)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	fs, err := mysqlfs.New(svc.settings.GitConnStr, filesTableName)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	gitFs, err := mysqlfs.New(svc.settings.GitConnStr, gitTableName)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	st := filesystem.NewStorage(fs, cache.NewObjectLRUDefault())
@@ -453,21 +465,21 @@ func (svc *service) Clone(user, url, repoName string, c *contract.Credentials) e
 		RecurseSubmodules: git.DefaultSubmoduleRecursionDepth,
 	}
 
-	if c != nil {
+	if auth != nil {
 		opts.Auth = &http.BasicAuth{
-			Username: c.Name,
-			Password: c.Password,
+			Username: auth.Name,
+			Password: auth.Password,
 		}
 	}
 
 	r, err := git.Clone(st, gitFs, opts)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	svc.git = &repository{name: repoName, fs: gitFs, repo: r}
 
-	return nil
+	return repoName, nil
 }
 
 // Repositories - returns all locally existing repositories

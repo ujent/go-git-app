@@ -1,6 +1,11 @@
 import * as api from './api';
 import { ActionType } from './constants';
 
+
+export function getSettings(state) {
+    return { user: state.currentUser, repo: state.currentRepo, branch: state.currentBranch }
+}
+
 export function showMessage(msg) {
     return {
         type: ActionType.SHOW_MSG,
@@ -24,12 +29,19 @@ export function showError(err) {
     };
 }
 
+export function setCurrentUser(name) {
+    return {
+        type: ActionType.SET_CURRENT_USER,
+        user: name
+    }
+}
+
 export function switchUser(name) {
     return (dispatch, getState) => {
         api.switchUser(name).then(
             () => {
-                dispatch(resetRepo)
-                dispatch(resetBranch)
+                dispatch(setCurrentUser(name));
+                dispatch(getRepositories(name))
             },
             err => {
                 dispatch(showError(err));
@@ -38,19 +50,28 @@ export function switchUser(name) {
     }
 }
 
-export function setRepositories(repos, current) {
+export function setRepositories(repos) {
     return {
         type: ActionType.SET_REPOSITORIES,
-        repos,
-        current
+        repos
+    };
+}
+
+
+export function setCurrentRepo(repo) {
+    return {
+        type: ActionType.SET_CURRENT_REPOSITORY,
+        current: repo
     };
 }
 
 export function getRepositories() {
     return (dispatch, getState) => {
-        api.getRepositories().then(
+        const user = getState().currentUser;
+
+        api.getRepositories(user).then(
             rs => {
-                dispatch(setRepositories(rs.repos, rs.current));
+                dispatch(setRepositories(rs.repos));
             },
             err => {
                 dispatch(showError(err));
@@ -59,16 +80,15 @@ export function getRepositories() {
     }
 }
 
-export function resetRepo() {
-    return {
-        type: ActionType.RESET_REPO
-    };
-}
-
 export function switchRepo(name) {
     return (dispatch, getState) => {
-        api.switchRepo(name).then(
-            () => { dispatch(getBranches) },
+        const user = getState().currentUser;
+
+        api.switchRepo(user, name).then(
+            () => {
+                dispatch(setCurrentRepo(name));
+                dispatch(getBranches(user, name));
+            },
             err => {
                 dispatch(showError(err));
             }
@@ -76,20 +96,28 @@ export function switchRepo(name) {
     }
 }
 
-export function setBranches(branches, current) {
+export function setBranches(branches) {
     return {
         type: ActionType.SET_BRANCHES,
-        branches,
-        current
+        branches
+    };
+}
+
+export function setCurrentBranch(branch) {
+    return {
+        type: ActionType.SET_CURRENT_BRANCH,
+        current: branch
     };
 }
 
 export function getBranches() {
     return (dispatch, getState) => {
-        api.getBranches().then(
+        const settings = getSettings(getState())
+        api.getBranches(settings.user, settings.repo).then(
             rs => {
-                dispatch(setBranches(rs.branches, rs.current));
-                dispatch(getRepoFiles())
+                dispatch(setBranches(rs.branches));
+                dispatch(setCurrentBranch(rs.current));
+                dispatch(getRepoFiles());
             },
             err => {
                 dispatch(showError(err));
@@ -98,16 +126,15 @@ export function getBranches() {
     }
 }
 
-export function resetBranch() {
-    return {
-        type: ActionType.RESET_BRANCH
-    };
-}
-
 export function switchBranch(name) {
     return (dispatch, getState) => {
-        api.switchBranch(name).then(
-            () => dispatch(getRepoFiles()),
+        const settings = getSettings(getState())
+
+        api.checkoutBranch(settings.user, settings.repo, name).then(
+            () => {
+                dispatch(setCurrentBranch(name));
+                dispatch(getRepoFiles());
+            },
             err => {
                 dispatch(showError(err));
             }
@@ -117,7 +144,9 @@ export function switchBranch(name) {
 
 export function getRepoFiles() {
     return (dispatch, getState) => {
-        api.getRepoFiles().then(
+        const settings = getSettings(getState())
+
+        api.getRepoFiles(settings.user, settings.repo, settings.branch).then(
             files => dispatch(setFiles(files)),
             err => {
                 dispatch(showError(err));
@@ -133,11 +162,28 @@ export function setFiles(files) {
     };
 }
 
-export function checkoutBranch() {
-    return (dispatch, getState) => {
-        api.checkoutBranch().then(
-            rs => {
+export function removeRepoEntry(repo) {
+    return {
+        type: ActionType.REMOVE_REPO,
+        repo
+    };
+}
 
+export function removeBranchEntry(branch) {
+    return {
+        type: ActionType.REMOVE_BRANCH,
+        branch
+    };
+}
+
+export function clone(url, authName, authPsw) {
+    return (dispatch, getState) => {
+        const user = getState().currentUser;
+
+        api.clone(user, url, authName, authPsw).then(
+            (rs) => {
+                dispatch(switchRepo(rs.name));
+                dispatch(showMessage("Success"));
             },
             err => {
                 dispatch(showError(err));
@@ -145,24 +191,14 @@ export function checkoutBranch() {
         );
     }
 }
-
-export function clone() {
+export function commit(msg) {
     return (dispatch, getState) => {
-        api.clone().then(
-            rs => {
+        const settings = getSettings(getState())
 
-            },
-            err => {
-                dispatch(showError(err));
-            }
-        );
-    }
-}
-export function commit() {
-    return (dispatch, getState) => {
-        api.commit().then(
-            rs => {
+        api.commit(settings, msg).then(
 
+            () => {
+                dispatch(showMessage("Success"));
             },
             err => {
                 dispatch(showError(err));
@@ -172,9 +208,20 @@ export function commit() {
 }
 export function log() {
     return (dispatch, getState) => {
-        api.log().then(
-            rs => {
+        const settings = getSettings(getState())
 
+        api.log(settings.user, settings.repo, settings.branch).then(
+            rs => {
+                let res
+                rs.commits.forEach(function (el) {
+                    res = res + `commit ${el.hash}
+                    Author: ${el.author ? el.author.name : ''} ${el.author ? el.author.email : ''}
+                    Date: ${el.date}
+                    Msg: ${el.msg}
+                        `
+                });
+
+                dispatch(showMessage(res))
             },
             err => {
                 dispatch(showError(err));
@@ -182,57 +229,67 @@ export function log() {
         );
     }
 }
+
+export function pull(remote, authName, authPsw) {
+    return (dispatch, getState) => {
+        const settings = getSettings(getState())
+
+        api.pull(settings, remote, authName, authPsw).then(
+            () => {
+                dispatch(showMessage("Success"));
+            },
+            err => {
+                dispatch(showError(err));
+            }
+        );
+    }
+}
+export function push(remote, authName, authPsw) {
+    return (dispatch, getState) => {
+        const settings = getSettings(getState())
+
+        api.push(settings, remote, authName, authPsw).then(
+            () => {
+                dispatch(showMessage("Success"));
+            },
+            err => {
+                dispatch(showError(err));
+            }
+        );
+    }
+}
+export function removeBranch(branch) {
+    return (dispatch, getState) => {
+        const settings = getSettings(getState())
+
+        api.removeBranch(settings.user, settings.repo, branch).then(
+            () => {
+                dispatch(showMessage("Success"));
+                dispatch(removeBranchEntry(branch));
+            },
+            err => {
+                dispatch(showError(err));
+            }
+        );
+    }
+}
+export function removeRepo(repo) {
+    return (dispatch, getState) => {
+        api.removeRepo(getState().user, repo).then(
+            () => {
+                dispatch(showMessage("Success"));
+                dispatch(removeRepoEntry(repo));
+            },
+            err => {
+                dispatch(showError(err));
+            }
+        );
+    }
+}
+
 export function merge() {
     return (dispatch, getState) => {
         api.merge().then(
-            rs => {
-
-            },
-            err => {
-                dispatch(showError(err));
-            }
-        );
-    }
-}
-export function pull() {
-    return (dispatch, getState) => {
-        api.pull().then(
-            rs => {
-
-            },
-            err => {
-                dispatch(showError(err));
-            }
-        );
-    }
-}
-export function push() {
-    return (dispatch, getState) => {
-        api.push().then(
-            rs => {
-
-            },
-            err => {
-                dispatch(showError(err));
-            }
-        );
-    }
-}
-export function removeBranch() {
-    return (dispatch, getState) => {
-        api.removeBranch().then(
-            rs => {
-
-            },
-            err => {
-                dispatch(showError(err));
-            }
-        );
-    }
-}
-export function removeRepo() {
-    return (dispatch, getState) => {
-        api.removeRepo().then(
             rs => {
 
             },
