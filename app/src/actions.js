@@ -3,7 +3,7 @@ import { ActionType } from './constants';
 
 
 export function getSettings(state) {
-    return { user: state.currentUser, repo: state.currentRepo, branch: state.currentBranch }
+    return { user: state.settings.currentUser, repo: state.settings.currentRepo, branch: state.settings.currentBranch }
 }
 
 export function showMessage(msg) {

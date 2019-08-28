@@ -1,15 +1,37 @@
-import React from 'react';
+import React, { Component } from 'react';
 import '../../App.css';
 
-const Commit = props => {
+export default class Commit extends Component {
+    constructor(props) {
+        super(props);
 
-    return (
-        <li className="commit-command">
-            <button type="button" className="button" disabled={!props.isAvailable}>Commit</button>
-            <textarea placeholder="commit message" rows="3"></textarea>
-            <hr></hr>
-        </li>
-    );
+        this.state = {
+            comment: ''
+        }
+    }
+
+    render() {
+        const onCommentChange = (e) => {
+            this.setState({
+                comment: e.target.value
+            });
+        }
+
+        const onCommitClick = () => {
+            this.props.action(this.state.comment);
+
+            this.setState({
+                comment: ''
+            })
+        }
+
+        return (
+            <li className="commit-command">
+                <button type="button" className="button" disabled={!this.props.isAvailable} onClick={() => onCommitClick()}>Commit</button>
+                <textarea placeholder="commit message" rows="3" value={this.state.comment} onChange={(e) => onCommentChange(e)}></textarea>
+                <hr></hr>
+            </li>
+        );
+    }
+
 }
-
-export default Commit;

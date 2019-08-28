@@ -34,7 +34,7 @@ export default class Clone extends Component {
         }
 
         const onCloneClick = () => {
-            this.props.action(this.state.url, this.state.name, this.state.psw)
+            this.props.action(this.state.url, this.state.name, this.state.psw);
             this.setState({
                 url: '',
                 name: '',

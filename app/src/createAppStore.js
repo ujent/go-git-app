@@ -29,8 +29,8 @@ function getInitialState() {
     repositories: [],
     branches: [],
     settings: {
-      currentUser: '',
-      currentRepo: '',
+      currentUser: 'user1',
+      currentRepo: 'repo1',
       currentBranch: ''
     },
     output: '',
