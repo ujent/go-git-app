@@ -15,7 +15,9 @@ serviceWorker.unregister();
 
 /* ReactDOM.render(<App />, document.getElementById('root')); */
 const currentUser = window.localStorage.getItem('go_git_user');
-const store = createAppStore(currentUser);
+const currentRepo = window.localStorage.getItem('go_git_repo');
+const currentBranch = window.localStorage.getItem('go_git_branch');
+const store = createAppStore(currentUser, currentRepo, currentBranch);
 
 ReactDOM.render(
     <Provider store={store}><App /></Provider>,

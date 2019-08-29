@@ -8,6 +8,8 @@ export const rootReducer = (state = {}, action) => {
                 return state;
             }
 
+            window.localStorage.setItem('go_git_user', action.user);
+
             return Object.assign({}, state, {
                 repositories: [],
                 branches: [],
@@ -29,6 +31,12 @@ export const rootReducer = (state = {}, action) => {
             });
         }
         case ActionType.SET_CURRENT_BRANCH: {
+            if (state.settings.currentBranch === action.current) {
+                return state;
+            }
+
+            window.localStorage.setItem('go_git_branch', action.current);
+
             return Object.assign({}, state, {
                 settings: Object.assign({}, state.settings, {
                     currentBranch: action.current,
@@ -99,6 +107,12 @@ export const rootReducer = (state = {}, action) => {
             });
         }
         case ActionType.SET_CURRENT_REPOSITORY: {
+            if (state.settings.currentRepo === action.current) {
+                return state;
+            }
+
+            window.localStorage.setItem('go_git_repo', action.current);
+
             return Object.assign({}, state, {
                 settings: Object.assign({}, state.settings, {
                     currentRepo: action.current,
