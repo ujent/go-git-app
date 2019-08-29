@@ -26,8 +26,8 @@ function getInitialState() {
 
   const initialState = {
     users: ['user1', 'user2', 'user3'],
-    repositories: [],
-    branches: [],
+    repositories: ['repo1', 'repo2'],
+    branches: ['branch1', 'branch2'],
     settings: {
       currentUser: 'user1',
       currentRepo: 'repo1',
