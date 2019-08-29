@@ -262,7 +262,7 @@ export function removeBranch(branch) {
     return (dispatch, getState) => {
         const settings = getSettings(getState())
 
-        api.removeBranch(settings.user, settings.repo, branch).then(
+        api.removeBranch(settings.settings.currentUser, settings.repo, branch).then(
             () => {
                 dispatch(showMessage("Success"));
                 dispatch(removeBranchEntry(branch));
@@ -275,7 +275,7 @@ export function removeBranch(branch) {
 }
 export function removeRepo(repo) {
     return (dispatch, getState) => {
-        api.removeRepo(getState().user, repo).then(
+        api.removeRepo(getState().settings.currentUser, repo).then(
             () => {
                 dispatch(showMessage("Success"));
                 dispatch(removeRepoEntry(repo));
