@@ -262,7 +262,7 @@ export function removeBranch(branch) {
     return (dispatch, getState) => {
         const settings = getSettings(getState())
 
-        api.removeBranch(settings.settings.currentUser, settings.repo, branch).then(
+        api.removeBranch(settings.user, settings.repo, branch).then(
             () => {
                 dispatch(showMessage("Success"));
                 dispatch(removeBranchEntry(branch));
