@@ -22,7 +22,7 @@ const Commands = props => {
             <h2>Commands</h2>
             <ul className="commands-list">
                 <Commit action={props.handleCommit} isAvailable={canCommit} />
-                <Merge action={props.handleMerge} branches={branches} isAvailable={isBaseAvailable} />
+                <Merge action={props.handleMerge} branches={branches} currentBranch={currentBranch} isAvailable={isBaseAvailable} />
                 <Clone action={props.handleClone} isAvailable={currentUser !== ""} />
                 <Pull action={props.handlePull} isAvailable={isBaseAvailable} />
                 <Push action={props.handlePush} isAvailable={isBaseAvailable} />

@@ -287,11 +287,14 @@ export function removeRepo(repo) {
     }
 }
 
-export function merge() {
-    return (dispatch, getState) => {
-        api.merge().then(
-            rs => {
+export function merge(theirs) {
 
+    return (dispatch, getState) => {
+        const settings = getSettings(getState());
+
+        api.merge(settings, theirs).then(
+            rs => {
+                dispatch(showMessage("Success"));
             },
             err => {
                 dispatch(showError(err));

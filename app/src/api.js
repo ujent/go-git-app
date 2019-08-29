@@ -174,5 +174,14 @@ export function removeRepo(user, repo) {
     });
 }
 
-export function merge() {
+export function merge(settings, theirs) {
+    const query = JSON.stringify({ base: settings, theirs: theirs })
+
+    return fetchApi('/merge', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: query
+    });
 }

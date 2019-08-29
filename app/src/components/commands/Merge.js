@@ -1,28 +1,57 @@
-import React from 'react';
+import React, { Component } from 'react';
 import '../../App.css';
 
-const Merge = props => {
+export default class Merge extends Component {
 
-    const branchOptions = props.branches.map(
-        opt => {
-            return (
-                <option key={opt} value={opt}>{opt}</option>
-            );
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            branch: ''
         }
-    );
+    }
 
-    return (
-        <li className="command-block">
-            <div className="command-block-content">
-                <button type="button" className="button" disabled={!props.isAvailable}>Merge</button>
-                <select placeholder="branch" className="command-block-input" defaultValue="">
-                    <option value="" disabled hidden>select</option>
-                    {branchOptions}
-                </select></div>
 
-            <hr></hr>
-        </li>
-    );
+
+    render() {
+        const isAvailable = this.props.isAvailable && this.state.branch
+        const branchOptions = this.props.branches.map(
+            opt => {
+                if (opt !== this.props.currentBranch) {
+                    return (
+                        <option key={opt} value={opt}>{opt}</option>
+                    );
+                } else {
+                    return '';
+                }
+            }
+        );
+
+        const onBranchChange = (e) => {
+            this.setState({
+                branch: e.target.value
+            })
+        }
+
+        const onMergeClick = () => {
+            this.props.action(this.state.branch);
+            this.setState({
+                branch: ''
+            })
+        }
+
+        return (
+            <li className="command-block">
+                <div className="command-block-content">
+                    <button type="button" className="button" disabled={!isAvailable} onClick={onMergeClick} >Merge</button>
+                    <select placeholder="branch" className="command-block-input" value={this.state.branch} onChange={onBranchChange}>
+                        <option value="" disabled hidden>select</option>
+                        {branchOptions}
+                    </select></div>
+
+                <hr></hr>
+            </li>
+        );
+    };
+
 };
-
-export default Merge;
