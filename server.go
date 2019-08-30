@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/cors"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"github.com/ujent/go-git-app/contract"
@@ -19,14 +20,7 @@ type server struct {
 	gitSvc   gitsvc.Service
 }
 
-func newServer(settings *contract.ServerSettings, logger *log.Logger) (*server, error) {
-	db, err := sqlx.Connect("mysql", settings.GitConnStr)
-
-	if err != nil {
-		return nil, err
-	}
-
-	defer db.Close()
+func newServer(db *sqlx.DB, settings *contract.ServerSettings, logger *log.Logger) (*server, error) {
 
 	gitSvc, err := gitsvc.New(settings, db)
 	if err != nil {
@@ -45,22 +39,27 @@ func (s *server) Start() error {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
+	cors := cors.New(cors.Options{
+		AllowedOrigins:   []string{"*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: true,
+		//MaxAge:           300, // Maximum value not ignored by any of major browsers
+	})
+	r.Use(cors.Handler)
+
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("welcome"))
 	})
-
-	err := http.ListenAndServe(":"+s.settings.Port, r)
-	if err != nil {
-		return err
-	}
 
 	r.Route("/users", func(r chi.Router) {
 		r.Post("/switch", s.switchUser)
 	})
 
 	r.Route("/repositories", func(r chi.Router) {
-		r.Get("/", s.repositories)
-		r.Get("/current", s.currentRepo)
+		r.Get("/{user}", s.repositories)
+		r.Get("/current/{user}", s.currentRepo)
 		r.Get("/open", s.openRepository)
 		r.Post("/", s.createRepository)
 		r.Post("/clone", s.clone)
@@ -98,6 +97,11 @@ func (s *server) Start() error {
 		r.Post("/", s.merge)
 	})
 
+	err := http.ListenAndServe(":"+s.settings.Port, r)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -126,6 +130,7 @@ func (s *server) switchUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("{}"))
 }
 
 func (s *server) pull(w http.ResponseWriter, r *http.Request) {
@@ -157,6 +162,7 @@ func (s *server) pull(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("{}"))
 }
 
 func (s *server) push(w http.ResponseWriter, r *http.Request) {
@@ -182,6 +188,7 @@ func (s *server) push(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("{}"))
 }
 
 func (s *server) commit(w http.ResponseWriter, r *http.Request) {
@@ -201,6 +208,7 @@ func (s *server) commit(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("{}"))
 }
 
 func (s *server) toBaseRequest(rq *contract.BaseRequestRQ) *contract.BaseRequest {
@@ -236,11 +244,11 @@ func (s *server) clone(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.writeJSON(w, http.StatusOK, &contract.RepoRS{Name: repo})
-	w.WriteHeader(http.StatusOK)
 }
 
 func (s *server) files(w http.ResponseWriter, r *http.Request) {
-	branch := chi.URLParam(r, "branch")
+	q := r.URL.Query()
+	branch := q.Get("branch")
 
 	if branch == "" {
 		w.WriteHeader(http.StatusBadRequest)
@@ -249,7 +257,7 @@ func (s *server) files(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	repo := chi.URLParam(r, "repo")
+	repo := q.Get("repo")
 
 	if repo == "" {
 		w.WriteHeader(http.StatusBadRequest)
@@ -258,7 +266,7 @@ func (s *server) files(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := chi.URLParam(r, "user")
+	user := q.Get("user")
 
 	if user == "" {
 		w.WriteHeader(http.StatusBadRequest)
@@ -282,7 +290,8 @@ func (s *server) files(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) logs(w http.ResponseWriter, r *http.Request) {
-	branch := chi.URLParam(r, "branch")
+	q := r.URL.Query()
+	branch := q.Get("branch")
 
 	if branch == "" {
 		w.WriteHeader(http.StatusBadRequest)
@@ -291,7 +300,7 @@ func (s *server) logs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	repo := chi.URLParam(r, "repo")
+	repo := q.Get("repo")
 
 	if repo == "" {
 		w.WriteHeader(http.StatusBadRequest)
@@ -300,7 +309,7 @@ func (s *server) logs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := chi.URLParam(r, "user")
+	user := q.Get("user")
 
 	if user == "" {
 		w.WriteHeader(http.StatusBadRequest)
@@ -357,6 +366,7 @@ func (s *server) createBranch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("{}"))
 }
 
 func (s *server) deleteBranch(w http.ResponseWriter, r *http.Request) {
@@ -377,6 +387,7 @@ func (s *server) deleteBranch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("{}"))
 }
 
 func (s *server) checkoutBranch(w http.ResponseWriter, r *http.Request) {
@@ -397,10 +408,12 @@ func (s *server) checkoutBranch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("{}"))
 }
 
 func (s *server) branches(w http.ResponseWriter, r *http.Request) {
-	repo := chi.URLParam(r, "repo")
+	q := r.URL.Query()
+	repo := q.Get("repo")
 
 	if repo == "" {
 		w.WriteHeader(http.StatusBadRequest)
@@ -409,7 +422,7 @@ func (s *server) branches(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := chi.URLParam(r, "user")
+	user := q.Get("user")
 
 	if user == "" {
 		w.WriteHeader(http.StatusBadRequest)
@@ -425,26 +438,19 @@ func (s *server) branches(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	n, err := s.gitSvc.CurrentBranch()
-	if err != nil {
-		s.writeError(w, http.StatusInternalServerError, err)
+	cur := ""
+	if len(branches) > 0 {
+		cBr, err := s.gitSvc.CurrentBranch()
+		if err != nil {
+			s.writeError(w, http.StatusInternalServerError, err)
 
-		return
-	}
-
-	res := []contract.BranchRS{}
-	var cur string
-
-	for _, b := range branches {
-		if b == n.Name {
-			res = append(res, contract.BranchRS{Name: b})
-			cur = b
-		} else {
-			res = append(res, contract.BranchRS{Name: n.Name})
+			return
 		}
+
+		cur = cBr.Name
 	}
 
-	s.writeJSON(w, http.StatusOK, &contract.BranchesRS{Branches: res, Current: cur})
+	s.writeJSON(w, http.StatusOK, &contract.BranchesRS{Branches: branches, Current: cur})
 }
 
 func (s *server) createRepository(w http.ResponseWriter, r *http.Request) {
@@ -480,6 +486,7 @@ func (s *server) createRepository(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("{}"))
 }
 
 func (s *server) deleteRepository(w http.ResponseWriter, r *http.Request) {
@@ -514,11 +521,13 @@ func (s *server) deleteRepository(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("{}"))
 }
 
 func (s *server) openRepository(w http.ResponseWriter, r *http.Request) {
 
-	repo := chi.URLParam(r, "repo")
+	q := r.URL.Query()
+	repo := q.Get("repo")
 
 	if repo == "" {
 		w.WriteHeader(http.StatusBadRequest)
@@ -527,7 +536,7 @@ func (s *server) openRepository(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := chi.URLParam(r, "user")
+	user := q.Get("user")
 
 	if user == "" {
 		w.WriteHeader(http.StatusBadRequest)
@@ -544,6 +553,7 @@ func (s *server) openRepository(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("{}"))
 }
 
 func (s *server) currentRepo(w http.ResponseWriter, r *http.Request) {
@@ -578,11 +588,11 @@ func (s *server) repositories(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res := []contract.RepoRS{}
+	res := []string{}
 
 	for _, r := range repos {
-		res = append(res, contract.RepoRS{Name: r})
 
+		res = append(res, r)
 	}
 
 	s.writeJSON(w, http.StatusOK, &contract.RepositoriesRS{Repos: res})

@@ -65,9 +65,9 @@ export function setCurrentRepo(repo) {
     };
 }
 
-export function getRepositories() {
+export function getRepositories(user) {
     return (dispatch, getState) => {
-        const user = getState().currentUser;
+        //const user = getState().currentUser;
 
         api.getRepositories(user).then(
             rs => {
@@ -82,7 +82,7 @@ export function getRepositories() {
 
 export function switchRepo(name) {
     return (dispatch, getState) => {
-        const user = getState().currentUser;
+        const user = getState().settings.currentUser;
 
         api.switchRepo(user, name).then(
             () => {
@@ -110,10 +110,9 @@ export function setCurrentBranch(branch) {
     };
 }
 
-export function getBranches() {
+export function getBranches(user, repo) {
     return (dispatch, getState) => {
-        const settings = getSettings(getState())
-        api.getBranches(settings.user, settings.repo).then(
+        api.getBranches(user, repo).then(
             rs => {
                 dispatch(setBranches(rs.branches));
                 dispatch(setCurrentBranch(rs.current));

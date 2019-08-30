@@ -21,7 +21,7 @@ type RepositoriesRQ struct {
 
 //RepositoriesRS - the response to repositories request
 type RepositoriesRS struct {
-	Repos []RepoRS `json:"repos"`
+	Repos []string `json:"repos"`
 }
 
 //RepoRS - base info about repository
@@ -44,8 +44,8 @@ type BranchesRQ struct {
 
 //BranchesRS - the response to branches request
 type BranchesRS struct {
-	Branches []BranchRS `json:"branches"`
-	Current  string     `json:"current"`
+	Branches []string `json:"branches"`
+	Current  string   `json:"current"`
 }
 
 //BranchRS - base info about branch

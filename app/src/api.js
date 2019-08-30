@@ -2,7 +2,7 @@ import queryString from 'query-string';
 
 export const apiUri = (function () {
     const buildMode = process.env.REACT_APP_BUILD_MODE;
-    if (!buildMode) return 'http://localhost:3000';
+    if (!buildMode) return 'http://localhost:4000';
     switch (buildMode) {
         case 'dev':
             return 'http://localhost:3000';

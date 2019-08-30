@@ -1,4 +1,4 @@
-import { ActionType } from './constants';
+import { ActionType, StorageItem } from './constants';
 
 export const rootReducer = (state = {}, action) => {
     switch (action.type) {
@@ -8,7 +8,7 @@ export const rootReducer = (state = {}, action) => {
                 return state;
             }
 
-            window.localStorage.setItem('go_git_user', action.user);
+            window.localStorage.setItem(StorageItem.User, action.user);
 
             return Object.assign({}, state, {
                 repositories: [],
@@ -35,7 +35,7 @@ export const rootReducer = (state = {}, action) => {
                 return state;
             }
 
-            window.localStorage.setItem('go_git_branch', action.current);
+            window.localStorage.setItem(StorageItem.Branch, action.current);
 
             return Object.assign({}, state, {
                 settings: Object.assign({}, state.settings, {
@@ -111,7 +111,7 @@ export const rootReducer = (state = {}, action) => {
                 return state;
             }
 
-            window.localStorage.setItem('go_git_repo', action.current);
+            window.localStorage.setItem(StorageItem.Repo, action.current);
 
             return Object.assign({}, state, {
                 settings: Object.assign({}, state.settings, {

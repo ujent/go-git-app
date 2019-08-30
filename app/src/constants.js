@@ -13,3 +13,9 @@ export const ActionType = {
     /* SHOW_SPINNER: 'SHOW_SPINNER',
     HIDE_SPINNER: 'HIDE_SPINNER', */
 }
+
+export const StorageItem = {
+    User: 'go_git_user',
+    Repo: 'go_git_repo',
+    Branch: 'go_git_branch'
+}

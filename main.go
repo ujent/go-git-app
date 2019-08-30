@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/ujent/go-git-app/config"
 )
 
@@ -21,7 +22,13 @@ func main() {
 
 	log.Println("Config was successfully parsed")
 
-	server, err := newServer(settings, logger)
+	db, err := sqlx.Connect("mysql", settings.GitConnStr)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	server, err := newServer(db, settings, logger)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -30,4 +37,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	defer db.Close()
 }

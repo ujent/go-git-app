@@ -492,6 +492,7 @@ func (svc *service) Repositories(user string) ([]string, error) {
 	svc.db.Select(&tables, "SELECT table_name FROM information_schema.tables ORDER BY table_name ASC")
 
 	repos := []string{}
+
 	for _, t := range tables {
 		if strings.HasPrefix(t, gitPrefix) {
 			temp := strings.TrimPrefix(t, gitPrefix)
@@ -1018,6 +1019,7 @@ func (svc *service) CurrentBranch() (*contract.Branch, error) {
 
 //Branches - returns a list of local branches names
 func (svc *service) Branches(user, repo string) ([]string, error) {
+
 	if user == "" {
 		return nil, errors.New("User cannot be empty")
 	}
@@ -1027,11 +1029,13 @@ func (svc *service) Branches(user, repo string) ([]string, error) {
 	}
 
 	err := svc.setSettings(&contract.User{Name: user}, repo, "")
+
 	if err != nil {
 		return nil, err
 	}
 
 	iter, err := svc.git.repo.Branches()
+
 	if err != nil {
 		return nil, err
 	}
@@ -1039,6 +1043,7 @@ func (svc *service) Branches(user, repo string) ([]string, error) {
 	branches := []string{}
 
 	err = iter.ForEach(func(br *plumbing.Reference) error {
+
 		if !br.Name().IsRemote() {
 			branches = append(branches, br.Name().Short())
 		}
