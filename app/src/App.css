@@ -165,6 +165,18 @@ input[type='radio'].visually-hidden {
   justify-content: space-between;
 }
 
+.repo-content .conflict-file {
+  font: red;
+}
+
+.repo-content .repo-file {
+  cursor: pointer;
+}
+
+.repo-content .repo-file-selected {
+  font-weight: bold;
+}
+
 .main-settings {
   display: flex;
   justify-content: space-between;

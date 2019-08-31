@@ -38,7 +38,7 @@ type Service interface {
 	//Filesystem returns fs of current repository
 	Filesystem(user, repo string) (billy.Filesystem, error)
 
-	//FilesList - returns only files in Merged mode, conflict files are excluded
+	//FilesList - returns current repository files pathes
 	FilesList(rq *contract.BaseRequest) ([]contract.FileInfo, error)
 
 	// Repositories - returns all locally existing repositories

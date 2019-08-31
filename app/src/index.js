@@ -6,7 +6,7 @@ import App from './containers/AppContainer';
 import AppError from './AppError';
 import * as serviceWorker from './serviceWorker';
 import createAppStore from './createAppStore';
-import { switchUser, getRepositories, getBranches } from './api';
+import { switchUser, getRepositories, getBranches, getRepoFiles } from './api';
 import { StorageItem } from './constants';
 
 
@@ -30,16 +30,34 @@ if (currentUser !== null) {
                             brRS => {
                                 let store;
                                 if (brRS.branches.indexOf(currentBranch) !== -1) {
-                                    store = createAppStore(currentUser, currentRepo, currentBranch, rs.repos, brRS.branches);
+
+                                    getRepoFiles(currentUser, currentRepo, currentBranch).then(
+                                        filesRS => {
+                                            store = createAppStore(currentUser, currentRepo, currentBranch, rs.repos, brRS.branches, filesRS.files);
+
+                                            ReactDOM.render(
+                                                <Provider store={store}><App /></Provider>,
+                                                document.getElementById('root')
+                                            );
+                                        },
+                                        err => {
+                                            console.log(err)
+
+                                            ReactDOM.render(<AppError error={err.message} />, document.getElementById('root'));
+                                        }
+                                    );
+
                                 } else {
                                     store = createAppStore(currentUser, currentRepo, '', rs.repos, brRS.branches);
                                     window.localStorage.removeItem(StorageItem.Branch)
+
+                                    ReactDOM.render(
+                                        <Provider store={store}><App /></Provider>,
+                                        document.getElementById('root')
+                                    );
                                 }
 
-                                ReactDOM.render(
-                                    <Provider store={store}><App /></Provider>,
-                                    document.getElementById('root')
-                                );
+
                             },
                             err => {
                                 console.log(err)

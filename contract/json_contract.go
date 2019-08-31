@@ -85,7 +85,7 @@ type FilesRQ struct {
 
 //FilesRS - the response to files request
 type FilesRS struct {
-	Files []FileInfoRS
+	Files []FileInfoRS `json:"files"`
 }
 
 //CloneRQ is the request payload for clone repository

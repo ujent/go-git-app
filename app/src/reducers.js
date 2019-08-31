@@ -19,10 +19,7 @@ export const rootReducer = (state = {}, action) => {
                     currentBranch: ''
                 }),
                 files: [],
-                fileContent: {
-                    isVisible: false,
-                    content: ''
-                }
+                currentFile: ''
             });
         }
         case ActionType.SET_BRANCHES: {
@@ -87,10 +84,7 @@ export const rootReducer = (state = {}, action) => {
                         currentBranch: ''
                     }),
                     files: [],
-                    fileContent: {
-                        isVisible: false,
-                        content: ''
-                    }
+                    currentFile: ''
                 });
             }
 
@@ -119,10 +113,7 @@ export const rootReducer = (state = {}, action) => {
                         currentRepo: '',
                         currentBranch: ''
                     }),
-                    fileContent: {
-                        isVisible: false,
-                        content: ''
-                    },
+                    currentFile: '',
                     files: []
                 })
             }
