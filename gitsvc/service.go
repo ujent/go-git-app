@@ -3,6 +3,7 @@ package gitsvc
 import (
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 	"time"
@@ -473,13 +474,40 @@ func (svc *service) Clone(user, url string, auth *contract.Credentials) (string,
 	}
 
 	r, err := git.Clone(st, gitFs, opts)
+
 	if err != nil {
+		delErr := svc.deleteRepo(user, repoName)
+		if delErr != nil {
+			log.Printf("Cannot remove repo: %s, user: %s, error: %v\n", repoName, user, err)
+		}
+
 		return "", err
 	}
 
 	svc.git = &repository{name: repoName, fs: gitFs, repo: r}
 
 	return repoName, nil
+}
+
+func (svc *service) deleteRepo(user, repo string) error {
+	filesTable, gitTable, err := svc.tablesNames(user, repo)
+	if err != nil {
+		return err
+	}
+
+	tx, err := svc.db.Begin()
+	if err != nil {
+		return err
+	}
+	tx.Exec(fmt.Sprintf("DROP TABLE %s", filesTable))
+	tx.Exec(fmt.Sprintf("DROP TABLE %s", gitTable))
+
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Repositories - returns all locally existing repositories

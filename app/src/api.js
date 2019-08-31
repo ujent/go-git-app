@@ -86,7 +86,7 @@ export function checkoutBranch(user, repo, branch) {
 export function getRepoFiles(user, repo, branch) {
     const query = queryString.stringify({ repo: repo, user: user, branch: branch });
 
-    return fetchApi('files?' + query, {});
+    return fetchApi('/files?' + query, {});
 }
 
 export function commit(settings, msg) {
@@ -106,7 +106,7 @@ export function clone(user, url, authName, authPsw) {
         JSON.stringify({ user: user, URL: url, auth: { name: authName, psw: authPsw } })
         : JSON.stringify({ user: user, URL: url });
 
-    return fetchApi('/clone', {
+    return fetchApi('/repositories/clone', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'

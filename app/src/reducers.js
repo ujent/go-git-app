@@ -26,6 +26,17 @@ export const rootReducer = (state = {}, action) => {
             });
         }
         case ActionType.SET_BRANCHES: {
+            if (action.current) {
+                window.localStorage.setItem(StorageItem.Branch, action.current);
+
+                return Object.assign({}, state, {
+                    branches: action.branches,
+                    settings: Object.assign({}, state.settings, {
+                        currentBranch: action.current,
+                    })
+                });
+            }
+
             return Object.assign({}, state, {
                 branches: action.branches
             });
@@ -37,7 +48,20 @@ export const rootReducer = (state = {}, action) => {
 
             window.localStorage.setItem(StorageItem.Branch, action.current);
 
+            const branches = state.branches;
+
+            if (branches.indexOf(action.current) !== -1) {
+                return Object.assign({}, state, {
+                    settings: Object.assign({}, state.settings, {
+                        currentBranch: action.current,
+                    })
+                });
+            }
+
+            branches.push(action.current);
+
             return Object.assign({}, state, {
+                branches: branches,
                 settings: Object.assign({}, state.settings, {
                     currentBranch: action.current,
                 })
@@ -113,11 +137,25 @@ export const rootReducer = (state = {}, action) => {
 
             window.localStorage.setItem(StorageItem.Repo, action.current);
 
+            const repos = state.repositories;
+
+            if (repos.indexOf(action.current) !== -1) {
+                return Object.assign({}, state, {
+                    settings: Object.assign({}, state.settings, {
+                        currentRepo: action.current,
+                    })
+                });
+            }
+
+            repos.push(action.current);
+
             return Object.assign({}, state, {
+                repositories: repos,
                 settings: Object.assign({}, state.settings, {
                     currentRepo: action.current,
                 })
             });
+
         }
         case ActionType.SHOW_MSG: {
             return Object.assign({}, state, {

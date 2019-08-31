@@ -96,10 +96,11 @@ export function switchRepo(name) {
     }
 }
 
-export function setBranches(branches) {
+export function setBranches(branches, currentBranch) {
     return {
         type: ActionType.SET_BRANCHES,
-        branches
+        branches,
+        current: currentBranch
     };
 }
 
@@ -114,9 +115,11 @@ export function getBranches(user, repo) {
     return (dispatch, getState) => {
         api.getBranches(user, repo).then(
             rs => {
-                dispatch(setBranches(rs.branches));
-                dispatch(setCurrentBranch(rs.current));
-                dispatch(getRepoFiles());
+                dispatch(setBranches(rs.branches, rs.current));
+
+                if (rs.currentBranch) {
+                    dispatch(getRepoFiles(user, repo, rs.currentBranch));
+                }
             },
             err => {
                 dispatch(showError(err));
@@ -132,7 +135,7 @@ export function switchBranch(name) {
         api.checkoutBranch(settings.user, settings.repo, name).then(
             () => {
                 dispatch(setCurrentBranch(name));
-                dispatch(getRepoFiles());
+                dispatch(getRepoFiles(settings.user, settings.repo, name));
             },
             err => {
                 dispatch(showError(err));
@@ -141,11 +144,10 @@ export function switchBranch(name) {
     }
 }
 
-export function getRepoFiles() {
+export function getRepoFiles(user, repo, branch) {
     return (dispatch, getState) => {
-        const settings = getSettings(getState())
 
-        api.getRepoFiles(settings.user, settings.repo, settings.branch).then(
+        api.getRepoFiles(user, repo, branch).then(
             files => dispatch(setFiles(files)),
             err => {
                 dispatch(showError(err));
@@ -177,7 +179,7 @@ export function removeBranchEntry(branch) {
 
 export function clone(url, authName, authPsw) {
     return (dispatch, getState) => {
-        const user = getState().currentUser;
+        const user = getState().settings.currentUser;
 
         api.clone(user, url, authName, authPsw).then(
             (rs) => {

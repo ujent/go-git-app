@@ -8,9 +8,6 @@ import (
 	"github.com/ujent/go-git-app/config"
 )
 
-const userName = "Jack Jonson"
-const userEmail = "JackJonson@gmail.com"
-
 func main() {
 
 	logger := log.New(os.Stdout, "go-git-app:", log.LstdFlags)
