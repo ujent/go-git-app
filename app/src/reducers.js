@@ -79,6 +79,8 @@ export const rootReducer = (state = {}, action) => {
             }
 
             if (currentBranch === action.branch) {
+                window.localStorage.removeItem(StorageItem.Branch);
+
                 return Object.assign({}, state, {
                     branches: branches,
                     settings: Object.assign({}, state.settings, {
@@ -104,14 +106,18 @@ export const rootReducer = (state = {}, action) => {
                 if (repos[i] === action.repo) {
                     repos.splice(i, 1);
                 }
-
             }
 
             if (currentRepo === action.repo) {
+                window.localStorage.removeItem(StorageItem.Repo);
+                window.localStorage.removeItem(StorageItem.Branch);
+
                 return Object.assign({}, state, {
                     repositories: repos,
+                    branches: [],
                     settings: Object.assign({}, state.settings, {
-                        currentRepo: ''
+                        currentRepo: '',
+                        currentBranch: ''
                     }),
                     fileContent: {
                         isVisible: false,
