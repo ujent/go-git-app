@@ -447,7 +447,9 @@ func (s *server) branches(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		cur = cBr.Name
+		if cBr != nil {
+			cur = cBr.Name
+		}
 	}
 
 	s.writeJSON(w, http.StatusOK, &contract.BranchesRS{Branches: branches, Current: cur})

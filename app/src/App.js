@@ -28,7 +28,7 @@ const App = props => {
               <div className="file-content-buttons">
                 <button type="button" className="button">Save</button>
               </div>
-              <textarea rows="32"></textarea>
+              <textarea rows="36"></textarea>
             </div>
           </section>
         </div>

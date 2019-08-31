@@ -1039,6 +1039,10 @@ func (svc *service) CurrentBranch() (*contract.Branch, error) {
 
 	headRef, err := svc.git.repo.Head()
 	if err != nil {
+		if err == plumbing.ErrReferenceNotFound {
+			return nil, nil
+		}
+
 		return nil, err
 	}
 

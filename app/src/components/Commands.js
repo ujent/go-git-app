@@ -7,6 +7,7 @@ import Pull from "./commands/Pull"
 import Push from "./commands/Push"
 import RemoveRepo from "./commands/RemoveRepo"
 import CheckoutBranch from "./commands/CheckoutBranch"
+import CreateBranch from "./commands/CreateBranch"
 import RemoveBranch from "./commands/RemoveBranch"
 import Log from "./commands/Log"
 
@@ -27,7 +28,8 @@ const Commands = props => {
                 <Pull action={props.handlePull} isAvailable={isBaseAvailable} />
                 <Push action={props.handlePush} isAvailable={isBaseAvailable} />
                 <RemoveRepo action={props.handleRemoveRepo} repositories={repositories} isAvailable={currentUser !== ""} />
-                <CheckoutBranch action={props.handleCheckoutBranch} branches={branches} isAvailable={canCheckoutBranch} />
+                <CheckoutBranch action={props.handleCheckoutBranch} branches={branches} currentBranch={currentBranch} isAvailable={canCheckoutBranch} />
+                <CreateBranch action={props.handleCheckoutBranch} branches={branches} isAvailable={canCheckoutBranch} />
                 <RemoveBranch action={props.handleRemoveBranch} branches={branches} isAvailable={canRemoveBranch} />
                 <Log action={props.handleLog} isAvailable={isBaseAvailable} />
             </ul>

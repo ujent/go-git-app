@@ -136,6 +136,7 @@ export function switchBranch(name) {
             () => {
                 dispatch(setCurrentBranch(name));
                 dispatch(getRepoFiles(settings.user, settings.repo, name));
+                dispatch(showMessage("Success"));
             },
             err => {
                 dispatch(showError(err));
@@ -213,13 +214,13 @@ export function log() {
 
         api.log(settings.user, settings.repo, settings.branch).then(
             rs => {
-                let res
+                let res = ''
                 rs.commits.forEach(function (el) {
                     res = res + `commit ${el.hash}
-                    Author: ${el.author ? el.author.name : ''} ${el.author ? el.author.email : ''}
-                    Date: ${el.date}
-                    Msg: ${el.msg}
-                        `
+Author: ${el.author ? el.author.name : ''} ${el.author ? el.author.email : ''}
+Date: ${el.date}
+Msg: ${el.msg}
+\n`
                 });
 
                 dispatch(showMessage(res))

@@ -15,6 +15,10 @@ export default class CheckoutBranch extends Component {
 
         const branchOptions = this.props.branches.map(
             opt => {
+                if (opt === this.props.currentBranch) {
+                    return '';
+                }
+
                 return (
                     <option key={opt} value={opt}>{opt}</option>
                 );
