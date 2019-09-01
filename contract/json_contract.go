@@ -72,6 +72,36 @@ type CommitRS struct {
 	Date    time.Time `json:"date"`
 }
 
+type FileRQ struct {
+	Base       *BaseRequestRQ `json:"base"`
+	Path       string         `json:"path"`
+	IsConflict bool           `json:"isConflict"`
+}
+
+type FileRS struct {
+	Path    string `json:"path"`
+	Content string `json:"content"`
+}
+
+type AddFileRQ struct {
+	Base    *BaseRequestRQ `json:"base"`
+	Path    string         `json:"path"`
+	Content string         `json:"content"`
+}
+
+type RemoveFileRQ struct {
+	Base       *BaseRequestRQ `json:"base"`
+	Path       string         `json:"path"`
+	IsConflict bool           `json:"isConflict"`
+}
+
+type EditFileRQ struct {
+	Base       *BaseRequestRQ `json:"base"`
+	Path       string         `json:"path"`
+	Content    string         `json:"content"`
+	IsConflict bool           `json:"isConflict"`
+}
+
 //FileInfoRS - common information about files in repository
 type FileInfoRS struct {
 	Path       string `json:"path"`

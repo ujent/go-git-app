@@ -2,6 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -78,7 +80,11 @@ func (s *server) Start() error {
 	})
 
 	r.Route("/files", func(r chi.Router) {
-		r.Get("/", s.files)
+		r.Get("/all", s.files)
+		r.Get("/", s.file)
+		r.Post("/", s.addFile)
+		r.Put("/", s.editFile)
+		r.Delete("/", s.removeFile)
 	})
 
 	r.Route("/commit", func(r chi.Router) {
@@ -287,6 +293,90 @@ func (s *server) files(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.writeJSON(w, http.StatusOK, &contract.FilesRS{Files: res})
+}
+
+func (s *server) file(w http.ResponseWriter, r *http.Request) {
+	rq := &contract.FileRQ{}
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(rq)
+
+	if err != nil {
+		s.writeError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	f, err := s.gitSvc.File(s.toBaseRequest(rq.Base), rq.Path, rq.IsConflict)
+	if err != nil {
+		s.writeError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	bytes, err := ioutil.ReadAll(f)
+	if err != nil && err != io.EOF {
+		s.writeError(w, http.StatusInternalServerError, err)
+	}
+
+	s.writeJSON(w, http.StatusOK, &contract.FileRS{Path: rq.Path, Content: string(bytes)})
+}
+
+func (s *server) addFile(w http.ResponseWriter, r *http.Request) {
+	rq := &contract.AddFileRQ{}
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(rq)
+
+	if err != nil {
+		s.writeError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	err = s.gitSvc.AddFile(s.toBaseRequest(rq.Base), rq.Path, rq.Content)
+	if err != nil {
+		s.writeError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("{}"))
+}
+
+func (s *server) editFile(w http.ResponseWriter, r *http.Request) {
+	rq := &contract.EditFileRQ{}
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(rq)
+
+	if err != nil {
+		s.writeError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	err = s.gitSvc.EditFile(s.toBaseRequest(rq.Base), rq.Path, rq.Content, rq.IsConflict)
+	if err != nil {
+		s.writeError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("{}"))
+}
+
+func (s *server) removeFile(w http.ResponseWriter, r *http.Request) {
+	rq := &contract.RemoveFileRQ{}
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(rq)
+
+	if err != nil {
+		s.writeError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	err = s.gitSvc.RemoveFile(s.toBaseRequest(rq.Base), rq.Path, rq.IsConflict)
+	if err != nil {
+		s.writeError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("{}"))
 }
 
 func (s *server) logs(w http.ResponseWriter, r *http.Request) {

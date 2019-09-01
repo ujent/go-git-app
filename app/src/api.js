@@ -86,7 +86,7 @@ export function checkoutBranch(user, repo, branch) {
 export function getRepoFiles(user, repo, branch) {
     const query = queryString.stringify({ repo: repo, user: user, branch: branch });
 
-    return fetchApi('/files?' + query, {});
+    return fetchApi('/files/all?' + query, {});
 }
 
 export function commit(settings, msg) {

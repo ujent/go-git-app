@@ -173,8 +173,48 @@ input[type='radio'].visually-hidden {
   cursor: pointer;
 }
 
+.repo-content .repo-file-wrapper {
+  display: flex;
+}
+
 .repo-content .repo-file-selected {
   font-weight: bold;
+}
+
+.repo-content .add-file-wrapper {
+  display: flex;
+}
+
+.repo-content .add-file-wrapper h3 {
+  margin-right: 8px;
+}
+
+.add-remove-file {
+  font-size: 28px;
+  font-weight: bold;
+  color: #a9a9a9;
+  background-color:inherit;
+  width: 38px;
+  line-height: 26px;
+
+  border: none;
+  padding: 0;
+  outline: none;
+
+  cursor: pointer;
+}
+
+.add-remove-file.minus-btn {
+  font-size: 34px;
+}
+
+.add-remove-file:focus,
+.add-remove-file:hover {
+  color: black;
+}
+
+.add-remove-file:active {
+  color: #81b3d2;
 }
 
 .main-settings {

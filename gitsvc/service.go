@@ -135,6 +135,18 @@ type Service interface {
 
 	//Remote returns a remote if exists or git.ErrRemoteNotFound
 	Remote(user, repo, name string) (*git.Remote, error)
+
+	//File - returns billy file
+	File(rq *contract.BaseRequest, path string, isConflict bool) (billy.File, error)
+
+	//AddFile - add file to Filesystem and stage it
+	AddFile(rq *contract.BaseRequest, path, content string) error
+
+	//EditFile - save changed in file and stage changes
+	EditFile(rq *contract.BaseRequest, path, content string, isConflict bool) error
+
+	//RemoveFile - remove file from Filesystem and stage changes
+	RemoveFile(rq *contract.BaseRequest, path string, isConflict bool) error
 }
 
 type service struct {
@@ -154,6 +166,156 @@ type repository struct {
 func New(s *contract.ServerSettings, db *sqlx.DB) (Service, error) {
 
 	return &service{user: &contract.User{}, settings: s, db: db}, nil
+}
+
+func (svc *service) File(rq *contract.BaseRequest, path string, isConflict bool) (billy.File, error) {
+	err := svc.validateBaseRQ(rq)
+	if err != nil {
+		return nil, err
+	}
+
+	if path == "" {
+		return nil, errors.New("path cannot be empty")
+	}
+
+	err = svc.setSettings(&contract.User{Name: rq.User.Name}, rq.Repository, rq.Branch)
+	if err != nil {
+		return nil, err
+	}
+
+	if isConflict {
+		f, err := svc.ConflictResultFile(rq, path)
+		if err != nil {
+			return nil, err
+		}
+
+		return f, nil
+	}
+
+	fs := svc.git.fs
+	f, err := fs.OpenFile(path, os.O_RDWR, 0666)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return f, nil
+}
+
+func (svc *service) AddFile(rq *contract.BaseRequest, path, content string) error {
+	err := svc.validateBaseRQ(rq)
+	if err != nil {
+		return err
+	}
+
+	if path == "" {
+		return errors.New("path cannot be empty")
+	}
+
+	err = svc.setSettings(&contract.User{Name: rq.User.Name}, rq.Repository, rq.Branch)
+	if err != nil {
+		return err
+	}
+
+	fs := svc.git.fs
+	_, err = fs.Create(path)
+
+	if err != nil {
+		return err
+	}
+
+	wt, err := svc.git.repo.Worktree()
+	if err != nil {
+		return nil
+	}
+
+	return wt.Add(path)
+}
+
+func (svc *service) EditFile(rq *contract.BaseRequest, path, content string, isConflict bool) error {
+	err := svc.validateBaseRQ(rq)
+	if err != nil {
+		return err
+	}
+
+	if path == "" {
+		return errors.New("path cannot be empty")
+	}
+
+	err = svc.setSettings(&contract.User{Name: rq.User.Name}, rq.Repository, rq.Branch)
+	if err != nil {
+		return err
+	}
+
+	var f billy.File
+
+	if isConflict {
+		f, err = svc.ConflictResultFile(rq, path)
+		if err != nil {
+			return err
+		}
+
+	} else {
+		fs := svc.git.fs
+		f, err = fs.OpenFile(path, os.O_RDWR, 0666)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	_, err = f.Write([]byte(content))
+	if err != nil {
+		return err
+	}
+
+	f.Close()
+
+	wt, err := svc.git.repo.Worktree()
+	if err != nil {
+		return nil
+	}
+
+	return wt.Add(path)
+}
+
+func (svc *service) RemoveFile(rq *contract.BaseRequest, path string, isConflict bool) error {
+	err := svc.validateBaseRQ(rq)
+	if err != nil {
+		return err
+	}
+
+	if path == "" {
+		return errors.New("path cannot be empty")
+	}
+
+	err = svc.setSettings(&contract.User{Name: rq.User.Name}, rq.Repository, rq.Branch)
+	if err != nil {
+		return err
+	}
+
+	wt, err := svc.git.repo.Worktree()
+	if err != nil {
+		return err
+	}
+
+	if isConflict {
+
+		err = wt.Filesystem.Remove(path)
+		if err != nil {
+			return err
+		}
+
+	} else {
+		fs := svc.git.fs
+		err = fs.Remove(path)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return wt.Add(path)
 }
 
 func (svc *service) SwitchUser(user *contract.User) error {
