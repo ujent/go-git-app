@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -296,16 +297,67 @@ func (s *server) files(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) file(w http.ResponseWriter, r *http.Request) {
-	rq := &contract.FileRQ{}
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(rq)
+	q := r.URL.Query()
+	branch := q.Get("branch")
 
-	if err != nil {
-		s.writeError(w, http.StatusBadRequest, err)
+	if branch == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("branch cannot be empty"))
+
 		return
 	}
 
-	f, err := s.gitSvc.File(s.toBaseRequest(rq.Base), rq.Path, rq.IsConflict)
+	repo := q.Get("repo")
+
+	if repo == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("repo cannot be empty"))
+
+		return
+	}
+
+	user := q.Get("user")
+
+	if user == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("user cannot be empty"))
+
+		return
+	}
+
+	path := q.Get("path")
+
+	if path == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("path cannot be empty"))
+
+		return
+	}
+
+	isConflictStr := q.Get("isConflict")
+
+	if isConflictStr == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("isConflict cannot be empty"))
+
+		return
+	}
+
+	var isConflict bool
+
+	if isConflictStr == "true" {
+		isConflict = true
+
+	} else if isConflictStr == "false" {
+		isConflict = false
+	} else {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(fmt.Sprintf("isConflict: wrong value - %s", isConflictStr)))
+
+		return
+	}
+
+	f, err := s.gitSvc.File(&contract.BaseRequest{User: &contract.User{Name: user}, Repository: repo, Branch: branch}, path, isConflict)
 	if err != nil {
 		s.writeError(w, http.StatusBadRequest, err)
 		return
@@ -316,7 +368,7 @@ func (s *server) file(w http.ResponseWriter, r *http.Request) {
 		s.writeError(w, http.StatusInternalServerError, err)
 	}
 
-	s.writeJSON(w, http.StatusOK, &contract.FileRS{Path: rq.Path, Content: string(bytes)})
+	s.writeJSON(w, http.StatusOK, &contract.FileRS{Path: path, Content: string(bytes)})
 }
 
 func (s *server) addFile(w http.ResponseWriter, r *http.Request) {

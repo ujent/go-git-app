@@ -118,7 +118,7 @@ export function getBranches(user, repo) {
                 dispatch(setBranches(rs.branches, rs.current));
 
                 if (rs.currentBranch) {
-                    dispatch(getRepoFiles(user, repo, rs.currentBranch));
+                    dispatch(getFiles(user, repo, rs.currentBranch));
                 }
             },
             err => {
@@ -135,7 +135,7 @@ export function switchBranch(name) {
         api.checkoutBranch(settings.user, settings.repo, name).then(
             () => {
                 dispatch(setCurrentBranch(name));
-                dispatch(getRepoFiles(settings.user, settings.repo, name));
+                dispatch(getFiles(settings.user, settings.repo, name));
                 dispatch(showMessage("Success"));
             },
             err => {
@@ -145,11 +145,11 @@ export function switchBranch(name) {
     }
 }
 
-export function getRepoFiles(user, repo, branch) {
+export function getFiles(user, repo, branch) {
     return (dispatch, getState) => {
 
-        api.getRepoFiles(user, repo, branch).then(
-            files => dispatch(setFiles(files)),
+        api.getFiles(user, repo, branch).then(
+            files => dispatch(setCurrentFile(files)),
             err => {
                 dispatch(showError(err));
             }
@@ -161,6 +161,83 @@ export function setFiles(files) {
     return {
         type: ActionType.SET_FILES,
         files
+    };
+}
+
+export function getFile(path, isConflict) {
+    return (dispatch, getState) => {
+
+        const settings = getSettings(getState())
+        api.getFile(settings, path, isConflict).then(
+            rs => dispatch(setCurrentFile(rs.path, rs.content, isConflict)),
+            err => {
+                dispatch(showError(err));
+            }
+        );
+    }
+}
+
+export function addFile(path, content) {
+    return (dispatch, getState) => {
+
+        const settings = getSettings(getState())
+        api.addFile(settings, path, content).then(
+            rs => dispatch(addFileEntry(path, content)),
+            err => {
+                dispatch(showError(err));
+            }
+        );
+    }
+}
+
+export function addFileEntry(path, content) {
+    return {
+        type: ActionType.ADD_FILE_ENTRY,
+        path,
+        content
+    }
+}
+
+export function removeFile(path, isConflict) {
+    return (dispatch, getState) => {
+
+        const settings = getSettings(getState())
+        api.removeFile(settings, path, isConflict).then(
+            rs => dispatch(removeFileEntry(path)),
+            err => {
+                dispatch(showError(err));
+            }
+        );
+    }
+}
+
+export function removeFileEntry(path) {
+    return {
+        type: ActionType.REMOVE_FILE_ENTRY,
+        path
+    }
+}
+
+
+export function saveFile(path, content, isConflict) {
+    return (dispatch, getState) => {
+
+        const settings = getSettings(getState())
+        api.editFile(settings, path, content, isConflict).then(
+            rs => dispatch(showMessage("File was successfully saved")),
+            err => {
+                dispatch(showError(err));
+            }
+        );
+    }
+}
+
+export function setCurrentFile(name, content, isConflict) {
+    return {
+        type: ActionType.SET_CURRENT_FILE,
+        name,
+        content,
+        isConflict
     };
 }
 

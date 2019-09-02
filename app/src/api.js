@@ -83,10 +83,52 @@ export function checkoutBranch(user, repo, branch) {
     });
 }
 
-export function getRepoFiles(user, repo, branch) {
+export function getFiles(user, repo, branch) {
     const query = queryString.stringify({ repo: repo, user: user, branch: branch });
 
     return fetchApi('/files/all?' + query, {});
+}
+
+export function getFile(settings, path, isConflict) {
+    const query = queryString.stringify({ branch: settings.branch, repo: settings.repo, user: settings.user, path: path, isConflict: isConflict });
+
+    return fetchApi('/files?' + query, {});
+}
+
+export function addFile(settings, path, content) {
+    const query = JSON.stringify({ base: settings, path: path, content: content });
+
+    return fetchApi('/files', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: query
+    });
+}
+
+export function editFile(settings, path, content, isConflict) {
+    const query = JSON.stringify({ base: settings, path: path, content: content, isConflict: isConflict });
+
+    return fetchApi('/files', {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: query
+    });
+}
+
+export function removeFile(settings, path, isConflict) {
+    const query = JSON.stringify({ base: settings, path: path, isConflict: isConflict });
+
+    return fetchApi('/files', {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: query
+    });
 }
 
 export function commit(settings, msg) {

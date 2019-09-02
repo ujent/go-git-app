@@ -171,6 +171,7 @@ input[type='radio'].visually-hidden {
 
 .repo-content .repo-file {
   cursor: pointer;
+  text-transform: initial;
 }
 
 .repo-content .repo-file-wrapper {
@@ -205,7 +206,7 @@ input[type='radio'].visually-hidden {
 }
 
 .add-remove-file.minus-btn {
-  font-size: 34px;
+  font-size: 18px;
 }
 
 .add-remove-file:focus,

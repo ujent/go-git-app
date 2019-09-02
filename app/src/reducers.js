@@ -19,8 +19,58 @@ export const rootReducer = (state = {}, action) => {
                     currentBranch: ''
                 }),
                 files: [],
-                currentFile: ''
+                currentFile: null
             });
+        }
+        case ActionType.SET_FILES: {
+            return Object.assign({}, state, {
+                files: action.files,
+                currentFile: null
+            })
+        }
+        case ActionType.SET_CURRENT_FILE: {
+            let file = null;
+            if (action.name) {
+                file = {
+                    path: action.name,
+                    content: action.content,
+                    isConflict: action.isConflict
+                }
+            }
+            return Object.assign({}, state, {
+                currentFile: file
+            })
+        }
+        case ActionType.ADD_FILE_ENTRY: {
+            const files = state.files;
+
+            const f = {
+                path: action.path,
+                content: action.content,
+                isConflict: false
+            }
+
+            files.unshift(f);
+
+            return Object.assign({}, state, {
+                currentFile: f,
+                files: files
+            });
+
+        }
+        case ActionType.REMOVE_FILE_ENTRY: {
+            let current = state.currentFile;
+            const files = state.files.filter(e => e.path !== action.path)
+
+            if (current && current.path === action.path) {
+                current = null;
+            }
+
+            return Object.assign({}, state, {
+                files: files,
+                currentFile: current
+            });
+
         }
         case ActionType.SET_BRANCHES: {
             if (action.current) {
@@ -71,7 +121,7 @@ export const rootReducer = (state = {}, action) => {
             for (let i = 0; i < branches.length; i++) {
                 if (branches[i] === action.branch) {
                     branches.splice(i, 1);
-                    break
+                    break;
                 }
             }
 
@@ -84,7 +134,7 @@ export const rootReducer = (state = {}, action) => {
                         currentBranch: ''
                     }),
                     files: [],
-                    currentFile: ''
+                    currentFile: null
                 });
             }
 
@@ -99,6 +149,7 @@ export const rootReducer = (state = {}, action) => {
             for (let i = 0; i < repos.length; i++) {
                 if (repos[i] === action.repo) {
                     repos.splice(i, 1);
+                    break;
                 }
             }
 
@@ -113,7 +164,7 @@ export const rootReducer = (state = {}, action) => {
                         currentRepo: '',
                         currentBranch: ''
                     }),
-                    currentFile: '',
+                    currentFile: null,
                     files: []
                 })
             }

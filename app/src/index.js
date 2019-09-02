@@ -6,7 +6,7 @@ import App from './containers/AppContainer';
 import AppError from './AppError';
 import * as serviceWorker from './serviceWorker';
 import createAppStore from './createAppStore';
-import { switchUser, getRepositories, getBranches, getRepoFiles } from './api';
+import { switchUser, getRepositories, getBranches, getFiles } from './api';
 import { StorageItem } from './constants';
 
 
@@ -31,7 +31,7 @@ if (currentUser !== null) {
                                 let store;
                                 if (brRS.branches.indexOf(currentBranch) !== -1) {
 
-                                    getRepoFiles(currentUser, currentRepo, currentBranch).then(
+                                    getFiles(currentUser, currentRepo, currentBranch).then(
                                         filesRS => {
                                             store = createAppStore(currentUser, currentRepo, currentBranch, rs.repos, brRS.branches, filesRS.files);
 

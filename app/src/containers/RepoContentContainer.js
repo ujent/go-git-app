@@ -12,8 +12,11 @@ const mapStateToProps = (state, ownProps) => {
 
 const mapDispatchToProps = (dispatch, ownProps) => {
     return {
-        //handleSelectUser: (user) => dispatch(actions.switchUser(user)),
-
+        handleSaveFile: (path, content, isConflict) => dispatch(actions.saveFile(path, content, isConflict)),
+        handleAddFile: (path, content) => dispatch(actions.addFile(path, content)),
+        handleRemoveFile: (path, isConflict) => dispatch(actions.removeFile(path, isConflict)),
+        handleGetFile: (path, isConflict) => dispatch(actions.getFile(path, isConflict)),
+        handleSetCurrentFile: (path, content, isConflict) => dispatch(actions.setCurrentFile(path, content, isConflict)),
     };
 };
 const RepoContentContainer = connect(mapStateToProps, mapDispatchToProps)(

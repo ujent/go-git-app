@@ -257,7 +257,7 @@ func (svc *service) EditFile(rq *contract.BaseRequest, path, content string, isC
 
 	} else {
 		fs := svc.git.fs
-		f, err = fs.OpenFile(path, os.O_RDWR, 0666)
+		f, err = fs.OpenFile(path, os.O_RDWR|os.O_TRUNC, 0666)
 
 		if err != nil {
 			return err

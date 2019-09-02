@@ -39,7 +39,12 @@ function getInitialState(currentUser, currentRepo, currentBranch, repos, branche
       currentBranch: branch
     },
     output: '',
-    currentFile: '',
+    currentFile: null,
+    // currentFile: {
+    //   name: '',
+    //   content: '',
+    //   isConflict: false
+    // },
     files: fileItems
 
   };
