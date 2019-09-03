@@ -201,6 +201,26 @@ export const rootReducer = (state = {}, action) => {
                 output: ''
             })
         }
+        case ActionType.SHOW_CONFIRM: {
+            return Object.assign({}, state, {
+                confirmPopup: {
+                    isOpen: true,
+                    message: action.msg,
+                    onConfirm: action.onConfirm,
+                    onClose: action.onClose
+                }
+            })
+        }
+        case ActionType.CLOSE_CONFIRM: {
+            return Object.assign({}, state, {
+                confirmPopup: {
+                    isOpen: false,
+                    message: '',
+                    onConfirm: function () { },
+                    onClose: function () { }
+                }
+            })
+        }
         default:
             return state;
     }

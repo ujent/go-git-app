@@ -6,7 +6,7 @@ import RepoContent from '../components/RepoContent';
 const mapStateToProps = (state, ownProps) => {
     return {
         files: state.files,
-        currentFile: state.currentFile
+        currentFile: state.currentFile,
     };
 };
 
@@ -17,6 +17,7 @@ const mapDispatchToProps = (dispatch, ownProps) => {
         handleRemoveFile: (path, isConflict) => dispatch(actions.removeFile(path, isConflict)),
         handleGetFile: (path, isConflict) => dispatch(actions.getFile(path, isConflict)),
         handleSetCurrentFile: (path, content, isConflict) => dispatch(actions.setCurrentFile(path, content, isConflict)),
+        handleOpenConfirm: (msg, onConfirm, onClose) => dispatch(actions.showConfirm(msg, onConfirm, onClose))
     };
 };
 const RepoContentContainer = connect(mapStateToProps, mapDispatchToProps)(

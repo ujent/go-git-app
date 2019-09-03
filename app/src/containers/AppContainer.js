@@ -5,14 +5,16 @@ import App from '../App';
 
 const mapStateToProps = (state, ownProps) => {
   return {
-    outputMsg: state.output
+    outputMsg: state.output,
+    confirm: state.confirmPopup
   };
 };
 
 const mapDispatchToProps = (dispatch, ownProps) => {
   return {
     getRepositories: () => dispatch(actions.getRepositories()),
-    getBranches: () => dispatch(actions.getBranches())
+    getBranches: () => dispatch(actions.getBranches()),
+    handleCloseConfirm: () => dispatch(actions.closeConfirm()),
   };
 };
 const AppContainer = connect(mapStateToProps, mapDispatchToProps)(App);

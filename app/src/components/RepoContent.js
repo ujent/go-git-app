@@ -25,7 +25,7 @@ export default class RepoContent extends Component {
 
             return <li key={el.path} className="repo-file-wrapper">
                 <div className={fileClass} onClick={() => this.onFileClick(el)}>{el.path}</div>
-                <button className="add-remove-file minus-btn" onClick={() => this.onRemoveClick(el)}>❌</button>
+                <button className="add-remove-file minus-btn" onClick={() => this.onRemoveClick(el)}><span role="img" aria-label="remove">❌</span></button>
             </li>
         });
 
@@ -119,7 +119,11 @@ export default class RepoContent extends Component {
 
     onRemoveClick = (file) => {
         if (file) {
-            this.props.handleRemoveFile(file.path, file.isConflict);
+            const msg = `Do you really want to remove ${file.path}?`;
+            const onClose = function () { }
+            const onConfirm = () => this.props.handleRemoveFile(file.path, file.isConflict);
+
+            this.props.handleOpenConfirm(msg, onConfirm, onClose);
         }
     }
 

@@ -45,27 +45,13 @@ function getInitialState(currentUser, currentRepo, currentBranch, repos, branche
     //   content: '',
     //   isConflict: false
     // },
-    files: fileItems
-
-  };
-
-  return initialState;
-}
-
-function getInitialStateTest() {
-
-  const initialState = {
-    users: ['user1', 'user2', 'user3'],
-    repositories: ['repo1', 'repo2'],
-    branches: ['branch1', 'branch2'],
-    settings: {
-      currentUser: 'user1',
-      currentRepo: 'repo1',
-      currentBranch: 'branch1'
-    },
-    output: '',
-    currentFile: '',
-    files: []
+    files: fileItems,
+    confirmPopup: {
+      isOpen: false,
+      message: '',
+      onConfirm: function () { },
+      onClose: function () { }
+    }
 
   };
 

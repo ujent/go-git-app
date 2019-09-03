@@ -6,6 +6,21 @@ export function getSettings(state) {
     return { user: state.settings.currentUser, repo: state.settings.currentRepo, branch: state.settings.currentBranch }
 }
 
+export function showConfirm(msg, onConfirm, onClose) {
+    return {
+        type: ActionType.SHOW_CONFIRM,
+        msg,
+        onConfirm,
+        onClose
+    }
+}
+
+export function closeConfirm() {
+    return {
+        type: ActionType.CLOSE_CONFIRM,
+    }
+}
+
 export function showMessage(msg) {
     return {
         type: ActionType.SHOW_MSG,
