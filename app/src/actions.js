@@ -35,8 +35,15 @@ export function resetMessage() {
 }
 
 export function showError(err) {
-    const msg = `Error code: ${err.status}
-    Message: ${err.message}`
+    let msg = '';
+
+    if (err.status) {
+        msg = `Error code: ${err.status}
+        Message: ${err.message}`
+    } else {
+        msg = err.message
+    }
+
 
     return {
         type: ActionType.SHOW_MSG,
@@ -195,10 +202,31 @@ export function getFile(path, isConflict) {
 export function addFile(path, content) {
     return (dispatch, getState) => {
 
-        const settings = getSettings(getState())
+        const state = getState()
+        let hasFile = false;
+
+        for (let i = 0; i < state.files.length; i++) {
+            const f = state.files[i];
+
+            if (f.path === path) {
+                hasFile = true;
+                break;
+            }
+        }
+
+        if (hasFile) {
+            dispatch(showError({ message: `File ${path} is already exists` }))
+            return;
+        }
+
+        const settings = getSettings(state)
+
+        dispatch(addFileEntry(path, content))
+
         api.addFile(settings, path, content).then(
-            rs => dispatch(addFileEntry(path, content)),
+            rs => { },
             err => {
+                dispatch(removeFileEntry(path))
                 dispatch(showError(err));
             }
         );
