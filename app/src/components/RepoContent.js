@@ -32,7 +32,7 @@ export default class RepoContent extends Component {
         return (
             <section className="repo-content">
                 <h2 className="visually-hidden">Repository content</h2>
-                <div className="repo-files">
+                <div className="repo-files" onKeyPress={e => this.handleEnterPress(e)}>
                     <header className="add-file-wrapper">
                         <h3>Files</h3>
                         <button className="add-remove-file" onClick={this.onAddClick}>+</button>
@@ -115,6 +115,15 @@ export default class RepoContent extends Component {
         });
 
         this.props.handleAddFile(path, '');
+    }
+
+    handleEnterPress = (e) => {
+
+        if (e.key === 'Enter') {
+            e.preventDefault();
+
+            this.onBlurFileName();
+        }
     }
 
     onRemoveClick = (file) => {

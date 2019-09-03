@@ -59,7 +59,10 @@ export function setCurrentUser(name) {
 }
 
 export function switchUser(name) {
+
     return (dispatch, getState) => {
+        dispatch(resetMessage());
+
         api.switchUser(name).then(
             () => {
                 dispatch(setCurrentUser(name));
@@ -88,8 +91,9 @@ export function setCurrentRepo(repo) {
 }
 
 export function getRepositories(user) {
+
     return (dispatch, getState) => {
-        //const user = getState().currentUser;
+        dispatch(resetMessage());
 
         api.getRepositories(user).then(
             rs => {
@@ -103,7 +107,10 @@ export function getRepositories(user) {
 }
 
 export function switchRepo(name) {
+
     return (dispatch, getState) => {
+        dispatch(resetMessage());
+
         const user = getState().settings.currentUser;
 
         api.switchRepo(user, name).then(
@@ -134,6 +141,7 @@ export function setCurrentBranch(branch) {
 }
 
 export function getBranches(user, repo) {
+
     return (dispatch, getState) => {
         api.getBranches(user, repo).then(
             rs => {
@@ -151,7 +159,10 @@ export function getBranches(user, repo) {
 }
 
 export function switchBranch(name) {
+
     return (dispatch, getState) => {
+        dispatch(resetMessage());
+
         const settings = getSettings(getState())
 
         api.checkoutBranch(settings.user, settings.repo, name).then(
@@ -187,7 +198,9 @@ export function setFiles(files) {
 }
 
 export function getFile(path, isConflict) {
+
     return (dispatch, getState) => {
+        dispatch(resetMessage());
 
         const settings = getSettings(getState())
         api.getFile(settings, path, isConflict).then(
@@ -201,8 +214,9 @@ export function getFile(path, isConflict) {
 
 export function addFile(path, content) {
     return (dispatch, getState) => {
+        dispatch(resetMessage());
 
-        const state = getState()
+        const state = getState();
         let hasFile = false;
 
         for (let i = 0; i < state.files.length; i++) {
@@ -215,7 +229,7 @@ export function addFile(path, content) {
         }
 
         if (hasFile) {
-            dispatch(showError({ message: `File ${path} is already exists` }))
+            dispatch(showError({ message: `File ${path} has already existed` }))
             return;
         }
 
@@ -242,7 +256,9 @@ export function addFileEntry(path, content) {
 }
 
 export function removeFile(path, isConflict) {
+
     return (dispatch, getState) => {
+        dispatch(resetMessage());
 
         const settings = getSettings(getState())
         api.removeFile(settings, path, isConflict).then(
@@ -263,7 +279,9 @@ export function removeFileEntry(path) {
 
 
 export function saveFile(path, content, isConflict) {
+
     return (dispatch, getState) => {
+        dispatch(resetMessage());
 
         const settings = getSettings(getState())
         api.editFile(settings, path, content, isConflict).then(
@@ -299,7 +317,10 @@ export function removeBranchEntry(branch) {
 }
 
 export function clone(url, authName, authPsw) {
+
     return (dispatch, getState) => {
+        dispatch(resetMessage());
+
         const user = getState().settings.currentUser;
 
         api.clone(user, url, authName, authPsw).then(
@@ -314,7 +335,10 @@ export function clone(url, authName, authPsw) {
     }
 }
 export function commit(msg) {
+
     return (dispatch, getState) => {
+        dispatch(resetMessage());
+
         const settings = getSettings(getState())
 
         api.commit(settings, msg).then(
@@ -329,7 +353,10 @@ export function commit(msg) {
     }
 }
 export function log() {
+
     return (dispatch, getState) => {
+        dispatch(resetMessage());
+
         const settings = getSettings(getState())
 
         api.log(settings.user, settings.repo, settings.branch).then(
@@ -353,7 +380,10 @@ Msg: ${el.msg}
 }
 
 export function pull(remote, authName, authPsw) {
+
     return (dispatch, getState) => {
+        dispatch(resetMessage());
+
         const settings = getSettings(getState())
 
         api.pull(settings, remote, authName, authPsw).then(
@@ -367,7 +397,10 @@ export function pull(remote, authName, authPsw) {
     }
 }
 export function push(remote, authName, authPsw) {
+
     return (dispatch, getState) => {
+        dispatch(resetMessage());
+
         const settings = getSettings(getState())
 
         api.push(settings, remote, authName, authPsw).then(
@@ -381,7 +414,10 @@ export function push(remote, authName, authPsw) {
     }
 }
 export function removeBranch(branch) {
+
     return (dispatch, getState) => {
+        dispatch(resetMessage());
+
         const settings = getSettings(getState())
 
         api.removeBranch(settings.user, settings.repo, branch).then(
@@ -396,7 +432,10 @@ export function removeBranch(branch) {
     }
 }
 export function removeRepo(repo) {
+
     return (dispatch, getState) => {
+        dispatch(resetMessage());
+
         api.removeRepo(getState().settings.currentUser, repo).then(
             () => {
                 dispatch(showMessage("Success"));
@@ -412,6 +451,8 @@ export function removeRepo(repo) {
 export function merge(theirs) {
 
     return (dispatch, getState) => {
+        dispatch(resetMessage());
+
         const settings = getSettings(getState());
 
         api.merge(settings, theirs).then(
