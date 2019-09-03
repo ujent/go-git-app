@@ -27,31 +27,31 @@ export default class Merge extends Component {
             }
         );
 
-        const onBranchChange = (e) => {
-            this.setState({
-                branch: e.target.value
-            })
-        }
-
-        const onMergeClick = () => {
-            this.props.action(this.state.branch);
-            this.setState({
-                branch: ''
-            })
-        }
-
         return (
             <li className="command-block">
                 <div className="command-block-content">
-                    <button type="button" className="button" disabled={!isAvailable} onClick={onMergeClick} >Merge</button>
-                    <select placeholder="branch" className="command-block-input" value={this.state.branch} onChange={onBranchChange}>
+                    <button type="button" className="button" disabled={!isAvailable} onClick={this.onMergeClick} >Merge</button>
+                    <select placeholder="branch" className="command-block-input" value={this.state.branch} onChange={this.onBranchChange}>
                         <option value="" disabled hidden>select</option>
                         {branchOptions}
                     </select></div>
-
                 <hr></hr>
             </li>
         );
     };
+
+    onBranchChange = (e) => {
+        this.setState({
+            branch: e.target.value
+        })
+    }
+
+    onMergeClick = () => {
+        this.props.action(this.state.branch);
+        this.setState({
+            branch: ''
+        })
+    }
+
 
 };

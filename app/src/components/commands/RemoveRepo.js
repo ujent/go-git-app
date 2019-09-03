@@ -20,25 +20,11 @@ export default class RemoveRepo extends Component {
             }
         );
 
-        const onRepoChange = (e) => {
-            this.setState({
-                repo: e.target.value
-            });
-        }
-
-        const onRemoveClick = () => {
-            this.props.action(this.state.repo)
-
-            this.setState({
-                repo: ''
-            });
-        }
-
         return (
             <li className="command-block">
                 <div className="command-block-content">
-                    <button type="button" className="button medium-button" disabled={!isAvailable} onClick={onRemoveClick} >Remove repo</button>
-                    <select placeholder="select" className="command-block-input" value={this.state.repo} onChange={onRepoChange} >
+                    <button type="button" className="button medium-button" disabled={!isAvailable} onClick={this.onRemoveClick} >Remove repo</button>
+                    <select placeholder="select" className="command-block-input" value={this.state.repo} onChange={this.onRepoChange} >
                         <option value="" disabled hidden>select</option>
                         {repoOptions}
                     </select>
@@ -47,5 +33,20 @@ export default class RemoveRepo extends Component {
             </li>
         );
     };
+
+    onRepoChange = (e) => {
+        this.setState({
+            repo: e.target.value
+        });
+    }
+
+    onRemoveClick = () => {
+        this.props.action(this.state.repo)
+
+        this.setState({
+            repo: ''
+        });
+    }
+
 
 }

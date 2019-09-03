@@ -116,14 +116,7 @@ export const rootReducer = (state = {}, action) => {
         }
         case ActionType.REMOVE_BRANCH: {
             const currentBranch = state.settings.currentBranch;
-            let branches = state.branches;
-
-            for (let i = 0; i < branches.length; i++) {
-                if (branches[i] === action.branch) {
-                    branches.splice(i, 1);
-                    break;
-                }
-            }
+            const branches = state.branches.filter(e => e !== action.branch);
 
             if (currentBranch === action.branch) {
                 window.localStorage.removeItem(StorageItem.Branch);
@@ -144,14 +137,7 @@ export const rootReducer = (state = {}, action) => {
         }
         case ActionType.REMOVE_REPO: {
             const currentRepo = state.settings.currentRepo;
-            let repos = state.repositories;
-
-            for (let i = 0; i < repos.length; i++) {
-                if (repos[i] === action.repo) {
-                    repos.splice(i, 1);
-                    break;
-                }
-            }
+            const repos = state.repositories.filter(r => r !== action.repo);
 
             if (currentRepo === action.repo) {
                 window.localStorage.removeItem(StorageItem.Repo);

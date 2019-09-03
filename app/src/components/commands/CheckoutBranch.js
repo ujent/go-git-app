@@ -25,25 +25,11 @@ export default class CheckoutBranch extends Component {
             }
         );
 
-        const onCheckoutClick = () => {
-            this.props.action(this.state.branch);
-
-            this.setState({
-                branch: ''
-            });
-        }
-
-        const onBranchChange = (e) => {
-            this.setState({
-                branch: e.target.value
-            });
-        }
-
         return (
             <li className="command-block">
                 <div className="command-block-content">
-                    <button type="button" className="button medium-button" disabled={!isAvailable} onClick={onCheckoutClick} >Checkout branch</button>
-                    <select placeholder="select" className="command-block-input" value={this.state.branch} onChange={onBranchChange} >
+                    <button type="button" className="button medium-button" disabled={!isAvailable} onClick={this.onCheckoutClick} >Checkout branch</button>
+                    <select placeholder="select" className="command-block-input" value={this.state.branch} onChange={this.onBranchChange} >
                         <option value="" disabled hidden>select</option>
                         {branchOptions}
                     </select>
@@ -52,5 +38,20 @@ export default class CheckoutBranch extends Component {
             </li>
         );
     }
+
+    onCheckoutClick = () => {
+        this.props.action(this.state.branch);
+
+        this.setState({
+            branch: ''
+        });
+    }
+
+    onBranchChange = (e) => {
+        this.setState({
+            branch: e.target.value
+        });
+    }
+
 
 }

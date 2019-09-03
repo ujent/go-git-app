@@ -11,27 +11,28 @@ export default class Commit extends Component {
     }
 
     render() {
-        const onCommentChange = (e) => {
-            this.setState({
-                comment: e.target.value
-            });
-        }
-
-        const onCommitClick = () => {
-            this.props.action(this.state.comment);
-
-            this.setState({
-                comment: ''
-            })
-        }
 
         return (
             <li className="commit-command">
-                <button type="button" className="button" disabled={!this.props.isAvailable} onClick={() => onCommitClick()}>Commit</button>
-                <textarea placeholder="commit message" rows="3" value={this.state.comment} onChange={(e) => onCommentChange(e)}></textarea>
+                <button type="button" className="button" disabled={!this.props.isAvailable} onClick={() => this.onCommitClick()}>Commit</button>
+                <textarea placeholder="commit message" rows="3" value={this.state.comment} onChange={(e) => this.onCommentChange(e)}></textarea>
                 <hr></hr>
             </li>
         );
+    }
+
+    onCommentChange = (e) => {
+        this.setState({
+            comment: e.target.value
+        });
+    }
+
+    onCommitClick = () => {
+        this.props.action(this.state.comment);
+
+        this.setState({
+            comment: ''
+        })
     }
 
 }

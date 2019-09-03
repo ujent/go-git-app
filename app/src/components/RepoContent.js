@@ -16,7 +16,6 @@ export default class RepoContent extends Component {
 
     render() {
 
-        console.log(this.props.files.length)
         const files = this.props.files.map(el => {
             const fileClass = classNames({
                 'repo-file': true,
