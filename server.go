@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -15,6 +16,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/ujent/go-git-app/contract"
 	"github.com/ujent/go-git-app/gitsvc"
+	"gopkg.in/src-d/go-git.v4"
 )
 
 type server struct {
@@ -742,43 +744,6 @@ func (s *server) repositories(w http.ResponseWriter, r *http.Request) {
 	s.writeJSON(w, http.StatusOK, &contract.RepositoriesRS{Repos: res})
 }
 
-/*func (s *server) handleMergeCommit(msg string) error {
-	_, err := s.gitSvc.Commit(msg)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (s *server) handleConflictFiles(path string) ([]contract.MergeFile, error) {
-	res, err := s.gitSvc.ConflictFiles(path)
-	if err != nil {
-		return nil, err
-	}
-
-	return res, nil
-}
-
-func (s *server) handleConflictResultFile(path string) (string, error) {
-	f, err := s.gitSvc.ConflictResultFile(path)
-	if err != nil {
-		return "", err
-	}
-
-	bytes, err := ioutil.ReadAll(f)
-	if err != nil && err != io.EOF {
-		return "", err
-	}
-
-	return string(bytes), nil
-}*/
-
-func (s *server) merge(w http.ResponseWriter, r *http.Request) {
-
-}
-
-/*
 func (s *server) merge(w http.ResponseWriter, r *http.Request) {
 	rq := &contract.MergeRQ{}
 	decoder := json.NewDecoder(r.Body)
@@ -796,7 +761,7 @@ func (s *server) merge(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = s.gitSvc.Merge(rq.Branch)
+	mergeMsg, err := s.gitSvc.Merge(s.toBaseRequest(rq.Base), rq.Branch)
 
 	if err != nil {
 
@@ -804,46 +769,32 @@ func (s *server) merge(w http.ResponseWriter, r *http.Request) {
 		case git.ErrHasUncommittedFiles:
 			{
 				//ErrHasUncommittedFiles occurs when there are any unstaged or staged files before merge
-				return "", err
+				s.writeError(w, http.StatusBadRequest, err)
+				return
 			}
 		case git.ErrMergeCommitNeeded:
 			{
-				msg, err := s.gitSvc.MergeMsgShort()
-				if err != nil {
-					return "", err
-				}
-
-				return msg, nil
+				s.writeError(w, http.StatusBadRequest, err)
+				return
 			}
 		case git.ErrMergeWithConflicts:
 			{
-				//ToDo RA - maybe write to error instead of Stdout?
-
-				msg, err := s.gitSvc.MergeMsgFull()
-				if err != nil {
-					return "", err
-				}
-
-				//ToDo RA - write to Response info about conflicts
-
-				//conflictFiles := s.svc.ConflictFileList()
-				return msg, nil
+				s.writeError(w, http.StatusBadRequest, errors.New(mergeMsg))
+				return
 
 			}
 		default:
 			{
-				return "", err
+				s.writeError(w, http.StatusBadRequest, err)
+				return
 			}
 		}
-
-	} else {
-		//if there is no error it means that it was a fastforward merge
-
-		//ToDo RA - write that all is OK or that it was successful ff merge
-		return "", nil
 	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("{}"))
 }
-*/
+
 func (s *server) writeJSON(w http.ResponseWriter, statusCode int, payload interface{}) {
 
 	json, err := json.Marshal(payload)
