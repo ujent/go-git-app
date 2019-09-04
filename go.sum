@@ -82,6 +82,8 @@ github.com/ujent/go-git v0.0.0-20190801043737-fd24d52a153b h1:R5MAeXPIv8QCOYqqqE
 github.com/ujent/go-git v0.0.0-20190801043737-fd24d52a153b/go.mod h1:zjlNnzc1Wjn43v3Mtii7RVxiReNP0fIu9npcXKzuNp4=
 github.com/ujent/go-git v0.0.0-20190818182111-d2614d9c9d65 h1:XlyNVt+4+FpVf9no7rMORRzRGnwi0+8g6HAB0z3nRzQ=
 github.com/ujent/go-git v0.0.0-20190818182111-d2614d9c9d65/go.mod h1:zjlNnzc1Wjn43v3Mtii7RVxiReNP0fIu9npcXKzuNp4=
+github.com/ujent/go-git v0.0.0-20190904045034-61d0f9f02f79 h1:AyawofpXpYEQDQtkh7yP3uLAmXh9R2Y//GNlMl8Yfqk=
+github.com/ujent/go-git v0.0.0-20190904045034-61d0f9f02f79/go.mod h1:zjlNnzc1Wjn43v3Mtii7RVxiReNP0fIu9npcXKzuNp4=
 github.com/ujent/go-git-mysql v0.0.0-20190807142715-fbc9b2c784de h1:MyrXoicPGxC5uaeQaqyWgYWuQKfnOJp5kmuDoX4r6kk=
 github.com/ujent/go-git-mysql v0.0.0-20190807142715-fbc9b2c784de/go.mod h1:YCeFiOeQbfBg9LRoqPZ5rPppTMMo5DbUGhxuKhQCCR8=
 github.com/xanzy/ssh-agent v0.2.0/go.mod h1:0NyE30eGUDliuLEHJgYte/zncp2zdTStcOnWhgSqHD8=
