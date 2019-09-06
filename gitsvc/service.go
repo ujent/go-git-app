@@ -97,9 +97,6 @@ type Service interface {
 	//ConflictFileList - returns pathes of files with conflicts
 	ConflictFileList(rq *contract.BaseRequest) ([]string, error)
 
-	//ConflictResultFile - returns file with unresolved conflicts
-	ConflictResultFile(rq *contract.BaseRequest, path string) (billy.File, error)
-
 	//FilesList - returns current repository files pathes
 	ConflictFiles(rq *contract.BaseRequest, path string) ([]contract.MergeFile, error)
 
@@ -186,15 +183,6 @@ func (svc *service) File(rq *contract.BaseRequest, path string, isConflict bool)
 		return nil, err
 	}
 
-	if isConflict {
-		f, err := svc.ConflictResultFile(rq, path)
-		if err != nil {
-			return nil, err
-		}
-
-		return f, nil
-	}
-
 	fs := svc.git.fs
 	f, err := fs.OpenFile(path, os.O_RDWR|os.O_TRUNC, 0666)
 
@@ -252,19 +240,11 @@ func (svc *service) EditFile(rq *contract.BaseRequest, path, content string, isC
 
 	var f billy.File
 
-	if isConflict {
-		f, err = svc.ConflictResultFile(rq, path)
-		if err != nil {
-			return err
-		}
+	fs := svc.git.fs
+	f, err = fs.OpenFile(path, os.O_RDWR|os.O_TRUNC, 0666)
 
-	} else {
-		fs := svc.git.fs
-		f, err = fs.OpenFile(path, os.O_RDWR|os.O_TRUNC, 0666)
-
-		if err != nil {
-			return err
-		}
+	if err != nil {
+		return err
 	}
 
 	_, err = f.Write([]byte(content))
@@ -567,12 +547,12 @@ func (svc *service) OpenRepository(user, repo string) error {
 		return err
 	}
 
-	fs, err := mysqlfs.New(svc.settings.GitConnStr, filesTableName)
+	fs, err := mysqlfs.New(svc.settings.GitConnStr, gitTableName)
 	if err != nil {
 		return err
 	}
 
-	gitFs, err := mysqlfs.New(svc.settings.GitConnStr, gitTableName)
+	gitFs, err := mysqlfs.New(svc.settings.GitConnStr, filesTableName)
 	if err != nil {
 		return err
 	}
@@ -965,31 +945,6 @@ func (svc *service) ConflictFileList(rq *contract.BaseRequest) ([]string, error)
 	}
 
 	return pathes, nil
-}
-
-//ConflictResultFile - returns file with unresolved conflicts
-func (svc *service) ConflictResultFile(rq *contract.BaseRequest, path string) (billy.File, error) {
-	err := svc.validateBaseRQ(rq)
-	if err != nil {
-		return nil, err
-	}
-
-	err = svc.setSettings(rq.User, rq.Repository, rq.Branch)
-	if err != nil {
-		return nil, err
-	}
-
-	w, err := svc.git.repo.Worktree()
-	if err != nil {
-		return nil, err
-	}
-
-	f, err := w.Filesystem.OpenFile(path, os.O_RDWR|os.O_TRUNC, 0666)
-	if err != nil {
-		return nil, err
-	}
-
-	return f, nil
 }
 
 //ConflictFiles - returns base, ours or theirs files by path of conflict file
