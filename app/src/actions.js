@@ -345,9 +345,10 @@ export function clone(url, authName, authPsw) {
             err => {
                 dispatch(showError(err));
             }
-        );
+        ).finally(
+            () => dispatch(hideSpinner())
+        );;
 
-        dispatch(hideSpinner())
     }
 }
 export function commit(msg) {
@@ -486,9 +487,10 @@ export function merge(theirs) {
             err => {
                 dispatch(showError(err));
             }
+        ).finally(
+            () => dispatch(hideSpinner())
         );
 
-        dispatch(hideSpinner());
     }
 }
 
