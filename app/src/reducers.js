@@ -2,6 +2,16 @@ import { ActionType, StorageItem } from './constants';
 
 export const rootReducer = (state = {}, action) => {
     switch (action.type) {
+        case ActionType.SHOW_SPINNER: {
+            return Object.assign({}, state, {
+                isSpinnerVisible: true
+            });
+        }
+        case ActionType.HIDE_SPINNER: {
+            return Object.assign({}, state, {
+                isSpinnerVisible: false
+            });
+        }
         case ActionType.SET_CURRENT_USER: {
             const prev = state.settings.currentUser;
             if (prev === action.user) {

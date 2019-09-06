@@ -6,6 +6,18 @@ export function getSettings(state) {
     return { user: state.settings.currentUser, repo: state.settings.currentRepo, branch: state.settings.currentBranch }
 }
 
+export function showSpinner() {
+    return {
+        type: ActionType.SHOW_SPINNER
+    }
+}
+
+export function hideSpinner() {
+    return {
+        type: ActionType.HIDE_SPINNER
+    }
+}
+
 export function showConfirm(msg, onConfirm, onClose) {
     return {
         type: ActionType.SHOW_CONFIRM,
@@ -143,12 +155,13 @@ export function setCurrentBranch(branch) {
 export function getBranches(user, repo) {
 
     return (dispatch, getState) => {
+
         api.getBranches(user, repo).then(
             rs => {
                 dispatch(setBranches(rs.branches, rs.current));
 
-                if (rs.currentBranch) {
-                    dispatch(getFiles(user, repo, rs.currentBranch));
+                if (rs.current) {
+                    dispatch(getFiles(user, repo, rs.current));
                 }
             },
             err => {
@@ -182,7 +195,7 @@ export function getFiles(user, repo, branch) {
     return (dispatch, getState) => {
 
         api.getFiles(user, repo, branch).then(
-            files => dispatch(setCurrentFile(files)),
+            rs => dispatch(setFiles(rs.files)),
             err => {
                 dispatch(showError(err));
             }
@@ -319,6 +332,7 @@ export function removeBranchEntry(branch) {
 export function clone(url, authName, authPsw) {
 
     return (dispatch, getState) => {
+        dispatch(showSpinner());
         dispatch(resetMessage());
 
         const user = getState().settings.currentUser;
@@ -332,6 +346,8 @@ export function clone(url, authName, authPsw) {
                 dispatch(showError(err));
             }
         );
+
+        dispatch(hideSpinner())
     }
 }
 export function commit(msg) {
@@ -451,13 +467,42 @@ export function removeRepo(repo) {
 export function merge(theirs) {
 
     return (dispatch, getState) => {
+        dispatch(showSpinner());
         dispatch(resetMessage());
 
         const settings = getSettings(getState());
 
         api.merge(settings, theirs).then(
             rs => {
+
+                if (rs.isFF) {
+                    dispatch(showMessage("Fast-forward"));
+                } else {
+                    dispatch(showMessage(rs.msg))
+                }
+
+                dispatch(getFiles(settings.user, settings.repo, settings.branch))
+            },
+            err => {
+                dispatch(showError(err));
+            }
+        );
+
+        dispatch(hideSpinner());
+    }
+}
+
+export function abortMerge() {
+
+    return (dispatch, getState) => {
+        dispatch(resetMessage());
+
+        const settings = getSettings(getState());
+
+        api.abortMerge(settings).then(
+            rs => {
                 dispatch(showMessage("Success"));
+                dispatch(getFiles(settings.user, settings.repo, settings.branch))
             },
             err => {
                 dispatch(showError(err));
