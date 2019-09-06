@@ -148,7 +148,16 @@ type PushRQ struct {
 // MergeRQ - request for merge operation
 type MergeRQ struct {
 	Base   *BaseRequestRQ `json:"base"`
-	Branch string         `json:"branch"`
+	Theirs string         `json:"theirs"`
+}
+
+type MergeRS struct {
+	Message       string `json:"msg"`
+	IsFastforward bool   `json:"isFF"`
+}
+
+type AbortMergeRQ struct {
+	Base *BaseRequestRQ `json:"base"`
 }
 
 //MsgResult - common result returns message

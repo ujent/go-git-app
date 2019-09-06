@@ -51,7 +51,8 @@ function getInitialState(currentUser, currentRepo, currentBranch, repos, branche
       message: '',
       onConfirm: function () { },
       onClose: function () { }
-    }
+    },
+    isSpinnerVisible: false
 
   };
 

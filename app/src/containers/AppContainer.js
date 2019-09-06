@@ -6,7 +6,8 @@ import App from '../App';
 const mapStateToProps = (state, ownProps) => {
   return {
     outputMsg: state.output,
-    confirm: state.confirmPopup
+    confirm: state.confirmPopup,
+    isSpinnerVisible: state.isSpinnerVisible
   };
 };
 

@@ -7,6 +7,7 @@ import Pull from "./commands/Pull"
 import Push from "./commands/Push"
 import RemoveRepo from "./commands/RemoveRepo"
 import CreateBranch from "./commands/CreateBranch"
+// import CheckoutBranch from "./commands/CheckoutBranch"
 import RemoveBranch from "./commands/RemoveBranch"
 import Log from "./commands/Log"
 
@@ -22,7 +23,7 @@ const Commands = props => {
             <h2>Commands</h2>
             <ul className="commands-list">
                 <Commit action={props.handleCommit} isAvailable={canCommit} />
-                <Merge action={props.handleMerge} branches={branches} currentBranch={currentBranch} isAvailable={isBaseAvailable} />
+                <Merge mergeAction={props.handleMerge} abortAction={props.handleAbortMerge} branches={branches} currentBranch={currentBranch} isAvailable={isBaseAvailable} />
                 <Clone action={props.handleClone} isAvailable={currentUser !== ""} />
                 <Pull action={props.handlePull} isAvailable={isBaseAvailable} />
                 <Push action={props.handlePush} isAvailable={isBaseAvailable} />

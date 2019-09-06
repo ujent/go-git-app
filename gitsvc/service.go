@@ -91,6 +91,9 @@ type Service interface {
 	//MergeMsgFull - returns MERGE_MSG file content  without trimming strings which begin from "#"
 	MergeMsgFull(rq *contract.BaseRequest) (string, error)
 
+	//AbortMerge will abort the merge process and try to reconstruct the pre-merge state
+	AbortMerge(rq *contract.BaseRequest) error
+
 	//ConflictFileList - returns pathes of files with conflicts
 	ConflictFileList(rq *contract.BaseRequest) ([]string, error)
 
@@ -193,7 +196,7 @@ func (svc *service) File(rq *contract.BaseRequest, path string, isConflict bool)
 	}
 
 	fs := svc.git.fs
-	f, err := fs.OpenFile(path, os.O_RDWR, 0666)
+	f, err := fs.OpenFile(path, os.O_RDWR|os.O_TRUNC, 0666)
 
 	if err != nil {
 		return nil, err
@@ -874,6 +877,26 @@ func (svc *service) Merge(rq *contract.BaseRequest, branch string) (string, erro
 	return w.Merge(branch)
 }
 
+//AbortMerge will abort the merge process and try to reconstruct the pre-merge state
+func (svc *service) AbortMerge(rq *contract.BaseRequest) error {
+	err := svc.validateBaseRQ(rq)
+	if err != nil {
+		return err
+	}
+
+	err = svc.setSettings(rq.User, rq.Repository, rq.Branch)
+	if err != nil {
+		return err
+	}
+
+	w, err := svc.git.repo.Worktree()
+	if err != nil {
+		return err
+	}
+
+	return w.AbortMerge()
+}
+
 //MergeMsgShort - returns MERGE_MSG file content  with trimming strings which begin from "#"
 func (svc *service) MergeMsgShort(rq *contract.BaseRequest) (string, error) {
 	err := svc.validateBaseRQ(rq)
@@ -961,7 +984,7 @@ func (svc *service) ConflictResultFile(rq *contract.BaseRequest, path string) (b
 		return nil, err
 	}
 
-	f, err := w.Filesystem.OpenFile(path, os.O_RDWR, 0666)
+	f, err := w.Filesystem.OpenFile(path, os.O_RDWR|os.O_TRUNC, 0666)
 	if err != nil {
 		return nil, err
 	}

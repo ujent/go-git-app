@@ -23,7 +23,8 @@ const mapDispatchToProps = (dispatch, ownProps) => {
     handlePush: (remote, authName, authPsw) => dispatch(actions.push(remote, authName, authPsw)),
     handleRemoveBranch: (branch) => dispatch(actions.removeBranch(branch)),
     handleRemoveRepo: (repo) => dispatch(actions.removeRepo(repo)),
-    handleMerge: (theirs) => dispatch(actions.merge(theirs))
+    handleMerge: (theirs) => dispatch(actions.merge(theirs)),
+    handleAbortMerge: () => dispatch(actions.abortMerge())
   };
 };
 const CommandsContainer = connect(mapStateToProps, mapDispatchToProps)(Commands);

@@ -28,15 +28,26 @@ export default class Merge extends Component {
         );
 
         return (
-            <li className="command-block">
-                <div className="command-block-content">
-                    <button type="button" className="button" disabled={!isAvailable} onClick={this.onMergeClick} >Merge</button>
-                    <select placeholder="branch" className="command-block-input" value={this.state.branch} onChange={this.onBranchChange}>
-                        <option value="" disabled hidden>select</option>
-                        {branchOptions}
-                    </select></div>
-                <hr></hr>
-            </li>
+            <>
+                <li className="command-block">
+                    <div className="command-block-content">
+                        <button type="button" className="button medium-button" disabled={!isAvailable} onClick={this.onMergeClick} >Merge</button>
+                        <select placeholder="branch" className="command-block-input" value={this.state.branch} onChange={this.onBranchChange}>
+                            <option value="" disabled hidden>select</option>
+                            {branchOptions}
+                        </select>
+                    </div>
+                    <hr></hr>
+                </li>
+                <li className="command-block">
+                    <div className="command-block-content">
+                        <button type="button" className="button medium-button" disabled={!this.props.isAvailable} onClick={this.onAbortClick} >Abort merge</button>
+
+                    </div>
+
+                    <hr></hr>
+                </li>
+            </>
         );
     };
 
@@ -47,11 +58,14 @@ export default class Merge extends Component {
     }
 
     onMergeClick = () => {
-        this.props.action(this.state.branch);
+        this.props.mergeAction(this.state.branch);
         this.setState({
             branch: ''
         })
     }
 
+    onAbortClick = () => {
+        this.props.abortAction()
+    }
 
 };

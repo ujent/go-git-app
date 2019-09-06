@@ -227,3 +227,15 @@ export function merge(settings, theirs) {
         body: query
     });
 }
+
+export function abortMerge(settings) {
+    const query = JSON.stringify({ base: settings })
+
+    return fetchApi('/merge/abort', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: query
+    });
+}

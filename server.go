@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -104,6 +103,7 @@ func (s *server) Start() error {
 
 	r.Route("/merge", func(r chi.Router) {
 		r.Post("/", s.merge)
+		r.Post("/abort", s.abortMerge)
 	})
 
 	err := http.ListenAndServe(":"+s.settings.Port, r)
@@ -754,14 +754,14 @@ func (s *server) merge(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if rq.Branch == "" {
+	if rq.Theirs == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("branch cannot be empty"))
+		w.Write([]byte("Theirs branch cannot be empty"))
 
 		return
 	}
 
-	mergeMsg, err := s.gitSvc.Merge(s.toBaseRequest(rq.Base), rq.Branch)
+	mergeMsg, err := s.gitSvc.Merge(s.toBaseRequest(rq.Base), rq.Theirs)
 
 	if err != nil {
 
@@ -769,26 +769,46 @@ func (s *server) merge(w http.ResponseWriter, r *http.Request) {
 		case git.ErrHasUncommittedFiles:
 			{
 				//ErrHasUncommittedFiles occurs when there are any unstaged or staged files before merge
-				s.writeError(w, http.StatusBadRequest, err)
+				s.writeJSON(w, http.StatusOK, &contract.MergeRS{Message: err.Error()})
 				return
 			}
 		case git.ErrMergeCommitNeeded:
 			{
-				s.writeError(w, http.StatusBadRequest, err)
+				s.writeJSON(w, http.StatusOK, &contract.MergeRS{Message: err.Error()})
 				return
 			}
 		case git.ErrMergeWithConflicts:
 			{
-				s.writeError(w, http.StatusBadRequest, errors.New(mergeMsg))
+				s.writeJSON(w, http.StatusOK, &contract.MergeRS{Message: mergeMsg})
 				return
 
 			}
 		default:
 			{
-				s.writeError(w, http.StatusBadRequest, err)
+				s.writeError(w, http.StatusInternalServerError, err)
 				return
 			}
 		}
+	}
+
+	s.writeJSON(w, http.StatusOK, &contract.MergeRS{IsFastforward: true})
+}
+
+func (s *server) abortMerge(w http.ResponseWriter, r *http.Request) {
+	rq := &contract.AbortMergeRQ{}
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(rq)
+
+	if err != nil {
+		s.writeError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	err = s.gitSvc.AbortMerge(s.toBaseRequest(rq.Base))
+
+	if err != nil {
+		s.writeError(w, http.StatusInternalServerError, err)
+		return
 	}
 
 	w.WriteHeader(http.StatusOK)
