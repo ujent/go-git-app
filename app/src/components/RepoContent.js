@@ -24,7 +24,7 @@ export default class RepoContent extends Component {
             })
 
             return <li key={el.path} className="repo-file-wrapper">
-                <div className={fileClass} onClick={() => this.onFileClick(el)}>{el.path}</div>
+                <div className={fileClass} onClick={() => this.onFileClick(el)}><span className="file-status-letter"></span><span>{el.path}</span></div>
                 <button className="add-remove-file minus-btn" onClick={() => this.onRemoveClick(el)}><span role="img" aria-label="remove">❌</span></button>
             </li>
         });

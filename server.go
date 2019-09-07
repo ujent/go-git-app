@@ -285,16 +285,57 @@ func (s *server) files(w http.ResponseWriter, r *http.Request) {
 
 	files, err := s.gitSvc.FilesList(&contract.BaseRequest{User: &contract.User{Name: user}, Repository: repo, Branch: branch})
 	if err != nil {
-		s.writeError(w, http.StatusBadRequest, err)
+		s.writeError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	statuses, err := s.gitSvc.Status(&contract.BaseRequest{User: &contract.User{Name: user}, Repository: repo, Branch: branch})
+	if err != nil {
+		s.writeError(w, http.StatusInternalServerError, err)
 		return
 	}
 
 	res := []contract.FileInfoRS{}
 	for _, f := range files {
-		res = append(res, contract.FileInfoRS{Path: f.Path, IsConflict: f.IsConflict})
+
+		st, ok := statuses[f.Path]
+
+		if ok {
+			res = append(res, contract.FileInfoRS{Path: f.Path, IsConflict: f.IsConflict, FileStatus: s.toFileStatus(st.Staging)})
+			delete(statuses, f.Path)
+		} else {
+			res = append(res, contract.FileInfoRS{Path: f.Path, IsConflict: f.IsConflict, FileStatus: contract.UnspecifiedFileStatus})
+		}
+	}
+
+	for path, st := range statuses {
+		res = append(res, contract.FileInfoRS{Path: path, FileStatus: s.toFileStatus(st.Staging)})
 	}
 
 	s.writeJSON(w, http.StatusOK, &contract.FilesRS{Files: res})
+}
+
+func (s *server) toFileStatus(c git.StatusCode) contract.FileStatus {
+	switch c {
+	case git.Unmodified:
+		return contract.UnmodifiedFileStatus
+	case git.Untracked:
+		return contract.UntrackedFileStatus
+	case git.Modified:
+		return contract.ModifiedFileStatus
+	case git.Added:
+		return contract.AddedFileStatus
+	case git.Deleted:
+		return contract.DeletedFileStatus
+	case git.Renamed:
+		return contract.RenamedFileStatus
+	case git.Copied:
+		return contract.CopiedFileStatus
+	case git.UpdatedButUnmerged:
+		return contract.UpdatedButUnmergedFileStatus
+	default:
+		return contract.UnspecifiedFileStatus
+	}
 }
 
 func (s *server) file(w http.ResponseWriter, r *http.Request) {

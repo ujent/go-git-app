@@ -100,10 +100,25 @@ type EditFileRQ struct {
 	Content string         `json:"content"`
 }
 
+type FileStatus int
+
+const (
+	UnspecifiedFileStatus        FileStatus = 0
+	UnmodifiedFileStatus         FileStatus = 1
+	ModifiedFileStatus           FileStatus = 2
+	AddedFileStatus              FileStatus = 3
+	DeletedFileStatus            FileStatus = 4
+	UntrackedFileStatus          FileStatus = 5
+	RenamedFileStatus            FileStatus = 6
+	CopiedFileStatus             FileStatus = 7
+	UpdatedButUnmergedFileStatus FileStatus = 8
+)
+
 //FileInfoRS - common information about files in repository
 type FileInfoRS struct {
-	Path       string `json:"path"`
-	IsConflict bool   `json:"isConflict"`
+	Path       string     `json:"path"`
+	IsConflict bool       `json:"isConflict"`
+	FileStatus FileStatus `json:"fileStatus"`
 }
 
 //FilesRQ - the files request

@@ -18,6 +18,34 @@ const remote = "http://35.239.165.218:9000/gitea/testrepo"
 const remoteUser = "gitea@gitea.com"
 const remotePsw = "secret123"
 
+func Test(t *testing.T) {
+	s, err := config.ParseTest()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	db, err := sqlx.Connect("mysql", s.GitConnStr)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer db.Close()
+
+	svc, err := New(s, db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	r := "repo_1"
+
+	err = svc.OpenRepository(userName, r)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+}
+
 func TestPush(t *testing.T) {
 	s, err := config.ParseTest()
 	if err != nil {

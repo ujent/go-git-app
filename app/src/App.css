@@ -169,6 +169,14 @@ input[type='radio'].visually-hidden {
   color: red;
 }
 
+.repo-content .removed-file {
+  color: #a9a9a9;
+  text-decoration: underline;
+}
+
+.repo-content .file-status-letter {
+}
+
 .repo-content .repo-file {
   cursor: pointer;
   text-transform: initial;
@@ -308,14 +316,14 @@ input[type='radio'].visually-hidden {
   color: #333333;
 }
 
-/* .button:focus:not([disabled]),
-.button:hover:not([disabled]) {
+.cancel-button:focus:not([disabled]),
+.cancel-button:hover:not([disabled]) {
   background-color: #f2f2f2;
 }
 
-.button:active:not([disabled]) {
+.cancel-button:active:not([disabled]) {
   background-color: #f2f2f2;
-} */
+}
 
 .spinner-overlay {
   background-color: rgba(0, 0, 0, 0.2);

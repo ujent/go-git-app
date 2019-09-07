@@ -33,7 +33,7 @@ const ConfirmPopup = props => {
                         <p>{message}</p>
                     </div>
                     <div className="popup-buttons-wrapper">
-                        <button className="button" onClick={closeWithCancel}>Cancel</button>
+                        <button className="button cancel-button" onClick={closeWithCancel}>Cancel</button>
                         <button className="button" onClick={closeWithConfirm}>OK</button>
                     </div>
                 </div>
