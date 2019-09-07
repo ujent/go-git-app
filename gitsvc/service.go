@@ -137,16 +137,19 @@ type Service interface {
 	Remote(user, repo, name string) (*git.Remote, error)
 
 	//File - returns billy file
-	File(rq *contract.BaseRequest, path string, isConflict bool) (billy.File, error)
+	File(rq *contract.BaseRequest, path string) (billy.File, error)
 
 	//AddFile - add file to Filesystem and stage it
 	AddFile(rq *contract.BaseRequest, path, content string) error
 
 	//EditFile - save changed in file and stage changes
-	EditFile(rq *contract.BaseRequest, path, content string, isConflict bool) error
+	EditFile(rq *contract.BaseRequest, path, content string) error
 
 	//RemoveFile - remove file from Filesystem and stage changes
-	RemoveFile(rq *contract.BaseRequest, path string, isConflict bool) error
+	RemoveFile(rq *contract.BaseRequest, path string) error
+
+	// Status - returns the working tree status
+	Status(rq *contract.BaseRequest) (git.Status, error)
 }
 
 type service struct {
@@ -168,7 +171,7 @@ func New(s *contract.ServerSettings, db *sqlx.DB) (Service, error) {
 	return &service{user: &contract.User{}, settings: s, db: db}, nil
 }
 
-func (svc *service) File(rq *contract.BaseRequest, path string, isConflict bool) (billy.File, error) {
+func (svc *service) File(rq *contract.BaseRequest, path string) (billy.File, error) {
 	err := svc.validateBaseRQ(rq)
 	if err != nil {
 		return nil, err
@@ -223,7 +226,7 @@ func (svc *service) AddFile(rq *contract.BaseRequest, path, content string) erro
 	return wt.Add(path)
 }
 
-func (svc *service) EditFile(rq *contract.BaseRequest, path, content string, isConflict bool) error {
+func (svc *service) EditFile(rq *contract.BaseRequest, path, content string) error {
 	err := svc.validateBaseRQ(rq)
 	if err != nil {
 		return err
@@ -262,7 +265,7 @@ func (svc *service) EditFile(rq *contract.BaseRequest, path, content string, isC
 	return wt.Add(path)
 }
 
-func (svc *service) RemoveFile(rq *contract.BaseRequest, path string, isConflict bool) error {
+func (svc *service) RemoveFile(rq *contract.BaseRequest, path string) error {
 	err := svc.validateBaseRQ(rq)
 	if err != nil {
 		return err
@@ -282,23 +285,33 @@ func (svc *service) RemoveFile(rq *contract.BaseRequest, path string, isConflict
 		return err
 	}
 
-	if isConflict {
+	fs := svc.git.fs
+	err = fs.Remove(path)
 
-		err = wt.Filesystem.Remove(path)
-		if err != nil {
-			return err
-		}
-
-	} else {
-		fs := svc.git.fs
-		err = fs.Remove(path)
-
-		if err != nil {
-			return err
-		}
+	if err != nil {
+		return err
 	}
 
 	return wt.Add(path)
+}
+
+func (svc *service) Status(rq *contract.BaseRequest) (git.Status, error) {
+	err := svc.validateBaseRQ(rq)
+	if err != nil {
+		return nil, err
+	}
+
+	err = svc.setSettings(&contract.User{Name: rq.User.Name}, rq.Repository, rq.Branch)
+	if err != nil {
+		return nil, err
+	}
+
+	wt, err := svc.git.repo.Worktree()
+	if err != nil {
+		return nil, err
+	}
+
+	return wt.Status()
 }
 
 func (svc *service) SwitchUser(user *contract.User) error {
@@ -489,12 +502,12 @@ func (svc *service) CreateRepository(user, repo string) error {
 		return err
 	}
 
-	fs, err := mysqlfs.New(svc.settings.GitConnStr, filesTableName)
+	fs, err := mysqlfs.New(svc.settings.GitConnStr, gitTableName)
 	if err != nil {
 		return err
 	}
 
-	gitFs, err := mysqlfs.New(svc.settings.GitConnStr, gitTableName)
+	gitFs, err := mysqlfs.New(svc.settings.GitConnStr, filesTableName)
 	if err != nil {
 		return err
 	}
@@ -594,12 +607,12 @@ func (svc *service) Clone(user, url string, auth *contract.Credentials) (string,
 		return "", err
 	}
 
-	fs, err := mysqlfs.New(svc.settings.GitConnStr, filesTableName)
+	fs, err := mysqlfs.New(svc.settings.GitConnStr, gitTableName)
 	if err != nil {
 		return "", err
 	}
 
-	gitFs, err := mysqlfs.New(svc.settings.GitConnStr, gitTableName)
+	gitFs, err := mysqlfs.New(svc.settings.GitConnStr, filesTableName)
 	if err != nil {
 		return "", err
 	}

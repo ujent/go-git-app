@@ -12,9 +12,9 @@ const mapStateToProps = (state, ownProps) => {
 
 const mapDispatchToProps = (dispatch, ownProps) => {
     return {
-        handleSaveFile: (path, content, isConflict) => dispatch(actions.saveFile(path, content, isConflict)),
+        handleSaveFile: (path, content) => dispatch(actions.saveFile(path, content)),
         handleAddFile: (path, content) => dispatch(actions.addFile(path, content)),
-        handleRemoveFile: (path, isConflict) => dispatch(actions.removeFile(path, isConflict)),
+        handleRemoveFile: (path) => dispatch(actions.removeFile(path)),
         handleGetFile: (path, isConflict) => dispatch(actions.getFile(path, isConflict)),
         handleSetCurrentFile: (path, content, isConflict) => dispatch(actions.setCurrentFile(path, content, isConflict)),
         handleOpenConfirm: (msg, onConfirm, onClose) => dispatch(actions.showConfirm(msg, onConfirm, onClose))

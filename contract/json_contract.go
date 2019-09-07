@@ -90,16 +90,14 @@ type AddFileRQ struct {
 }
 
 type RemoveFileRQ struct {
-	Base       *BaseRequestRQ `json:"base"`
-	Path       string         `json:"path"`
-	IsConflict bool           `json:"isConflict"`
+	Base *BaseRequestRQ `json:"base"`
+	Path string         `json:"path"`
 }
 
 type EditFileRQ struct {
-	Base       *BaseRequestRQ `json:"base"`
-	Path       string         `json:"path"`
-	Content    string         `json:"content"`
-	IsConflict bool           `json:"isConflict"`
+	Base    *BaseRequestRQ `json:"base"`
+	Path    string         `json:"path"`
+	Content string         `json:"content"`
 }
 
 //FileInfoRS - common information about files in repository

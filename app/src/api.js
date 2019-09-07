@@ -89,8 +89,8 @@ export function getFiles(user, repo, branch) {
     return fetchApi('/files/all?' + query, {});
 }
 
-export function getFile(settings, path, isConflict) {
-    const query = queryString.stringify({ branch: settings.branch, repo: settings.repo, user: settings.user, path: path, isConflict: isConflict });
+export function getFile(settings, path) {
+    const query = queryString.stringify({ branch: settings.branch, repo: settings.repo, user: settings.user, path: path });
 
     return fetchApi('/files?' + query, {});
 }
@@ -107,8 +107,8 @@ export function addFile(settings, path, content) {
     });
 }
 
-export function editFile(settings, path, content, isConflict) {
-    const query = JSON.stringify({ base: settings, path: path, content: content, isConflict: isConflict });
+export function editFile(settings, path, content) {
+    const query = JSON.stringify({ base: settings, path: path, content: content });
 
     return fetchApi('/files', {
         method: 'PUT',
@@ -119,8 +119,8 @@ export function editFile(settings, path, content, isConflict) {
     });
 }
 
-export function removeFile(settings, path, isConflict) {
-    const query = JSON.stringify({ base: settings, path: path, isConflict: isConflict });
+export function removeFile(settings, path) {
+    const query = JSON.stringify({ base: settings, path: path });
 
     return fetchApi('/files', {
         method: 'DELETE',

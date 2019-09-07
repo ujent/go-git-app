@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -336,30 +335,7 @@ func (s *server) file(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	isConflictStr := q.Get("isConflict")
-
-	if isConflictStr == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("isConflict cannot be empty"))
-
-		return
-	}
-
-	var isConflict bool
-
-	if isConflictStr == "true" {
-		isConflict = true
-
-	} else if isConflictStr == "false" {
-		isConflict = false
-	} else {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(fmt.Sprintf("isConflict: wrong value - %s", isConflictStr)))
-
-		return
-	}
-
-	f, err := s.gitSvc.File(&contract.BaseRequest{User: &contract.User{Name: user}, Repository: repo, Branch: branch}, path, isConflict)
+	f, err := s.gitSvc.File(&contract.BaseRequest{User: &contract.User{Name: user}, Repository: repo, Branch: branch}, path)
 	if err != nil {
 		s.writeError(w, http.StatusBadRequest, err)
 		return
@@ -403,7 +379,7 @@ func (s *server) editFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = s.gitSvc.EditFile(s.toBaseRequest(rq.Base), rq.Path, rq.Content, rq.IsConflict)
+	err = s.gitSvc.EditFile(s.toBaseRequest(rq.Base), rq.Path, rq.Content)
 	if err != nil {
 		s.writeError(w, http.StatusInternalServerError, err)
 		return
@@ -423,7 +399,7 @@ func (s *server) removeFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = s.gitSvc.RemoveFile(s.toBaseRequest(rq.Base), rq.Path, rq.IsConflict)
+	err = s.gitSvc.RemoveFile(s.toBaseRequest(rq.Base), rq.Path)
 	if err != nil {
 		s.writeError(w, http.StatusInternalServerError, err)
 		return

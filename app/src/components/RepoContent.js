@@ -71,7 +71,7 @@ export default class RepoContent extends Component {
         const f = this.props.currentFile;
 
         if (f) {
-            this.props.handleSaveFile(f.path, f.content, f.isConflict)
+            this.props.handleSaveFile(f.path, f.content)
         }
     }
 
@@ -130,7 +130,7 @@ export default class RepoContent extends Component {
         if (file) {
             const msg = `Do you really want to remove ${file.path}?`;
             const onClose = function () { }
-            const onConfirm = () => this.props.handleRemoveFile(file.path, file.isConflict);
+            const onConfirm = () => this.props.handleRemoveFile(file.path);
 
             this.props.handleOpenConfirm(msg, onConfirm, onClose);
         }

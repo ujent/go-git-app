@@ -216,7 +216,7 @@ export function getFile(path, isConflict) {
         dispatch(resetMessage());
 
         const settings = getSettings(getState())
-        api.getFile(settings, path, isConflict).then(
+        api.getFile(settings, path).then(
             rs => dispatch(setCurrentFile(rs.path, rs.content, isConflict)),
             err => {
                 dispatch(showError(err));
@@ -268,13 +268,13 @@ export function addFileEntry(path, content) {
     }
 }
 
-export function removeFile(path, isConflict) {
+export function removeFile(path) {
 
     return (dispatch, getState) => {
         dispatch(resetMessage());
 
         const settings = getSettings(getState())
-        api.removeFile(settings, path, isConflict).then(
+        api.removeFile(settings, path).then(
             rs => dispatch(removeFileEntry(path)),
             err => {
                 dispatch(showError(err));
@@ -291,13 +291,13 @@ export function removeFileEntry(path) {
 }
 
 
-export function saveFile(path, content, isConflict) {
+export function saveFile(path, content) {
 
     return (dispatch, getState) => {
         dispatch(resetMessage());
 
         const settings = getSettings(getState())
-        api.editFile(settings, path, content, isConflict).then(
+        api.editFile(settings, path, content).then(
             rs => dispatch(showMessage("File was successfully saved")),
             err => {
                 dispatch(showError(err));
