@@ -18,12 +18,12 @@ require (
 	github.com/oxtoacart/bpool v0.0.0-20190530202638-03653db5a59c // indirect
 	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/stretchr/testify v1.4.0 // indirect
-	github.com/ujent/go-git-mysql v0.0.0-20190907032042-5508d679a5e8
+	github.com/ujent/go-git-mysql v0.0.0-20190908145408-348f38348e3e
 
-	golang.org/x/crypto v0.0.0-20190829043050-9756ffdc2472 // indirect
+	golang.org/x/crypto v0.0.0-20190907121410-71b5226ff739 // indirect
 	golang.org/x/net v0.0.0-20190827160401-ba9fcec4b297 // indirect
-	golang.org/x/sys v0.0.0-20190904154756-749cb33beabd // indirect
-	golang.org/x/tools v0.0.0-20190907020128-2ca718005c18 // indirect
+	golang.org/x/sys v0.0.0-20190907184412-d223b2b6db03 // indirect
+	golang.org/x/tools v0.0.0-20190908135931-fef9eaa9e42b // indirect
 	google.golang.org/appengine v1.6.1 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/src-d/go-billy.v4 v4.3.2
