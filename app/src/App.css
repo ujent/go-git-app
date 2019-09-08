@@ -227,7 +227,7 @@ input[type='radio'].visually-hidden {
   cursor: pointer;
 }
 
-.add-remove-file.minus-btn {
+.add-remove-file.remove-btn {
   font-size: 18px;
 }
 

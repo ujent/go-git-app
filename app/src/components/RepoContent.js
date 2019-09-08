@@ -36,7 +36,7 @@ export default class RepoContent extends Component {
 
             return <li key={el.path} className="repo-file-wrapper">
                 <div className={fileClass} onClick={() => this.onFileClick(el)}><p className="file-status-letter" data-tip={fs.tooltip}>{fs.letter}</p><p>{el.path}</p></div>
-                <button className="add-remove-file minus-btn" onClick={() => this.onRemoveClick(el)}><span role="img" aria-label="remove">❌</span></button>
+                <button className="add-remove-file remove-btn" onClick={() => this.onRemoveClick(el)}><span role="img" aria-label="remove">❌</span></button>
             </li>
         });
 
@@ -67,7 +67,7 @@ export default class RepoContent extends Component {
                             <textarea rows="34" value={this.props.currentFile.content} onChange={this.onContentChange}></textarea>
                         </div> : null
                 }
-                <ReactTooltip place="top" type="info" effect="solid" getContent={(c) => { if (c) return c; return null }} clickable="false" />
+                <ReactTooltip place="top" type="info" effect="solid" getContent={(c) => { if (c) return c; return null }} />
             </section>
         );
     };
