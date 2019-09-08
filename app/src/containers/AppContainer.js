@@ -2,12 +2,15 @@ import { connect } from 'react-redux';
 
 import * as actions from '../actions';
 import App from '../App';
+import { FileStatus } from '../constants'
 
 const mapStateToProps = (state, ownProps) => {
+  const changed = state.files.filter(e => e.fileStatus !== FileStatus.Unmodified);
   return {
     outputMsg: state.output,
     confirm: state.confirmPopup,
-    isSpinnerVisible: state.isSpinnerVisible
+    isSpinnerVisible: state.isSpinnerVisible,
+    hasUncommitted: changed.length > 0
   };
 };
 

@@ -23,3 +23,16 @@ export const StorageItem = {
     Repo: 'go_git_repo',
     Branch: 'go_git_branch'
 }
+
+
+export const FileStatus = {
+    Unspecified: 0,
+    Unmodified: 1,
+    Modified: 2,
+    Added: 3,
+    Deleted: 4,
+    Untracked: 5,
+    Renamed: 6,
+    Copied: 7,
+    UpdatedButUnmerged: 8
+}

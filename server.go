@@ -304,7 +304,7 @@ func (s *server) files(w http.ResponseWriter, r *http.Request) {
 			res = append(res, contract.FileInfoRS{Path: f.Path, IsConflict: f.IsConflict, FileStatus: s.toFileStatus(st.Staging)})
 			delete(statuses, f.Path)
 		} else {
-			res = append(res, contract.FileInfoRS{Path: f.Path, IsConflict: f.IsConflict, FileStatus: contract.UnspecifiedFileStatus})
+			res = append(res, contract.FileInfoRS{Path: f.Path, IsConflict: f.IsConflict, FileStatus: contract.UnmodifiedFileStatus})
 		}
 	}
 

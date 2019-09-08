@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import classNames from 'classnames';
+import ReactTooltip from 'react-tooltip'
 import '../App.css';
+import { FileStatus } from '../constants';
 
 export default class RepoContent extends Component {
     constructor(props) {
@@ -17,14 +19,23 @@ export default class RepoContent extends Component {
     render() {
 
         const files = this.props.files.map(el => {
+            const fs = this.convertFileStatus(el.fileStatus);
+
+            if (el.fileStatus === FileStatus.Deleted) {
+
+                return <li key={el.path} className="repo-file-wrapper">
+                    <div className="repo-file"><p className="file-status-letter" data-tip={fs.tooltip}>{fs.letter}</p><p className="removed-file">{el.path}</p></div>
+                </li>
+            }
+
             const fileClass = classNames({
                 'repo-file': true,
                 'repo-file-selected': this.props.currentFile && el.path === this.props.currentFile.path,
-                'conflict-file': el.isConflict
+                'conflict-file': el.isConflict,
             })
 
             return <li key={el.path} className="repo-file-wrapper">
-                <div className={fileClass} onClick={() => this.onFileClick(el)}><span className="file-status-letter"></span><span>{el.path}</span></div>
+                <div className={fileClass} onClick={() => this.onFileClick(el)}><p className="file-status-letter" data-tip={fs.tooltip}>{fs.letter}</p><p>{el.path}</p></div>
                 <button className="add-remove-file minus-btn" onClick={() => this.onRemoveClick(el)}><span role="img" aria-label="remove">❌</span></button>
             </li>
         });
@@ -56,10 +67,35 @@ export default class RepoContent extends Component {
                             <textarea rows="32" value={this.props.currentFile.content} onChange={this.onContentChange}></textarea>
                         </div> : null
                 }
-
+                <ReactTooltip place="top" type="info" effect="solid" getContent={(c) => { if (c) return c; return null }} clickable="false" />
             </section>
         );
     };
+
+    convertFileStatus = (fs) => {
+        switch (fs) {
+            case FileStatus.Unspecified:
+                return { letter: '' }
+            case FileStatus.Unmodified:
+                return { letter: '' }
+            case FileStatus.Modified:
+                return { letter: 'M', tooltip: 'Modified' }
+            case FileStatus.Added:
+                return { letter: 'A', tooltip: 'Added' }
+            case FileStatus.Deleted:
+                return { letter: 'D', tooltip: 'Deleted' }
+            case FileStatus.Untracked:
+                return { letter: '?', tooltip: 'Untracked' }
+            case FileStatus.Renamed:
+                return { letter: 'R', tooltip: 'Renamed' }
+            case FileStatus.Copied:
+                return { letter: 'C', tooltip: 'Copied' }
+            case FileStatus.UpdatedButUnmerged:
+                return { letter: 'U', tooltip: 'UpdatedButUnmerged' }
+            default:
+                return { letter: '??', tooltip: `Wrong status: ${fs}` }
+        }
+    }
 
     onFileClick = (file) => {
         if (file) {

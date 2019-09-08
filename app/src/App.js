@@ -19,6 +19,7 @@ const App = props => {
           <div className="main-content">
             <Settings />
             <Output message={props.outputMsg} />
+            <p className="uncommitted-warning">{props.hasUncommitted ? '! Has uncommitted changes' : null}</p>
             <RepoContent />
           </div>
         </div>

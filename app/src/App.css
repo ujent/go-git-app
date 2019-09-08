@@ -14,6 +14,10 @@ a {
   text-decoration: none;
 }
 
+p {
+  margin: 0;
+}
+
 img {
   max-width: 100%;
   height: auto;
@@ -152,17 +156,25 @@ input[type='radio'].visually-hidden {
   margin-left: 100px;
 }
 
-.output {
-  margin-bottom: 20px;
-}
-
 .output textarea {
   width: 100%;
+}
+
+.uncommitted-warning {
+  color: red;
+  margin-bottom: 20px;
+  min-height: 26px;
 }
 
 .repo-content {
   display: flex;
   justify-content: space-between;
+}
+
+.repo-content .repo-file {
+  display: flex;
+  cursor: pointer;
+  text-transform: initial;
 }
 
 .repo-content .conflict-file {
@@ -171,15 +183,17 @@ input[type='radio'].visually-hidden {
 
 .repo-content .removed-file {
   color: #a9a9a9;
-  text-decoration: underline;
+  text-decoration: line-through;
+  cursor: initial;
 }
 
 .repo-content .file-status-letter {
+  min-width: 20px;
+  color:#5496bd;
 }
 
-.repo-content .repo-file {
-  cursor: pointer;
-  text-transform: initial;
+.repo-content .__react_component_tooltip.type-info {
+  background-color: #5496bd;
 }
 
 .repo-content .repo-file-wrapper {
