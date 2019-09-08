@@ -64,7 +64,7 @@ export default class RepoContent extends Component {
                             <div className="file-content-buttons">
                                 <button type="button" className="button" onClick={this.onSaveClick}>Save</button>
                             </div>
-                            <textarea rows="32" value={this.props.currentFile.content} onChange={this.onContentChange}></textarea>
+                            <textarea rows="34" value={this.props.currentFile.content} onChange={this.onContentChange}></textarea>
                         </div> : null
                 }
                 <ReactTooltip place="top" type="info" effect="solid" getContent={(c) => { if (c) return c; return null }} clickable="false" />

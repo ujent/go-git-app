@@ -258,10 +258,15 @@ input[type='radio'].visually-hidden {
   list-style: none;
   padding: 0;
   margin: 0;
+
+  max-height: 549px;
+  overflow: auto;
+  margin-right: 20px;
 }
 
 .file-content {
   width: 60%;
+  margin-left: 20px;
 }
 
 .file-content textarea {
