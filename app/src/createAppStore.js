@@ -4,8 +4,8 @@ import logger from 'redux-logger';
 
 import { rootReducer } from './reducers';
 
-export default function createAppStore(currentUser, currentRepo, currentBranch, repos, branches, files) {
-  const initialState = getInitialState(currentUser, currentRepo, currentBranch, repos, branches, files);
+export default function createAppStore(err, currentUser, currentRepo, currentBranch, repos, branches, files) {
+  const initialState = getInitialState(err, currentUser, currentRepo, currentBranch, repos, branches, files);
   let store;
 
   if (process.env.NODE_ENV === 'production') {
@@ -21,13 +21,14 @@ export default function createAppStore(currentUser, currentRepo, currentBranch, 
   return store;
 }
 
-function getInitialState(currentUser, currentRepo, currentBranch, repos, branches, files) {
+function getInitialState(err, currentUser, currentRepo, currentBranch, repos, branches, files) {
   const user = currentUser ? currentUser : '';
   const repo = currentRepo ? currentRepo : '';
   const branch = currentBranch ? currentBranch : '';
   const brItems = branches ? branches : [];
   const repoItems = repos ? repos : [];
   const fileItems = files ? files : [];
+  err = err ? err : '';
 
   const initialState = {
     users: ['user1', 'user2', 'user3'],
@@ -38,7 +39,7 @@ function getInitialState(currentUser, currentRepo, currentBranch, repos, branche
       currentRepo: repo,
       currentBranch: branch
     },
-    output: '',
+    output: err,
     currentFile: null,
     // currentFile: {
     //   name: '',

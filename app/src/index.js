@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 import './index.css';
 import App from './containers/AppContainer';
-import AppError from './AppError';
 import * as serviceWorker from './serviceWorker';
 import createAppStore from './createAppStore';
 import { switchUser, getRepositories, getBranches, getFiles } from './api';
@@ -28,12 +27,11 @@ if (currentUser !== null) {
                     if (rs.repos.indexOf(currentRepo) !== -1) {
                         getBranches(currentUser, currentRepo).then(
                             brRS => {
-                                let store;
                                 if (brRS.branches.indexOf(currentBranch) !== -1) {
 
                                     getFiles(currentUser, currentRepo, currentBranch).then(
                                         filesRS => {
-                                            store = createAppStore(currentUser, currentRepo, currentBranch, rs.repos, brRS.branches, filesRS.files);
+                                            const store = createAppStore(null, currentUser, currentRepo, currentBranch, rs.repos, brRS.branches, filesRS.files);
 
                                             ReactDOM.render(
                                                 <Provider store={store}><App /></Provider>,
@@ -42,13 +40,17 @@ if (currentUser !== null) {
                                         },
                                         err => {
                                             console.log(err)
+                                            const store = createAppStore(err, currentUser, currentRepo, currentBranch, rs.repos, brRS.branches, []);
 
-                                            ReactDOM.render(<AppError error={err.message} />, document.getElementById('root'));
+                                            ReactDOM.render(
+                                                <Provider store={store}><App /></Provider>,
+                                                document.getElementById('root')
+                                            );
                                         }
                                     );
 
                                 } else {
-                                    store = createAppStore(currentUser, currentRepo, '', rs.repos, brRS.branches);
+                                    const store = createAppStore(null, currentUser, currentRepo, '', rs.repos, brRS.branches);
                                     window.localStorage.removeItem(StorageItem.Branch)
 
                                     ReactDOM.render(
@@ -61,12 +63,16 @@ if (currentUser !== null) {
                             },
                             err => {
                                 console.log(err)
+                                const store = createAppStore(err, currentUser, currentRepo, '', rs.repos);
 
-                                ReactDOM.render(<AppError error={err.message} />, document.getElementById('root'));
+                                ReactDOM.render(
+                                    <Provider store={store}><App /></Provider>,
+                                    document.getElementById('root')
+                                );
                             }
                         )
                     } else {
-                        const store = createAppStore(currentUser, '', '', rs.repos, []);
+                        const store = createAppStore(null, currentUser, '', '', rs.repos);
                         window.localStorage.removeItem(StorageItem.Repo)
 
                         ReactDOM.render(
@@ -77,19 +83,27 @@ if (currentUser !== null) {
                 },
                 err => {
                     console.log(err)
+                    const store = createAppStore(err, currentUser);
 
-                    ReactDOM.render(<AppError error={err.message} />, document.getElementById('root'));
+                    ReactDOM.render(
+                        <Provider store={store}><App /></Provider>,
+                        document.getElementById('root')
+                    );
                 }
             )
         },
         err => {
             console.log(err)
+            const store = createAppStore(err);
 
-            ReactDOM.render(<AppError error={err.message} />, document.getElementById('root'));
+            ReactDOM.render(
+                <Provider store={store}><App /></Provider>,
+                document.getElementById('root')
+            );
         }
     )
 } else {
-    const store = createAppStore('', '', '', [], []);
+    const store = createAppStore();
 
     ReactDOM.render(
         <Provider store={store}><App /></Provider>,
