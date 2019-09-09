@@ -177,9 +177,6 @@ input[type='radio'].visually-hidden {
   text-transform: initial;
 }
 
-.repo-content .conflict-file {
-  color: red;
-}
 
 .repo-content .removed-file {
   color: #a9a9a9;
@@ -190,6 +187,10 @@ input[type='radio'].visually-hidden {
 .repo-content .file-status-letter {
   min-width: 20px;
   color:#5496bd;
+}
+
+.repo-content .conflict-file,  .repo-content .conflict-file-letter {
+  color: red;
 }
 
 .repo-content .__react_component_tooltip.type-info {
@@ -251,7 +252,7 @@ input[type='radio'].visually-hidden {
 }
 
 .repo-files {
-  width: 40%;
+  width: 45%;
 }
 
 .files-list {
@@ -261,12 +262,11 @@ input[type='radio'].visually-hidden {
 
   max-height: 549px;
   overflow: auto;
-  margin-right: 20px;
+  margin-right: 40px;
 }
 
 .file-content {
-  width: 60%;
-  margin-left: 20px;
+  width: 55%;
 }
 
 .file-content textarea {

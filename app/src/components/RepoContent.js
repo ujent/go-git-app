@@ -19,7 +19,7 @@ export default class RepoContent extends Component {
     render() {
 
         const files = this.props.files.map(el => {
-            const fs = this.convertFileStatus(el.fileStatus);
+            const fs = this.convertFileStatus(el.fileStatus, el.isConflict);
 
             if (el.fileStatus === FileStatus.Deleted) {
 
@@ -32,10 +32,15 @@ export default class RepoContent extends Component {
                 'repo-file': true,
                 'repo-file-selected': this.props.currentFile && el.path === this.props.currentFile.path,
                 'conflict-file': el.isConflict,
-            })
+            });
+
+            const letterClass = classNames({
+                'file-status-letter': true,
+                'conflict-file-letter': el.isConflict,
+            });
 
             return <li key={el.path} className="repo-file-wrapper">
-                <div className={fileClass} onClick={() => this.onFileClick(el)}><p className="file-status-letter" data-tip={fs.tooltip}>{fs.letter}</p><p>{el.path}</p></div>
+                <div className={fileClass} onClick={() => this.onFileClick(el)}><p className={letterClass} data-tip={fs.tooltip}>{fs.letter}</p><p>{el.path}</p></div>
                 <button className="add-remove-file remove-btn" onClick={() => this.onRemoveClick(el)}><span role="img" aria-label="remove">❌</span></button>
             </li>
         });
@@ -72,7 +77,11 @@ export default class RepoContent extends Component {
         );
     };
 
-    convertFileStatus = (fs) => {
+    convertFileStatus = (fs, isConflict) => {
+        if (isConflict) {
+            return { letter: 'C', tooltip: 'Conflict' }
+        }
+
         switch (fs) {
             case FileStatus.Unspecified:
                 return { letter: '' }
