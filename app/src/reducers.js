@@ -1,4 +1,4 @@
-import { ActionType, StorageItem } from './constants';
+import { ActionType, StorageItem, FileStatus } from './constants';
 
 export const rootReducer = (state = {}, action) => {
     switch (action.type) {
@@ -44,7 +44,8 @@ export const rootReducer = (state = {}, action) => {
                 file = {
                     path: action.name,
                     content: action.content,
-                    isConflict: action.isConflict
+                    isConflict: action.isConflict,
+                    fileStatus: action.fileStatus
                 }
             }
             return Object.assign({}, state, {
@@ -57,7 +58,8 @@ export const rootReducer = (state = {}, action) => {
             const f = {
                 path: action.path,
                 content: action.content,
-                isConflict: false
+                isConflict: false,
+                fileStatus: FileStatus.Added
             }
 
             files.unshift(f);
@@ -70,17 +72,43 @@ export const rootReducer = (state = {}, action) => {
         }
         case ActionType.REMOVE_FILE_ENTRY: {
             let current = state.currentFile;
-            const files = state.files.filter(e => e.path !== action.path)
 
             if (current && current.path === action.path) {
                 current = null;
             }
 
-            return Object.assign({}, state, {
-                files: files,
-                currentFile: current
-            });
+            let files = state.files;
+            let isAdded = false;
 
+            for (let i = 0; i < files.length; i++) {
+                const f = files[i];
+                if (f.path === action.path) {
+                    if (f.fileStatus === FileStatus.Added) {
+                        isAdded = true;
+                    }
+
+                    break;
+                }
+            }
+
+            if (isAdded) {
+                files = files.filter(e => e.path !== action.path)
+            } else {
+                files = files.map(f => {
+                    if (f.path === action.path) {
+
+                        return Object.assign({}, f, { fileStatus: FileStatus.Deleted })
+                    }
+
+                    return f;
+                })
+            }
+
+
+            return Object.assign({}, state, {
+                currentFile: current,
+                files: files,
+            });
         }
         case ActionType.SET_BRANCHES: {
             if (action.current) {

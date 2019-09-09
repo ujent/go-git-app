@@ -108,7 +108,7 @@ export default class RepoContent extends Component {
 
     onFileClick = (file) => {
         if (file) {
-            this.props.handleGetFile(file.path, file.isConflict)
+            this.props.handleGetFile(file.path, file.isConflict, file.fileStatus)
         }
     }
 
@@ -124,7 +124,7 @@ export default class RepoContent extends Component {
         const f = this.props.currentFile;
 
         if (f) {
-            this.props.handleSetCurrentFile(f.path, e.target.value, f.isConflict)
+            this.props.handleSetCurrentFile(f.path, e.target.value, f.isConflict, f.fileStatus)
         }
     }
 

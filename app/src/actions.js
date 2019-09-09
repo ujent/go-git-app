@@ -210,14 +210,14 @@ export function setFiles(files) {
     };
 }
 
-export function getFile(path, isConflict) {
+export function getFile(path, isConflict, fileStatus) {
 
     return (dispatch, getState) => {
         dispatch(resetMessage());
 
         const settings = getSettings(getState())
         api.getFile(settings, path).then(
-            rs => dispatch(setCurrentFile(rs.path, rs.content, isConflict)),
+            rs => dispatch(setCurrentFile(rs.path, rs.content, isConflict, fileStatus)),
             err => {
                 dispatch(showError(err));
             }
@@ -251,7 +251,8 @@ export function addFile(path, content) {
         dispatch(addFileEntry(path, content))
 
         api.addFile(settings, path, content).then(
-            rs => { },
+            rs => {
+            },
             err => {
                 dispatch(removeFileEntry(path))
                 dispatch(showError(err));
@@ -306,12 +307,13 @@ export function saveFile(path, content) {
     }
 }
 
-export function setCurrentFile(name, content, isConflict) {
+export function setCurrentFile(name, content, isConflict, fileStatus) {
     return {
         type: ActionType.SET_CURRENT_FILE,
         name,
         content,
-        isConflict
+        isConflict,
+        fileStatus
     };
 }
 
