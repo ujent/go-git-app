@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -160,6 +161,7 @@ type service struct {
 }
 
 type repository struct {
+	sync.Mutex
 	name string
 	repo *git.Repository
 	fs   billy.Filesystem
@@ -210,6 +212,9 @@ func (svc *service) AddFile(rq *contract.BaseRequest, path, content string) erro
 	if err != nil {
 		return err
 	}
+
+	svc.git.Lock()
+	defer svc.git.Unlock()
 
 	fs := svc.git.fs
 	_, err = fs.Create(path)
