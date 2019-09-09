@@ -30,4 +30,4 @@ require (
 	gopkg.in/src-d/go-git.v4 v4.13.1
 )
 
-replace gopkg.in/src-d/go-git.v4 v4.13.1 => github.com/ujent/go-git v0.0.0-20190904045034-61d0f9f02f79
+replace gopkg.in/src-d/go-git.v4 v4.13.1 => github.com/ujent/go-git v0.0.0-20190909053805-dbbc7ca93549
