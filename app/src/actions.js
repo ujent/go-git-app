@@ -363,6 +363,7 @@ export function commit(msg) {
         api.commit(settings, msg).then(
 
             () => {
+                dispatch(getFiles(settings.user, settings.repo, settings.branch))
                 dispatch(showMessage("Success"));
             },
             err => {
