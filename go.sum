@@ -88,6 +88,10 @@ github.com/ujent/go-git v0.0.0-20190909053805-dbbc7ca93549 h1:55IDuxwTI4lQl6U0ik
 github.com/ujent/go-git v0.0.0-20190909053805-dbbc7ca93549/go.mod h1:zjlNnzc1Wjn43v3Mtii7RVxiReNP0fIu9npcXKzuNp4=
 github.com/ujent/go-git v0.0.0-20190909103728-8d4b49f3ca2c h1:PzTm96T0R1FsAeB+/ujfQyy/j7B6OSUDAFkIkg7/Vs0=
 github.com/ujent/go-git v0.0.0-20190909103728-8d4b49f3ca2c/go.mod h1:zjlNnzc1Wjn43v3Mtii7RVxiReNP0fIu9npcXKzuNp4=
+github.com/ujent/go-git v0.0.0-20190910061912-be822696e6e0 h1:oToq+W9b4URT2DnwiOFpOTLFxr95gcVOqHuPF3CaZ4Y=
+github.com/ujent/go-git v0.0.0-20190910061912-be822696e6e0/go.mod h1:zjlNnzc1Wjn43v3Mtii7RVxiReNP0fIu9npcXKzuNp4=
+github.com/ujent/go-git v0.0.0-20190910062220-8ba2d33e60c4 h1:JZ4lssrPSyKiNVmj3ggI1N0gcpMKxKVmGxx7JvNBLXY=
+github.com/ujent/go-git v0.0.0-20190910062220-8ba2d33e60c4/go.mod h1:zjlNnzc1Wjn43v3Mtii7RVxiReNP0fIu9npcXKzuNp4=
 github.com/ujent/go-git-mysql v0.0.0-20190807142715-fbc9b2c784de h1:MyrXoicPGxC5uaeQaqyWgYWuQKfnOJp5kmuDoX4r6kk=
 github.com/ujent/go-git-mysql v0.0.0-20190807142715-fbc9b2c784de/go.mod h1:YCeFiOeQbfBg9LRoqPZ5rPppTMMo5DbUGhxuKhQCCR8=
 github.com/ujent/go-git-mysql v0.0.0-20190907032042-5508d679a5e8 h1:YmwvxlurhJeDI/8jBA5o3Heu5IdN3Qsz/zSfBHRTHP4=
