@@ -150,6 +150,7 @@ export default class RepoContent extends Component {
     }
 
     onBlurFileName = () => {
+
         const path = this.state.fileNameInput.value;
 
         this.setState({
@@ -159,7 +160,9 @@ export default class RepoContent extends Component {
             }
         });
 
-        this.props.handleAddFile(path, '');
+        if (this.state.fileNameInput.value) {
+            this.props.handleAddFile(path, '');
+        }
     }
 
     handleEnterPress = (e) => {
