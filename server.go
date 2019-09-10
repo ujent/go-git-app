@@ -169,8 +169,7 @@ func (s *server) pull(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("{}"))
+	s.writeJSON(w, http.StatusOK, &contract.MsgResult{Msg: msg})
 }
 
 func (s *server) push(w http.ResponseWriter, r *http.Request) {

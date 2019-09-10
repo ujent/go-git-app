@@ -7,6 +7,7 @@ const mapStateToProps = (state, ownProps) => {
     return {
         files: state.files,
         currentFile: state.currentFile,
+        isVisible: state.settings.currentUser && state.settings.currentRepo
     };
 };
 

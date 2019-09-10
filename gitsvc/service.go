@@ -199,16 +199,23 @@ func (svc *service) File(rq *contract.BaseRequest, path string) (billy.File, err
 }
 
 func (svc *service) AddFile(rq *contract.BaseRequest, path, content string) error {
-	err := svc.validateBaseRQ(rq)
-	if err != nil {
-		return err
+	if rq == nil {
+		return errors.New("rq cannot be nil")
+	}
+
+	if rq.User == nil {
+		return errors.New("User cannot be empty")
+	}
+
+	if rq.Repository == "" {
+		return errors.New("Repository cannot be empty")
 	}
 
 	if path == "" {
 		return errors.New("path cannot be empty")
 	}
 
-	err = svc.setSettings(&contract.User{Name: rq.User.Name}, rq.Repository, rq.Branch)
+	err := svc.setSettings(&contract.User{Name: rq.User.Name}, rq.Repository, rq.Branch)
 	if err != nil {
 		return err
 	}

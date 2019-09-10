@@ -18,6 +18,10 @@ export default class RepoContent extends Component {
 
     render() {
 
+        if (!this.props.isVisible) {
+            return null;
+        }
+
         const files = this.props.files.map(el => {
             const fs = this.convertFileStatus(el.fileStatus, el.isConflict);
 
