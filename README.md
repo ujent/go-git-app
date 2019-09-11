@@ -22,3 +22,19 @@ Email: gitea@gitea.com
 
 5. Create in gitea repository with name "testrepo" under the user "gitea" to verify 
 that everything is alright and for later usage in tests
+
+
+
+Deployment:
+
+Frontend building
+
+1. cd go-git-app
+2. docker build -t go-git-app app
+
+Backend building
+
+NOTE: you must have access to private repository (github.com/ujent/go-git) via ssh
+1. cd go-git-app
+2. ssh-add (only once)
+3. DOCKER_BUILDKIT=1 docker build --ssh default -t go-git-api .

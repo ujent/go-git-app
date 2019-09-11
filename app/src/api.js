@@ -9,7 +9,7 @@ export const apiUri = (function () {
         case 'staging':
             return 'http://localhost:3000';
         case 'release':
-            return 'http://localhost:3000';
+            return '/api';
         default:
             return '';
     }
