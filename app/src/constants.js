@@ -36,3 +36,16 @@ export const FileStatus = {
     Copied: 7,
     UpdatedButUnmerged: 8
 }
+
+export const GetErrorMsg = err => {
+    let msg = '';
+
+    if (err.status) {
+        msg = `Error code: ${err.status}
+Message: ${err.message}`
+    } else {
+        msg = err.message
+    }
+
+    return msg;
+}

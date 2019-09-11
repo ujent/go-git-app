@@ -3,6 +3,7 @@ import thunk from 'redux-thunk';
 import logger from 'redux-logger';
 
 import { rootReducer } from './reducers';
+import { GetErrorMsg } from './constants';
 
 export default function createAppStore(err, currentUser, currentRepo, currentBranch, repos, branches, files) {
   const initialState = getInitialState(err, currentUser, currentRepo, currentBranch, repos, branches, files);
@@ -28,7 +29,7 @@ function getInitialState(err, currentUser, currentRepo, currentBranch, repos, br
   const brItems = branches ? branches : [];
   const repoItems = repos ? repos : [];
   const fileItems = files ? files : [];
-  err = err ? err : '';
+  err = err ? GetErrorMsg(err) : '';
 
   const initialState = {
     users: ['user1', 'user2', 'user3'],

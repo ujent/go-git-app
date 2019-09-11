@@ -1,5 +1,5 @@
 import * as api from './api';
-import { ActionType } from './constants';
+import { ActionType, GetErrorMsg } from './constants';
 
 
 export function getSettings(state) {
@@ -47,15 +47,7 @@ export function resetMessage() {
 }
 
 export function showError(err) {
-    let msg = '';
-
-    if (err.status) {
-        msg = `Error code: ${err.status}
-        Message: ${err.message}`
-    } else {
-        msg = err.message
-    }
-
+    const msg = GetErrorMsg(err);
 
     return {
         type: ActionType.SHOW_MSG,
