@@ -8,10 +8,9 @@ import (
 )
 
 const appServerHostEnv = "APP_SERVER_PORT"
-const gitConnStrEnv = "GIT_CONN_STRING"
+const gitDBConnStrEnv = "GIT_DB_CONN_STRING"
 const gitConnStr = "root:secret@/gogit"
-const gitConnStrTest = "root:secret@/gogittest"
-const remoteGitEnv = "REMOTE_GIT_URL"
+const gitDBConnStrTest = "root:secret@/gogittest"
 
 //Parse - get settings from the env and parse them
 func Parse() (*contract.ServerSettings, error) {
@@ -21,20 +20,15 @@ func Parse() (*contract.ServerSettings, error) {
 		panic(fmt.Sprintf("%s isn't set", appServerHostEnv))
 	}
 
-	gitConnStr := os.Getenv(gitConnStrEnv)
+	gitConnStr := os.Getenv(gitDBConnStrEnv)
 	if gitConnStr == "" {
 		panic(fmt.Sprintf("%s isn't set", gitConnStr))
 	}
 
-	remote := os.Getenv(remoteGitEnv)
-	if gitConnStr == "" {
-		panic(fmt.Sprintf("%s isn't set", remoteGitEnv))
-	}
-
-	return &contract.ServerSettings{Port: serverPort, GitConnStr: gitConnStr, GitRemote: remote}, nil
+	return &contract.ServerSettings{Port: serverPort, GitConnStr: gitConnStr}, nil
 }
 
 //ParseTest - returns default values for testing usage
 func ParseTest() (*contract.ServerSettings, error) {
-	return &contract.ServerSettings{Port: "4000", GitConnStr: gitConnStrTest, GitRemote: "http://35.239.165.218:9000"}, nil
+	return &contract.ServerSettings{Port: "4000", GitConnStr: gitDBConnStrTest}, nil
 }

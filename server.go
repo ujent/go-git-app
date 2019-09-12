@@ -52,57 +52,59 @@ func (s *server) Start() error {
 	})
 	r.Use(cors.Handler)
 
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("welcome"))
-	})
+	r.Route("/api", func(r chi.Router) {
+		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte("welcome"))
+		})
 
-	r.Route("/users", func(r chi.Router) {
-		r.Post("/switch", s.switchUser)
-	})
+		r.Route("/users", func(r chi.Router) {
+			r.Post("/switch", s.switchUser)
+		})
 
-	r.Route("/repositories", func(r chi.Router) {
-		r.Get("/{user}", s.repositories)
-		r.Get("/current/{user}", s.currentRepo)
-		r.Get("/open", s.openRepository)
-		r.Post("/", s.createRepository)
-		r.Post("/clone", s.clone)
-		r.Delete("/", s.deleteRepository)
-	})
+		r.Route("/repositories", func(r chi.Router) {
+			r.Get("/{user}", s.repositories)
+			r.Get("/current/{user}", s.currentRepo)
+			r.Get("/open", s.openRepository)
+			r.Post("/", s.createRepository)
+			r.Post("/clone", s.clone)
+			r.Delete("/", s.deleteRepository)
+		})
 
-	r.Route("/branches", func(r chi.Router) {
-		r.Get("/", s.branches)
-		r.Post("/checkout", s.checkoutBranch)
-		r.Post("/", s.createBranch)
-		r.Delete("/", s.deleteBranch)
-	})
+		r.Route("/branches", func(r chi.Router) {
+			r.Get("/", s.branches)
+			r.Post("/checkout", s.checkoutBranch)
+			r.Post("/", s.createBranch)
+			r.Delete("/", s.deleteBranch)
+		})
 
-	r.Route("/log", func(r chi.Router) {
-		r.Get("/", s.logs)
-	})
+		r.Route("/log", func(r chi.Router) {
+			r.Get("/", s.logs)
+		})
 
-	r.Route("/files", func(r chi.Router) {
-		r.Get("/all", s.files)
-		r.Get("/", s.file)
-		r.Post("/", s.addFile)
-		r.Put("/", s.editFile)
-		r.Delete("/", s.removeFile)
-	})
+		r.Route("/files", func(r chi.Router) {
+			r.Get("/all", s.files)
+			r.Get("/", s.file)
+			r.Post("/", s.addFile)
+			r.Put("/", s.editFile)
+			r.Delete("/", s.removeFile)
+		})
 
-	r.Route("/commit", func(r chi.Router) {
-		r.Post("/", s.commit)
-	})
+		r.Route("/commit", func(r chi.Router) {
+			r.Post("/", s.commit)
+		})
 
-	r.Route("/pull", func(r chi.Router) {
-		r.Post("/", s.pull)
-	})
+		r.Route("/pull", func(r chi.Router) {
+			r.Post("/", s.pull)
+		})
 
-	r.Route("/push", func(r chi.Router) {
-		r.Post("/", s.push)
-	})
+		r.Route("/push", func(r chi.Router) {
+			r.Post("/", s.push)
+		})
 
-	r.Route("/merge", func(r chi.Router) {
-		r.Post("/", s.merge)
-		r.Post("/abort", s.abortMerge)
+		r.Route("/merge", func(r chi.Router) {
+			r.Post("/", s.merge)
+			r.Post("/abort", s.abortMerge)
+		})
 	})
 
 	err := http.ListenAndServe(":"+s.settings.Port, r)

@@ -12,7 +12,7 @@ func main() {
 
 	logger := log.New(os.Stdout, "go-git-app:", log.LstdFlags)
 
-	settings, err := config.ParseTest()
+	settings, err := config.Parse()
 	if err != nil {
 		log.Fatal(err)
 	}

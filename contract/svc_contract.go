@@ -13,7 +13,6 @@ var ErrGitRepositoryNotSet = errors.New("Git repository isn't set")
 type ServerSettings struct {
 	Port       string
 	GitConnStr string
-	GitRemote  string
 }
 
 // BaseRequest - rq for most git operations

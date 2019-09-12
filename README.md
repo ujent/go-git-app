@@ -38,3 +38,5 @@ NOTE: you must have access to private repository (github.com/ujent/go-git) via s
 1. cd go-git-app
 2. ssh-add (only once)
 3. DOCKER_BUILDKIT=1 docker build --ssh default -t go-git-api .
+
+
