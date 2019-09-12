@@ -166,6 +166,7 @@ export function getBranches(user, repo) {
 export function switchBranch(name) {
 
     return (dispatch, getState) => {
+        dispatch(showSpinner());
         dispatch(resetMessage());
 
         const settings = getSettings(getState())
@@ -179,6 +180,8 @@ export function switchBranch(name) {
             err => {
                 dispatch(showError(err));
             }
+        ).finally(
+            () => dispatch(hideSpinner())
         );
     }
 }
@@ -287,6 +290,7 @@ export function removeFileEntry(path) {
 export function saveFile(path, content) {
 
     return (dispatch, getState) => {
+        dispatch(showSpinner());
         dispatch(resetMessage());
 
         const settings = getSettings(getState())
@@ -295,6 +299,8 @@ export function saveFile(path, content) {
             err => {
                 dispatch(showError(err));
             }
+        ).finally(
+            () => dispatch(hideSpinner())
         );
     }
 }
@@ -341,13 +347,14 @@ export function clone(url, authName, authPsw) {
             }
         ).finally(
             () => dispatch(hideSpinner())
-        );;
+        );
 
     }
 }
 export function commit(msg) {
 
     return (dispatch, getState) => {
+        dispatch(showSpinner());
         dispatch(resetMessage());
 
         const settings = getSettings(getState())
@@ -365,12 +372,16 @@ export function commit(msg) {
             err => {
                 dispatch(showError(err));
             }
+        ).finally(
+            () => dispatch(hideSpinner())
         );
+
     }
 }
 export function log() {
 
     return (dispatch, getState) => {
+        dispatch(showSpinner());
         dispatch(resetMessage());
 
         const settings = getSettings(getState())
@@ -391,7 +402,10 @@ Msg: ${el.msg}
             err => {
                 dispatch(showError(err));
             }
+        ).finally(
+            () => dispatch(hideSpinner())
         );
+
     }
 }
 
@@ -421,6 +435,7 @@ export function pull(remote, authName, authPsw) {
 export function push(remote, authName, authPsw) {
 
     return (dispatch, getState) => {
+        dispatch(showSpinner());
         dispatch(resetMessage());
 
         const settings = getSettings(getState())
@@ -432,6 +447,8 @@ export function push(remote, authName, authPsw) {
             err => {
                 dispatch(showError(err));
             }
+        ).finally(
+            () => dispatch(hideSpinner())
         );
     }
 }
@@ -450,7 +467,7 @@ export function removeBranch(branch) {
             err => {
                 dispatch(showError(err));
             }
-        );
+        )
     }
 }
 export function removeRepo(repo) {
