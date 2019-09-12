@@ -163,13 +163,22 @@ export function getBranches(user, repo) {
     }
 }
 
-export function switchBranch(name) {
+export function switchBranch(name, isCreation) {
 
     return (dispatch, getState) => {
+        const settings = getSettings(getState())
+
+        if (isCreation) {
+            if (!settings.branch) {
+                dispatch(showMessage('Please, checkout branch!'))
+
+                return;
+            }
+        }
+
         dispatch(showSpinner());
         dispatch(resetMessage());
 
-        const settings = getSettings(getState())
 
         api.checkoutBranch(settings.user, settings.repo, name).then(
             () => {

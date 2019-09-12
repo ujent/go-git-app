@@ -17,6 +17,7 @@ const mapDispatchToProps = (dispatch, ownProps) => {
   return {
     handleCommit: (msg) => dispatch(actions.commit(msg)),
     handleCheckoutBranch: (name) => dispatch(actions.switchBranch(name)),
+    handleCreateBranch: (name) => dispatch(actions.switchBranch(name, true)),
     handleClone: (url, authName, authPsw) => dispatch(actions.clone(url, authName, authPsw)),
     handleLog: () => dispatch(actions.log()),
     handlePull: (remote, authName, authPsw) => dispatch(actions.pull(remote, authName, authPsw)),

@@ -29,7 +29,7 @@ const Commands = props => {
                 <Push action={props.handlePush} isAvailable={isBaseAvailable} />
                 <RemoveRepo action={props.handleRemoveRepo} repositories={repositories} isAvailable={currentUser !== ""} />
                 {/* <CheckoutBranch action={props.handleCheckoutBranch} branches={branches} currentBranch={currentBranch} isAvailable={canCheckoutBranch} /> */}
-                <CreateBranch action={props.handleCheckoutBranch} branches={branches} isAvailable={canCheckoutBranch} />
+                <CreateBranch action={props.handleCreateBranch} branches={branches} isAvailable={canCheckoutBranch} />
                 <RemoveBranch action={props.handleRemoveBranch} branches={branches} isAvailable={canRemoveBranch} />
                 <Log action={props.handleLog} isAvailable={isBaseAvailable} />
             </ul>
