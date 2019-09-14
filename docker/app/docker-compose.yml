@@ -6,7 +6,7 @@ services:
     image: go-git-app
     restart: always
     ports: 
-      - "80:80"
+      - "5000:80"
     environment:
       - API_ADDR=http://api:4000
     depends_on:

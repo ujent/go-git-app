@@ -1,6 +1,6 @@
 server {
-    listen       80;
-    server_name  localhost;
+    listen       80       default_server;
+    listen       [::]:80  default_server;
 
     location / {
         root   /usr/share/nginx/html;
@@ -11,4 +11,3 @@ server {
         proxy_pass ${API_ADDR};
     }
 }
-
