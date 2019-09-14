@@ -34,9 +34,33 @@ Frontend building
 
 Backend building
 
-NOTE: you must have access to private repository (github.com/ujent/go-git) via ssh
+NOTE: you must have access to private repository via ssh. Nowadays, go modules have no integration with bitbucket. So, please, use github.com. For example, github.com/ujent/go-git. Or copy from bitbucket to your github repo.
+
 1. cd go-git-app
 2. ssh-add (only once)
 3. DOCKER_BUILDKIT=1 docker build --ssh default -t go-git-api .
+4. docker save -o go-git-api.tar go-git-api
+5. Copy go-git-api.tar to server
+6. docker load -i go-git-api.tar
+
+To start application:
+1. cd docker/app
+2. docker-compose up -d
+
+Local development:
+
+UI:
+
+To start a development server:
+1. cd app
+2. npm install
+2. npm run start
+
+Server:
+1. To deploy test MySQL: 
+    - cd docker/test
+    - docker-compose up
+
+2. APP_SERVER_PORT=4000 GIT_DB_CONN_STRING=root:secret@/gogittest go run main.go server.go
 
 
