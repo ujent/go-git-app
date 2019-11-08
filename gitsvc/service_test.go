@@ -18,19 +18,23 @@ const remote = "http://35.239.165.218:9000/gitea/testrepo"
 const remoteUser = "gitea@gitea.com"
 const remotePsw = "secret123"
 
-func Test(t *testing.T) {
+/*func Test(t *testing.T) {
 	s, err := config.ParseTest()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	db, err := sqlx.Connect("mysql", s.GitConnStr)
+	var db *sqlx.DB
 
-	if err != nil {
-		t.Fatal(err)
+	if s.FsType == contract.FsTypeMySQL {
+		db, err = sqlx.Connect("mysql", s.GitConnStr)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		defer db.Close()
 	}
-
-	defer db.Close()
 
 	svc, err := New(s, db)
 	if err != nil {
@@ -45,6 +49,7 @@ func Test(t *testing.T) {
 	}
 
 }
+*/
 
 func TestPush(t *testing.T) {
 	s, err := config.ParseTest()
@@ -52,13 +57,17 @@ func TestPush(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	db, err := sqlx.Connect("mysql", s.GitConnStr)
+	var db *sqlx.DB
 
-	if err != nil {
-		t.Fatal(err)
+	if s.FsType == contract.FsTypeMySQL {
+		db, err = sqlx.Connect("mysql", s.GitConnStr)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		defer db.Close()
 	}
-
-	defer db.Close()
 
 	svc, err := New(s, db)
 	if err != nil {
@@ -119,13 +128,17 @@ func TestRepositories(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	db, err := sqlx.Connect("mysql", s.GitConnStr)
+	var db *sqlx.DB
 
-	if err != nil {
-		t.Fatal(err)
+	if s.FsType == contract.FsTypeMySQL {
+		db, err = sqlx.Connect("mysql", s.GitConnStr)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		defer db.Close()
 	}
-
-	defer db.Close()
 
 	svc, err := New(s, db)
 	if err != nil {
@@ -168,13 +181,17 @@ func TestCreateRepository(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	db, err := sqlx.Connect("mysql", s.GitConnStr)
+	var db *sqlx.DB
 
-	if err != nil {
-		t.Fatal(err)
+	if s.FsType == contract.FsTypeMySQL {
+		db, err = sqlx.Connect("mysql", s.GitConnStr)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		defer db.Close()
 	}
-
-	defer db.Close()
 
 	svc, err := New(s, db)
 	if err != nil {
@@ -211,13 +228,17 @@ func TestRemoveRepository(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	db, err := sqlx.Connect("mysql", s.GitConnStr)
+	var db *sqlx.DB
 
-	if err != nil {
-		t.Fatal(err)
+	if s.FsType == contract.FsTypeMySQL {
+		db, err = sqlx.Connect("mysql", s.GitConnStr)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		defer db.Close()
 	}
-
-	defer db.Close()
 
 	svc, err := New(s, db)
 	if err != nil {
@@ -255,13 +276,17 @@ func TestCurrentRepository(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	db, err := sqlx.Connect("mysql", s.GitConnStr)
+	var db *sqlx.DB
 
-	if err != nil {
-		t.Fatal(err)
+	if s.FsType == contract.FsTypeMySQL {
+		db, err = sqlx.Connect("mysql", s.GitConnStr)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		defer db.Close()
 	}
-
-	defer db.Close()
 
 	svc, err := New(s, db)
 	if err != nil {
@@ -290,13 +315,17 @@ func TestOpenRepository(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	db, err := sqlx.Connect("mysql", s.GitConnStr)
+	var db *sqlx.DB
 
-	if err != nil {
-		t.Fatal(err)
+	if s.FsType == contract.FsTypeMySQL {
+		db, err = sqlx.Connect("mysql", s.GitConnStr)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		defer db.Close()
 	}
-
-	defer db.Close()
 
 	svc, err := New(s, db)
 	if err != nil {
@@ -339,13 +368,17 @@ func TestCreateBranch(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	db, err := sqlx.Connect("mysql", s.GitConnStr)
+	var db *sqlx.DB
 
-	if err != nil {
-		t.Fatal(err)
+	if s.FsType == contract.FsTypeMySQL {
+		db, err = sqlx.Connect("mysql", s.GitConnStr)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		defer db.Close()
 	}
-
-	defer db.Close()
 
 	svc, err := New(s, db)
 	if err != nil {
@@ -420,13 +453,17 @@ func TestCheckoutBranch1(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	db, err := sqlx.Connect("mysql", s.GitConnStr)
+	var db *sqlx.DB
 
-	if err != nil {
-		t.Fatal(err)
+	if s.FsType == contract.FsTypeMySQL {
+		db, err = sqlx.Connect("mysql", s.GitConnStr)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		defer db.Close()
 	}
-
-	defer db.Close()
 
 	svc, err := New(s, db)
 	if err != nil {
@@ -517,13 +554,17 @@ func TestCheckoutBranch2(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	db, err := sqlx.Connect("mysql", s.GitConnStr)
+	var db *sqlx.DB
 
-	if err != nil {
-		t.Fatal(err)
+	if s.FsType == contract.FsTypeMySQL {
+		db, err = sqlx.Connect("mysql", s.GitConnStr)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		defer db.Close()
 	}
-
-	defer db.Close()
 
 	svc, err := New(s, db)
 	if err != nil {
@@ -589,13 +630,17 @@ func TestRemoveBranch(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	db, err := sqlx.Connect("mysql", s.GitConnStr)
+	var db *sqlx.DB
 
-	if err != nil {
-		t.Fatal(err)
+	if s.FsType == contract.FsTypeMySQL {
+		db, err = sqlx.Connect("mysql", s.GitConnStr)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		defer db.Close()
 	}
-
-	defer db.Close()
 
 	svc, err := New(s, db)
 	if err != nil {
@@ -693,13 +738,17 @@ func TestBranches(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	db, err := sqlx.Connect("mysql", s.GitConnStr)
+	var db *sqlx.DB
 
-	if err != nil {
-		t.Fatal(err)
+	if s.FsType == contract.FsTypeMySQL {
+		db, err = sqlx.Connect("mysql", s.GitConnStr)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		defer db.Close()
 	}
-
-	defer db.Close()
 
 	svc, err := New(s, db)
 	if err != nil {
@@ -765,13 +814,17 @@ func TestCheckout(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	db, err := sqlx.Connect("mysql", s.GitConnStr)
+	var db *sqlx.DB
 
-	if err != nil {
-		t.Fatal(err)
+	if s.FsType == contract.FsTypeMySQL {
+		db, err = sqlx.Connect("mysql", s.GitConnStr)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		defer db.Close()
 	}
-
-	defer db.Close()
 
 	svc, err := New(s, db)
 	if err != nil {
@@ -849,13 +902,17 @@ func TestCurrentBranch1(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	db, err := sqlx.Connect("mysql", s.GitConnStr)
+	var db *sqlx.DB
 
-	if err != nil {
-		t.Fatal(err)
+	if s.FsType == contract.FsTypeMySQL {
+		db, err = sqlx.Connect("mysql", s.GitConnStr)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		defer db.Close()
 	}
-
-	defer db.Close()
 
 	svc, err := New(s, db)
 	if err != nil {
@@ -918,13 +975,17 @@ func TestCurrentBranch2(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	db, err := sqlx.Connect("mysql", s.GitConnStr)
+	var db *sqlx.DB
 
-	if err != nil {
-		t.Fatal(err)
+	if s.FsType == contract.FsTypeMySQL {
+		db, err = sqlx.Connect("mysql", s.GitConnStr)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		defer db.Close()
 	}
-
-	defer db.Close()
 
 	svc, err := New(s, db)
 	if err != nil {
@@ -1011,13 +1072,17 @@ func TestLog(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	db, err := sqlx.Connect("mysql", s.GitConnStr)
+	var db *sqlx.DB
 
-	if err != nil {
-		t.Fatal(err)
+	if s.FsType == contract.FsTypeMySQL {
+		db, err = sqlx.Connect("mysql", s.GitConnStr)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		defer db.Close()
 	}
-
-	defer db.Close()
 
 	svc, err := New(s, db)
 	if err != nil {
@@ -1113,13 +1178,17 @@ func TestCommit(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	db, err := sqlx.Connect("mysql", s.GitConnStr)
+	var db *sqlx.DB
 
-	if err != nil {
-		t.Fatal(err)
+	if s.FsType == contract.FsTypeMySQL {
+		db, err = sqlx.Connect("mysql", s.GitConnStr)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		defer db.Close()
 	}
-
-	defer db.Close()
 
 	svc, err := New(s, db)
 	if err != nil {
@@ -1197,13 +1266,17 @@ func TestCreateRemote(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	db, err := sqlx.Connect("mysql", s.GitConnStr)
+	var db *sqlx.DB
 
-	if err != nil {
-		t.Fatal(err)
+	if s.FsType == contract.FsTypeMySQL {
+		db, err = sqlx.Connect("mysql", s.GitConnStr)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		defer db.Close()
 	}
-
-	defer db.Close()
 
 	svc, err := New(s, db)
 	if err != nil {
@@ -1254,13 +1327,17 @@ func TestRemoveRemote(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	db, err := sqlx.Connect("mysql", s.GitConnStr)
+	var db *sqlx.DB
 
-	if err != nil {
-		t.Fatal(err)
+	if s.FsType == contract.FsTypeMySQL {
+		db, err = sqlx.Connect("mysql", s.GitConnStr)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		defer db.Close()
 	}
-
-	defer db.Close()
 
 	svc, err := New(s, db)
 	if err != nil {
@@ -1316,13 +1393,17 @@ func TestRemote(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	db, err := sqlx.Connect("mysql", s.GitConnStr)
+	var db *sqlx.DB
 
-	if err != nil {
-		t.Fatal(err)
+	if s.FsType == contract.FsTypeMySQL {
+		db, err = sqlx.Connect("mysql", s.GitConnStr)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		defer db.Close()
 	}
-
-	defer db.Close()
 
 	svc, err := New(s, db)
 	if err != nil {
@@ -1364,13 +1445,17 @@ func TestRemotes(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	db, err := sqlx.Connect("mysql", s.GitConnStr)
+	var db *sqlx.DB
 
-	if err != nil {
-		t.Fatal(err)
+	if s.FsType == contract.FsTypeMySQL {
+		db, err = sqlx.Connect("mysql", s.GitConnStr)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		defer db.Close()
 	}
-
-	defer db.Close()
 
 	svc, err := New(s, db)
 	if err != nil {

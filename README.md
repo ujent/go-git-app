@@ -61,6 +61,8 @@ Server:
     - cd docker/test
     - docker-compose up
 
-2. APP_SERVER_PORT=4000 GIT_DB_CONN_STRING=root:secret@/gogittest go run main.go server.go
+2. APP_SERVER_PORT=4000 GIT_DB_CONN_STRING=root:secret@/gogittest go run main.go server.go FS_TYPE=1
+or for using local filesystem
+APP_SERVER_PORT=4000 FS_TYPE=2 GIT_ROOT=/home/ujent/code/go-git-app/testdata
 
 

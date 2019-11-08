@@ -3,8 +3,10 @@ package gitsvc
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -14,6 +16,7 @@ import (
 	"github.com/ujent/go-git-app/contract"
 	"github.com/ujent/go-git-mysql/mysqlfs"
 	"gopkg.in/src-d/go-billy.v4"
+	"gopkg.in/src-d/go-billy.v4/osfs"
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/config"
 	"gopkg.in/src-d/go-git.v4/plumbing"
@@ -509,17 +512,7 @@ func (svc *service) CreateRepository(user, repo string) error {
 		return err
 	}
 
-	filesTableName, gitTableName, err := svc.tablesNames(user, repo)
-	if err != nil {
-		return err
-	}
-
-	fs, err := mysqlfs.New(svc.settings.GitConnStr, gitTableName)
-	if err != nil {
-		return err
-	}
-
-	gitFs, err := mysqlfs.New(svc.settings.GitConnStr, filesTableName)
+	fs, gitFs, err := svc.createFs(user, repo)
 	if err != nil {
 		return err
 	}
@@ -551,6 +544,21 @@ func (svc *service) tablesNames(user, repoName string) (filesTableName, gitTable
 	return filesTableName, gitTableName, nil
 }
 
+func (svc *service) gitPath(user, repoName string) (gitPath, wtPath string, err error) {
+	if svc.user == nil {
+		return "", "", errors.New("user cannot be empty")
+	}
+
+	if user == "" {
+		return "", "", errors.New("userName cannot be empty")
+	}
+
+	wtPath = filepath.Join(svc.settings.GitRoot, user, repoName)
+	gitPath = filepath.Join(wtPath, ".git")
+
+	return gitPath, wtPath, nil
+}
+
 //OpenRepository - opens an existing repository
 func (svc *service) OpenRepository(user, repo string) error {
 
@@ -567,17 +575,7 @@ func (svc *service) OpenRepository(user, repo string) error {
 		return nil
 	}
 
-	filesTableName, gitTableName, err := svc.tablesNames(user, repo)
-	if err != nil {
-		return err
-	}
-
-	fs, err := mysqlfs.New(svc.settings.GitConnStr, gitTableName)
-	if err != nil {
-		return err
-	}
-
-	gitFs, err := mysqlfs.New(svc.settings.GitConnStr, filesTableName)
+	fs, gitFs, err := svc.createFs(user, repo)
 	if err != nil {
 		return err
 	}
@@ -592,6 +590,46 @@ func (svc *service) OpenRepository(user, repo string) error {
 	svc.git = &repository{name: repo, fs: gitFs, repo: r}
 
 	return nil
+}
+
+func (svc *service) createFs(user, repo string) (fs billy.Filesystem, gitFs billy.Filesystem, err error) {
+	switch svc.settings.FsType {
+	case contract.FsTypeMySQL:
+		{
+			filesTableName, gitTableName, err := svc.tablesNames(user, repo)
+			if err != nil {
+				return nil, nil, err
+			}
+
+			fs, err = mysqlfs.New(svc.settings.GitConnStr, gitTableName)
+			if err != nil {
+				return nil, nil, err
+			}
+
+			gitFs, err = mysqlfs.New(svc.settings.GitConnStr, filesTableName)
+			if err != nil {
+				return nil, nil, err
+			}
+
+			return fs, gitFs, nil
+		}
+	case contract.FsTypeLocal:
+		{
+			filesPath, wtPath, err := svc.gitPath(user, repo)
+			if err != nil {
+				return nil, nil, err
+			}
+
+			dotgit := osfs.New(filesPath)
+			wtfs := osfs.New(wtPath)
+
+			return dotgit, wtfs, nil
+		}
+	default:
+		{
+			return nil, nil, fmt.Errorf("Wrong fsType = %d", svc.settings.FsType)
+		}
+	}
 }
 
 // Clone the given repository to the given directory
@@ -614,17 +652,7 @@ func (svc *service) Clone(user, url string, auth *contract.Credentials) (string,
 		return "", err
 	}
 
-	filesTableName, gitTableName, err := svc.tablesNames(user, repoName)
-	if err != nil {
-		return "", err
-	}
-
-	fs, err := mysqlfs.New(svc.settings.GitConnStr, gitTableName)
-	if err != nil {
-		return "", err
-	}
-
-	gitFs, err := mysqlfs.New(svc.settings.GitConnStr, filesTableName)
+	fs, gitFs, err := svc.createFs(user, repoName)
 	if err != nil {
 		return "", err
 	}
@@ -660,19 +688,58 @@ func (svc *service) Clone(user, url string, auth *contract.Credentials) (string,
 }
 
 func (svc *service) deleteRepo(user, repo string) error {
-	filesTable, gitTable, err := svc.tablesNames(user, repo)
+	switch svc.settings.FsType {
+	case contract.FsTypeMySQL:
+		{
+			filesTable, gitTable, err := svc.tablesNames(user, repo)
+			if err != nil {
+				return err
+			}
+
+			tx, err := svc.db.Begin()
+			if err != nil {
+				return err
+			}
+			tx.Exec(fmt.Sprintf("DROP TABLE %s", filesTable))
+			tx.Exec(fmt.Sprintf("DROP TABLE %s", gitTable))
+
+			err = tx.Commit()
+			if err != nil {
+				return err
+			}
+		}
+	case contract.FsTypeLocal:
+		{
+			p := filepath.Join(svc.settings.GitRoot, user, repo)
+
+			err := removeFiles(p)
+			if err != nil {
+				return err
+			}
+		}
+	default:
+		{
+			return fmt.Errorf("[Delete Repo] Wrong fsType = %d", svc.settings.FsType)
+		}
+	}
+
+	return nil
+}
+
+func removeFiles(dir string) error {
+	files, err := filepath.Glob(filepath.Join(dir, "*"))
 	if err != nil {
 		return err
 	}
 
-	tx, err := svc.db.Begin()
-	if err != nil {
-		return err
+	for _, file := range files {
+		err = os.RemoveAll(file)
+		if err != nil {
+			return err
+		}
 	}
-	tx.Exec(fmt.Sprintf("DROP TABLE %s", filesTable))
-	tx.Exec(fmt.Sprintf("DROP TABLE %s", gitTable))
 
-	err = tx.Commit()
+	err = os.RemoveAll(dir)
 	if err != nil {
 		return err
 	}
@@ -680,29 +747,60 @@ func (svc *service) deleteRepo(user, repo string) error {
 	return nil
 }
 
+//ToDo RA - rewrite it!
 // Repositories - returns all locally existing repositories
 func (svc *service) Repositories(user string) ([]string, error) {
 	if user == "" {
 		return nil, errors.New("user cannot be empty")
 	}
 
-	tables := []string{}
-	svc.db.Select(&tables, "SELECT table_name FROM information_schema.tables ORDER BY table_name ASC")
+	switch svc.settings.FsType {
+	case contract.FsTypeMySQL:
+		{
 
-	repos := []string{}
+			tables := []string{}
+			svc.db.Select(&tables, "SELECT table_name FROM information_schema.tables ORDER BY table_name ASC")
 
-	for _, t := range tables {
-		if strings.HasPrefix(t, gitPrefix) {
-			temp := strings.TrimPrefix(t, gitPrefix)
-			userPrefix := user + "_"
+			repos := []string{}
 
-			if strings.HasPrefix(temp, userPrefix) {
-				repos = append(repos, strings.TrimPrefix(temp, userPrefix))
+			for _, t := range tables {
+				if strings.HasPrefix(t, gitPrefix) {
+					temp := strings.TrimPrefix(t, gitPrefix)
+					userPrefix := user + "_"
+
+					if strings.HasPrefix(temp, userPrefix) {
+						repos = append(repos, strings.TrimPrefix(temp, userPrefix))
+					}
+				}
 			}
+
+			return repos, nil
+		}
+	case contract.FsTypeLocal:
+		{
+			gitPath := filepath.Join(svc.settings.GitRoot, user)
+			files, err := ioutil.ReadDir(gitPath)
+
+			if err != nil {
+				return nil, err
+			}
+
+			res := []string{}
+
+			for _, f := range files {
+				if f.IsDir() {
+					res = append(res, f.Name())
+				}
+			}
+
+			return res, nil
+		}
+	default:
+		{
+			return nil, fmt.Errorf("Wrong fsType = %d", svc.settings.FsType)
 		}
 	}
 
-	return repos, nil
 }
 
 //RemoveRepository - removes specified repository permanently
@@ -712,19 +810,7 @@ func (svc *service) RemoveRepository(user, repo string) error {
 		return err
 	}
 
-	filesTable, gitTable, err := svc.tablesNames(user, repo)
-	if err != nil {
-		return err
-	}
-
-	tx, err := svc.db.Begin()
-	if err != nil {
-		return err
-	}
-	tx.Exec(fmt.Sprintf("DROP TABLE %s", filesTable))
-	tx.Exec(fmt.Sprintf("DROP TABLE %s", gitTable))
-
-	err = tx.Commit()
+	err = svc.deleteRepo(user, repo)
 	if err != nil {
 		return err
 	}

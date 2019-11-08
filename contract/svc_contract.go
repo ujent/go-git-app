@@ -13,6 +13,8 @@ var ErrGitRepositoryNotSet = errors.New("Git repository isn't set")
 type ServerSettings struct {
 	Port       string
 	GitConnStr string
+	GitRoot    string
+	FsType     FsType
 }
 
 // BaseRequest - rq for most git operations
@@ -75,4 +77,25 @@ type MergeFile struct {
 type FileInfo struct {
 	Path       string
 	IsConflict bool
+}
+
+//FsType - concrete type of filesystem
+type FsType int
+
+const (
+	FsTypeInvalid FsType = 0
+	FsTypeMySQL   FsType = 1
+	FsTypeLocal   FsType = 2
+)
+
+func ToFsType(t int) FsType {
+
+	switch t {
+	case 1:
+		return FsTypeMySQL
+	case 2:
+		return FsTypeLocal
+	default:
+		return FsTypeInvalid
+	}
 }

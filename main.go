@@ -6,6 +6,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/ujent/go-git-app/config"
+	"github.com/ujent/go-git-app/contract"
 )
 
 func main() {
@@ -19,13 +20,19 @@ func main() {
 
 	log.Println("Config was successfully parsed")
 
-	db, err := sqlx.Connect("mysql", settings.GitConnStr)
+	var db *sqlx.DB
 
-	if err != nil {
-		log.Fatal(err)
+	if settings.FsType == contract.FsTypeMySQL {
+		db, err = sqlx.Connect("mysql", settings.GitConnStr)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		defer db.Close()
 	}
 
-	server, err := newServer(db, settings, logger)
+	server, err := newServer(settings, logger, db)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -34,6 +41,4 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	defer db.Close()
 }

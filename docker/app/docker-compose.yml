@@ -20,6 +20,8 @@ services:
     environment:
       - APP_SERVER_PORT=4000
       - GIT_DB_CONN_STRING=admin:admin@tcp(db)/gogit
+      - FS_TYPE=1
+      - GIT_ROOT=empty
     depends_on:
       - db
 

@@ -23,7 +23,7 @@ type server struct {
 	gitSvc   gitsvc.Service
 }
 
-func newServer(db *sqlx.DB, settings *contract.ServerSettings, logger *log.Logger) (*server, error) {
+func newServer(settings *contract.ServerSettings, logger *log.Logger, db *sqlx.DB) (*server, error) {
 
 	gitSvc, err := gitsvc.New(settings, db)
 	if err != nil {
