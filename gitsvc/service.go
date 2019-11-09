@@ -615,11 +615,6 @@ func (svc *service) createFs(user, repo string) (fs billy.Filesystem, gitFs bill
 		}
 	case contract.FsTypeLocal:
 		{
-			err := os.Mkdir(filepath.Join(svc.settings.GitRoot, user), 0777)
-			if err != nil && !os.IsExist(err) {
-				return nil, nil, err
-			}
-
 			filesPath, wtPath, err := svc.gitPath(user, repo)
 			if err != nil {
 				return nil, nil, err
@@ -752,7 +747,6 @@ func removeFiles(dir string) error {
 	return nil
 }
 
-//ToDo RA - rewrite it!
 // Repositories - returns all locally existing repositories
 func (svc *service) Repositories(user string) ([]string, error) {
 	if user == "" {
@@ -787,6 +781,10 @@ func (svc *service) Repositories(user string) ([]string, error) {
 			files, err := ioutil.ReadDir(gitPath)
 
 			if err != nil {
+				if os.IsNotExist(err) {
+					return []string{}, nil
+				}
+
 				return nil, err
 			}
 
