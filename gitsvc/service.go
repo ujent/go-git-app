@@ -192,7 +192,7 @@ func (svc *service) File(rq *contract.BaseRequest, path string) (billy.File, err
 	}
 
 	fs := svc.git.fs
-	f, err := fs.OpenFile(path, os.O_RDWR|os.O_TRUNC, 0666)
+	f, err := fs.OpenFile(path, os.O_RDONLY, 0666)
 
 	if err != nil {
 		return nil, err
@@ -615,6 +615,11 @@ func (svc *service) createFs(user, repo string) (fs billy.Filesystem, gitFs bill
 		}
 	case contract.FsTypeLocal:
 		{
+			err := os.Mkdir(filepath.Join(svc.settings.GitRoot, user), 0777)
+			if err != nil && !os.IsExist(err) {
+				return nil, nil, err
+			}
+
 			filesPath, wtPath, err := svc.gitPath(user, repo)
 			if err != nil {
 				return nil, nil, err
