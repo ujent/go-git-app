@@ -601,12 +601,12 @@ func (svc *service) createFs(user, repo string) (fs billy.Filesystem, gitFs bill
 				return nil, nil, err
 			}
 
-			fs, err = mysqlfs.New(svc.settings.GitConnStr, gitTableName)
+			fs, err = mysqlfs.New(svc.db.DB, gitTableName)
 			if err != nil {
 				return nil, nil, err
 			}
 
-			gitFs, err = mysqlfs.New(svc.settings.GitConnStr, filesTableName)
+			gitFs, err = mysqlfs.New(svc.db.DB, filesTableName)
 			if err != nil {
 				return nil, nil, err
 			}
