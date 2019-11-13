@@ -104,6 +104,8 @@ github.com/ujent/go-git-mysql v0.0.0-20190908145408-348f38348e3e h1:3n4zYy75bj62
 github.com/ujent/go-git-mysql v0.0.0-20190908145408-348f38348e3e/go.mod h1:OnQ9OwODR9MAmR0kTanC0DuqorUX+snyj/je8jU5OLA=
 github.com/ujent/go-git-mysql v0.0.0-20191110110114-c2ea4d01fcea h1:Br+TTbuCvczvWmDqx5jwPmrEAkLG237lUvS70oAV/qs=
 github.com/ujent/go-git-mysql v0.0.0-20191110110114-c2ea4d01fcea/go.mod h1:OnQ9OwODR9MAmR0kTanC0DuqorUX+snyj/je8jU5OLA=
+github.com/ujent/go-git-mysql v0.0.0-20191113095041-12ddb425ddec h1:34zqUU8tT6xFBQ3MbLc+LW1AJTH1X+c4YkTMalGXofs=
+github.com/ujent/go-git-mysql v0.0.0-20191113095041-12ddb425ddec/go.mod h1:OnQ9OwODR9MAmR0kTanC0DuqorUX+snyj/je8jU5OLA=
 github.com/xanzy/ssh-agent v0.2.0/go.mod h1:0NyE30eGUDliuLEHJgYte/zncp2zdTStcOnWhgSqHD8=
 github.com/xanzy/ssh-agent v0.2.1 h1:TCbipTQL2JiiCprBWx9frJ2eJlCYT00NmctrHxVAr70=
 github.com/xanzy/ssh-agent v0.2.1/go.mod h1:mLlQY/MoOhWBj+gOGMQkOeiEvkx+8pJSI+0Bx9h2kr4=

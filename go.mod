@@ -18,7 +18,7 @@ require (
 	github.com/oxtoacart/bpool v0.0.0-20190530202638-03653db5a59c // indirect
 	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/stretchr/testify v1.4.0 // indirect
-	github.com/ujent/go-git-mysql v0.0.0-20191110110114-c2ea4d01fcea
+	github.com/ujent/go-git-mysql v0.0.0-20191113095041-12ddb425ddec
 
 	golang.org/x/crypto v0.0.0-20190907121410-71b5226ff739 // indirect
 	golang.org/x/net v0.0.0-20190827160401-ba9fcec4b297 // indirect
