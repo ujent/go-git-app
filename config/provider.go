@@ -5,7 +5,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/ujent/go-git-app/contract"
+	"bitbucket.org/vishjosh/bipp-go-git/experimental-app/contract"
 )
 
 const appServerHostEnv = "APP_SERVER_PORT"

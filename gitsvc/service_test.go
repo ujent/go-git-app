@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"testing"
 
+	git "bitbucket.org/vishjosh/bipp-go-git"
+	"bitbucket.org/vishjosh/bipp-go-git/experimental-app/config"
+	"bitbucket.org/vishjosh/bipp-go-git/experimental-app/contract"
+	"bitbucket.org/vishjosh/bipp-go-git/plumbing/transport/http"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
-	"github.com/ujent/go-git-app/config"
-	"github.com/ujent/go-git-app/contract"
-	"gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing/transport/http"
 )
 
 const userName = "test_user"
@@ -18,38 +18,21 @@ const remote = "http://35.239.165.218:9000/gitea/testrepo"
 const remoteUser = "gitea@gitea.com"
 const remotePsw = "secret123"
 
-/*func Test(t *testing.T) {
-	s, err := config.ParseTest()
-	if err != nil {
-		t.Fatal(err)
-	}
+type config1 struct {
+	path string
+	data string
+}
 
-	var db *sqlx.DB
+func Test(t *testing.T) {
+	c := config1{path: "xxxx", data: "yyyy"}
 
-	if s.FsType == contract.FsTypeMySQL {
-		db, err = sqlx.Connect("mysql", s.GitConnStr)
-
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		defer db.Close()
-	}
-
-	svc, err := New(s, db)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	r := "repo_1"
-
-	err = svc.OpenRepository(userName, r)
-	if err != nil {
-		t.Fatal(err)
-	}
+	change(&c)
+	t.Error(c.path)
 
 }
-*/
+func change(c *config1) {
+	c.path = "zzzz"
+}
 
 func TestPush(t *testing.T) {
 	s, err := config.ParseTest()

@@ -4,9 +4,9 @@ import (
 	"log"
 	"os"
 
+	"bitbucket.org/vishjosh/bipp-go-git/experimental-app/config"
+	"bitbucket.org/vishjosh/bipp-go-git/experimental-app/contract"
 	"github.com/jmoiron/sqlx"
-	"github.com/ujent/go-git-app/config"
-	"github.com/ujent/go-git-app/contract"
 )
 
 func main() {

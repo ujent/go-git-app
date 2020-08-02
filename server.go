@@ -12,9 +12,9 @@ import (
 	"github.com/go-chi/cors"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
-	"github.com/ujent/go-git-app/contract"
-	"github.com/ujent/go-git-app/gitsvc"
-	"gopkg.in/src-d/go-git.v4"
+	"bitbucket.org/vishjosh/bipp-go-git"
+	"bitbucket.org/vishjosh/bipp-go-git/experimental-app/contract"
+	"bitbucket.org/vishjosh/bipp-go-git/experimental-app/gitsvc"
 )
 
 type server struct {

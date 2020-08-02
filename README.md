@@ -1,5 +1,10 @@
 # go-git-app
 
+Note: please, use it as a part of bitbucket.org/vishjosh/bipp-go-git project:
+- create a folder experimental-app in it's root
+- run go test 
+ It's the easiest way to integrate
+
 1. Install Docker
 2. Install docker-compose
 3. Run: `docker-compose up`
