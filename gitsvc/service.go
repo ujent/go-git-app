@@ -14,6 +14,8 @@ import (
 	git "bitbucket.org/vishjosh/bipp-go-git"
 	"bitbucket.org/vishjosh/bipp-go-git/config"
 	"bitbucket.org/vishjosh/bipp-go-git/experimental-app/contract"
+	"bitbucket.org/vishjosh/bipp-go-git/go-billy"
+	"bitbucket.org/vishjosh/bipp-go-git/go-billy/osfs"
 	"bitbucket.org/vishjosh/bipp-go-git/plumbing"
 	"bitbucket.org/vishjosh/bipp-go-git/plumbing/cache"
 	"bitbucket.org/vishjosh/bipp-go-git/plumbing/format/index"
@@ -21,8 +23,6 @@ import (
 	"bitbucket.org/vishjosh/bipp-go-git/plumbing/transport/http"
 	"bitbucket.org/vishjosh/bipp-go-git/storage/filesystem"
 	"bitbucket.org/vishjosh/bipp-go-git/storage/mysqlfs"
-	"github.com/go-git/go-billy/v5"
-	"github.com/go-git/go-billy/v5/osfs"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 )
